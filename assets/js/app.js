@@ -171,9 +171,58 @@
   document.getElementById("btn-close-import").addEventListener("click", () => importModal.classList.add("hidden"));
   importModal.addEventListener("click", (e) => { if (e.target === importModal) importModal.classList.add("hidden"); });
 
+  const PDFJS_VERSION = "6.3.289";
+  const PDFJS_BASE = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/build/`;
+  let pdfjsLibPromise = null;
+
+  function loadPdfJs() {
+    if (!pdfjsLibPromise) {
+      pdfjsLibPromise = import(/* webpackIgnore: true */ PDFJS_BASE + "pdf.min.mjs").then((lib) => {
+        lib.GlobalWorkerOptions.workerSrc = PDFJS_BASE + "pdf.worker.min.mjs";
+        return lib;
+      });
+    }
+    return pdfjsLibPromise;
+  }
+
+  async function extractTextFromPdf(file) {
+    const pdfjsLib = await loadPdfJs();
+    const buffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+    const sectionTexts = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      let raw = "";
+      textContent.items.forEach((item) => { raw += item.str + (item.hasEOL ? "\n" : " "); });
+      const lines = raw.split("\n").map((l) => l.replace(/[ \t]+/g, " ").trim()).filter(Boolean);
+      if (!lines.length) continue;
+      const firstLine = lines[0];
+      const looksLikeHeading = firstLine.length <= 40 && !/[。.!?]$/.test(firstLine);
+      const title = looksLikeHeading ? firstLine : `ページ${i}`;
+      const bodyLines = looksLikeHeading ? lines.slice(1) : lines;
+      sectionTexts.push(`# ${title}\n${bodyLines.join("\n")}`);
+    }
+    return sectionTexts.join("\n\n");
+  }
+
   importFile.addEventListener("change", () => {
     const file = importFile.files[0];
     if (!file) return;
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+    if (isPdf) {
+      importTextarea.disabled = true;
+      importTextarea.value = "PDFを解析中です…";
+      extractTextFromPdf(file)
+        .then((text) => { importTextarea.value = text.trim() || "(このPDFからはテキストを抽出できませんでした)"; })
+        .catch((err) => {
+          console.error(err);
+          importTextarea.value = "";
+          alert("PDFの読み込みに失敗しました。文字を選択できないスキャン画像のみのPDFには対応していません。また、この機能はpdf.jsライブラリをCDNから読み込むためインターネット接続が必要です。");
+        })
+        .finally(() => { importTextarea.disabled = false; });
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => { importTextarea.value = reader.result; };
     reader.readAsText(file);

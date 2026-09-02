@@ -142,13 +142,14 @@
       <button id="btn-close-import" class="btn-icon" aria-label="閉じる">✕</button>
     </div>
     <p class="modal-hint">
-      Claude などで作成した解説テキストを貼り付けるか、ファイルを選択してください。
+      Claude などで作成した解説テキストを貼り付けるか、テキストファイル（.txt/.md）またはPDFファイルを選択してください。
       <code># 見出し</code> でセクションが自動分割されます。
       行頭に <code>用語：説明</code> の形式で書くと、その行がクイズの問題として自動的に使われます。
+      PDFは文字が選択できるものに対応しています（スキャン画像のみのPDFは非対応）。解析はブラウザ内で行われ、pdf.jsライブラリの読み込みにのみインターネット接続が必要です。
     </p>
     <div class="import-input-row">
       <textarea id="import-textarea" rows="8" placeholder="# 第1章 力のつり合い&#10;- 力：物体の運動状態を変化させる作用&#10;- 慣性：外力が働かない限り運動状態を維持する性質&#10;物体に働く力の合計がゼロのとき、物体は静止または等速直線運動を続ける。"></textarea>
-      <input id="import-file" type="file" accept=".txt,.md,.markdown">
+      <input id="import-file" type="file" accept=".txt,.md,.markdown,.pdf,application/pdf,text/plain,text/markdown">
     </div>
     <button id="btn-parse-import" class="btn btn-outline">プレビューを作成</button>
 
