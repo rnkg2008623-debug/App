@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学習ナビ - 教材整理・Todo・クイズ</title>
+<meta name="description" content="教科ごとの解説をセクション単位で整理し、Todo管理とクイズで知識を定着させる学習支援アプリ。サーバー不要・完全無料で動作します。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📘</text></svg>">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div class="app-shell">
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark">📘</span>
+      <span class="brand-name">学習ナビ</span>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab-btn is-active" data-tab="materials" role="tab" aria-selected="true">教材</button>
+      <button class="tab-btn" data-tab="todo" role="tab" aria-selected="false">Todo</button>
+      <button class="tab-btn" data-tab="quiz" role="tab" aria-selected="false">クイズ</button>
+    </nav>
+  </header>
+
+  <main class="app-main">
+
+    <!-- ===================== 教材タブ ===================== -->
+    <section id="tab-materials" class="tab-panel is-active">
+      <div class="panel-head">
+        <div>
+          <h1>教材</h1>
+          <p class="panel-sub">教科ごとに解説をセクション単位で整理します。</p>
+        </div>
+        <div class="panel-actions">
+          <button id="btn-import" class="btn btn-primary">解説ファイルを取り込む</button>
+          <button id="btn-new-subject" class="btn btn-outline">教科を追加</button>
+        </div>
+      </div>
+
+      <div id="subject-list" class="subject-grid"></div>
+
+      <div id="subject-detail" class="subject-detail hidden">
+        <button id="btn-back-subjects" class="btn-link">← 教科一覧に戻る</button>
+        <div class="detail-head">
+          <h2 id="detail-subject-name"></h2>
+          <div class="progress-track"><div id="detail-progress-bar" class="progress-fill"></div></div>
+          <span id="detail-progress-text" class="progress-text"></span>
+        </div>
+        <div id="section-list" class="section-list"></div>
+      </div>
+    </section>
+
+    <!-- ===================== Todoタブ ===================== -->
+    <section id="tab-todo" class="tab-panel">
+      <div class="panel-head">
+        <div>
+          <h1>Todo</h1>
+          <p class="panel-sub">タイトル・タグ・所要時間を記録して学習計画を立てます。</p>
+        </div>
+      </div>
+
+      <form id="todo-form" class="todo-form">
+        <input id="todo-title" type="text" placeholder="タイトル（例: 第3章の復習）" required>
+        <input id="todo-tags" type="text" placeholder="タグ（カンマ区切り 例: 数学, 復習）">
+        <input id="todo-minutes" type="number" min="1" placeholder="所要時間(分)">
+        <button type="submit" class="btn btn-primary">追加</button>
+      </form>
+
+      <div class="todo-stats">
+        <span id="todo-stat-total">合計 0 件</span>
+        <span id="todo-stat-done">完了 0 件</span>
+        <span id="todo-stat-minutes">見積もり合計 0 分</span>
+      </div>
+
+      <div class="todo-filter">
+        <label for="todo-tag-filter">タグで絞り込み</label>
+        <select id="todo-tag-filter">
+          <option value="">すべて</option>
+        </select>
+      </div>
+
+      <ul id="todo-list" class="todo-list"></ul>
+    </section>
+
+    <!-- ===================== クイズタブ ===================== -->
+    <section id="tab-quiz" class="tab-panel">
+      <div class="panel-head">
+        <div>
+          <h1>クイズ</h1>
+          <p class="panel-sub">教科とセクション範囲を選んで理解度をチェックします。</p>
+        </div>
+      </div>
+
+      <div id="quiz-setup" class="quiz-setup">
+        <div class="quiz-setup-row">
+          <label for="quiz-subject-select">教科</label>
+          <select id="quiz-subject-select"></select>
+        </div>
+        <div id="quiz-section-checks" class="quiz-section-checks"></div>
+        <div class="quiz-setup-row">
+          <label for="quiz-count">問題数</label>
+          <select id="quiz-count">
+            <option value="5">5問</option>
+            <option value="10" selected>10問</option>
+            <option value="15">15問</option>
+            <option value="20">20問</option>
+          </select>
+        </div>
+        <button id="btn-start-quiz" class="btn btn-primary">クイズ開始</button>
+        <p id="quiz-setup-msg" class="quiz-msg"></p>
+      </div>
+
+      <div id="quiz-play" class="quiz-play hidden">
+        <div class="quiz-progress">
+          <span id="quiz-progress-text"></span>
+          <span id="quiz-score-text"></span>
+        </div>
+        <div class="quiz-card">
+          <p id="quiz-question-kind" class="quiz-kind"></p>
+          <h2 id="quiz-question-text" class="quiz-question"></h2>
+          <div id="quiz-options" class="quiz-options"></div>
+        </div>
+        <button id="btn-next-question" class="btn btn-primary hidden">次へ</button>
+      </div>
+
+      <div id="quiz-result" class="quiz-result hidden">
+        <h2 id="quiz-result-score"></h2>
+        <div id="quiz-result-review" class="quiz-result-review"></div>
+        <button id="btn-retry-quiz" class="btn btn-primary">もう一度設定する</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ===================== 取り込みモーダル ===================== -->
+<div id="import-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>解説ファイルを取り込む</h2>
+      <button id="btn-close-import" class="btn-icon" aria-label="閉じる">✕</button>
+    </div>
+    <p class="modal-hint">
+      Claude などで作成した解説テキストを貼り付けるか、ファイルを選択してください。
+      <code># 見出し</code> でセクションが自動分割されます。
+      行頭に <code>用語：説明</code> の形式で書くと、その行がクイズの問題として自動的に使われます。
+    </p>
+    <div class="import-input-row">
+      <textarea id="import-textarea" rows="8" placeholder="# 第1章 力のつり合い&#10;- 力：物体の運動状態を変化させる作用&#10;- 慣性：外力が働かない限り運動状態を維持する性質&#10;物体に働く力の合計がゼロのとき、物体は静止または等速直線運動を続ける。"></textarea>
+      <input id="import-file" type="file" accept=".txt,.md,.markdown">
+    </div>
+    <button id="btn-parse-import" class="btn btn-outline">プレビューを作成</button>
+
+    <div id="import-preview" class="import-preview hidden">
+      <h3>取り込むセクションを選択・振り分け（Allocate）</h3>
+      <div id="import-preview-list" class="import-preview-list"></div>
+      <button id="btn-confirm-import" class="btn btn-primary">選択したセクションを取り込む</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/app.js"></script>
+</body>
+</html>
