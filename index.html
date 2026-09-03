@@ -21,6 +21,7 @@
       <button class="tab-btn" data-tab="todo" role="tab" aria-selected="false">Todo</button>
       <button class="tab-btn" data-tab="calendar" role="tab" aria-selected="false">カレンダー</button>
       <button class="tab-btn" data-tab="quiz" role="tab" aria-selected="false">クイズ</button>
+      <button class="tab-btn" data-tab="videos" role="tab" aria-selected="false">プレイリスト</button>
     </nav>
     <button id="btn-toggle-yt" class="btn btn-outline btn-sm yt-toggle-btn" aria-label="YouTube Playerを開閉">📺 動画</button>
   </header>
@@ -172,6 +173,23 @@
         <div id="quiz-result-review" class="quiz-result-review"></div>
         <button id="btn-retry-quiz" class="btn btn-primary">もう一度設定する</button>
       </div>
+    </section>
+
+    <!-- ===================== プレイリストタブ ===================== -->
+    <section id="tab-videos" class="tab-panel">
+      <div class="panel-head">
+        <div>
+          <h1>プレイリスト</h1>
+          <p class="panel-sub">複数のYouTube動画をグリッドに並べて、それぞれ再生できます。</p>
+        </div>
+      </div>
+
+      <form id="video-add-form" class="video-add-form">
+        <input id="video-url-input" type="text" placeholder="YouTubeのURLまたは動画IDを貼り付け" required>
+        <button type="submit" class="btn btn-primary">追加</button>
+      </form>
+
+      <div id="video-grid" class="video-grid"></div>
     </section>
 
   </main>

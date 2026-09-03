@@ -3,7 +3,7 @@
 
   /* ============================== Storage ============================== */
 
-  const STORAGE_KEYS = { subjects: "sn_subjects", todos: "sn_todos" };
+  const STORAGE_KEYS = { subjects: "sn_subjects", todos: "sn_todos", videos: "sn_videos" };
   const SUBJECT_COLORS = ["#3f5744", "#b5602f", "#a9821c", "#3f6b4a", "#6b5b95", "#2f6f76"];
 
   const uid = () => (crypto.randomUUID ? crypto.randomUUID() : "id-" + Date.now() + "-" + Math.random().toString(16).slice(2));
@@ -24,9 +24,11 @@
 
   let subjects = Store.load(STORAGE_KEYS.subjects, []);
   let todos = Store.load(STORAGE_KEYS.todos, []);
+  let videos = Store.load(STORAGE_KEYS.videos, null);
 
   const saveSubjects = () => Store.save(STORAGE_KEYS.subjects, subjects);
   const saveTodos = () => Store.save(STORAGE_KEYS.todos, todos);
+  const saveVideos = () => Store.save(STORAGE_KEYS.videos, videos);
 
   /* ============================== Tabs ============================== */
 
@@ -944,10 +946,73 @@
     if (savedSize && savedSize.w && savedSize.h) applyYtSize(savedSize.w, savedSize.h);
   } catch (e) { /* ignore malformed saved size */ }
 
+  /* ============================== Playlist ============================== */
+
+  const DEFAULT_VIDEO_URLS = [
+    "https://www.youtube.com/watch?v=u7kCTaCX_J4",
+    "https://www.youtube.com/watch?v=dfVK7ld38Ys",
+    "https://www.youtube.com/watch?v=DjdUEyjx8GM",
+    "https://www.youtube.com/watch?v=hlbh4P0Mz8M",
+    "https://www.youtube.com/watch?v=ErHJBXTmm2Q",
+    "https://www.youtube.com/watch?v=DjdUEyjx8GM",
+    "https://www.youtube.com/watch?v=lA6TaaMGgDo",
+    "https://www.youtube.com/watch?v=6dp-bvQ7RWo",
+    "https://www.youtube.com/watch?v=cptolqWrjcw",
+    "https://www.youtube.com/watch?v=8H3nRCFVR6Y",
+    "https://www.youtube.com/watch?v=Zhmmh7l6KEw",
+    "https://www.youtube.com/watch?v=V1rDmWK4Dd8",
+  ];
+
+  if (videos === null) {
+    videos = DEFAULT_VIDEO_URLS
+      .map((url) => ({ id: uid(), videoId: extractYouTubeId(url), url, addedAt: Date.now() }))
+      .filter((v) => v.videoId);
+    saveVideos();
+  }
+
+  const videoGridEl = document.getElementById("video-grid");
+
+  function renderVideoGrid() {
+    videoGridEl.innerHTML = "";
+    if (!videos.length) {
+      videoGridEl.innerHTML = '<p class="panel-sub">動画がまだありません。URLを追加してください。</p>';
+      return;
+    }
+    videos.forEach((v) => {
+      const cell = document.createElement("div");
+      cell.className = "video-cell";
+      cell.innerHTML = `
+        <iframe src="https://www.youtube-nocookie.com/embed/${v.videoId}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="${escapeHtml(v.url)}"></iframe>
+        <button class="video-cell-delete" aria-label="削除">✕</button>
+      `;
+      cell.querySelector(".video-cell-delete").addEventListener("click", () => {
+        videos = videos.filter((x) => x.id !== v.id);
+        saveVideos();
+        renderVideoGrid();
+      });
+      videoGridEl.appendChild(cell);
+    });
+  }
+
+  document.getElementById("video-add-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("video-url-input");
+    const videoId = extractYouTubeId(input.value);
+    if (!videoId) {
+      alert("YouTubeのURLとして認識できませんでした");
+      return;
+    }
+    videos.push({ id: uid(), videoId, url: input.value.trim(), addedAt: Date.now() });
+    saveVideos();
+    input.value = "";
+    renderVideoGrid();
+  });
+
   /* ============================== Init ============================== */
 
   renderSubjectList();
   renderTodos();
   renderCalendarGrid();
   renderQuizSetup();
+  renderVideoGrid();
 })();
