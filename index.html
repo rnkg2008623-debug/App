@@ -203,6 +203,27 @@
   </div>
 </div>
 
+<!-- ===================== Todo編集モーダル ===================== -->
+<div id="edit-todo-modal" class="modal-overlay hidden">
+  <div class="modal modal-narrow">
+    <div class="modal-head">
+      <h2>Todoを編集</h2>
+      <button id="btn-close-edit-todo" class="btn-icon" aria-label="閉じる">✕</button>
+    </div>
+    <form id="edit-todo-form" class="edit-todo-form">
+      <label>タイトル<input id="edit-todo-title" type="text" required></label>
+      <label>タグ（カンマ区切り）<input id="edit-todo-tags" type="text"></label>
+      <label>所要時間（分）<input id="edit-todo-minutes" type="number" min="1"></label>
+      <label>日付<input id="edit-todo-date" type="date"></label>
+      <label>開始時刻<input id="edit-todo-start-time" type="time"></label>
+      <div class="edit-todo-actions">
+        <button type="button" id="btn-delete-edit-todo" class="btn-danger-ghost">このTodoを削除</button>
+        <button type="submit" class="btn btn-primary">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="assets/js/app.js"></script>
 </body>
 </html>

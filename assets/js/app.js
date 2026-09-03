@@ -369,9 +369,7 @@
     todos.push({ id: uid(), title, tags, minutes, date, startTime, done: false, createdAt: Date.now() });
     saveTodos();
     todoForm.reset();
-    renderTodos();
-    renderCalendarGrid();
-    if (dayScheduleEl && !dayScheduleEl.classList.contains("hidden") && date === openDayKey) renderDaySchedule(openDayKey);
+    refreshAfterTodoChange();
   });
 
   todoTagFilter.addEventListener("change", renderTodos);
@@ -406,17 +404,14 @@
         li.querySelector('[data-role="toggle"]').addEventListener("change", (e) => {
           todo.done = e.target.checked;
           saveTodos();
-          renderTodos();
-          renderCalendarGrid();
-          if (dayScheduleEl && !dayScheduleEl.classList.contains("hidden") && todo.date === openDayKey) renderDaySchedule(openDayKey);
+          refreshAfterTodoChange();
         });
         li.querySelector('[data-role="delete"]').addEventListener("click", () => {
           todos = todos.filter((t) => t.id !== todo.id);
           saveTodos();
-          renderTodos();
-          renderCalendarGrid();
-          if (dayScheduleEl && !dayScheduleEl.classList.contains("hidden") && todo.date === openDayKey) renderDaySchedule(openDayKey);
+          refreshAfterTodoChange();
         });
+        li.querySelector(".todo-main").addEventListener("click", () => openEditTodoModal(todo.id));
         todoListEl.appendChild(li);
       });
     }
@@ -580,7 +575,7 @@
         const color = SUBJECT_COLORS[Math.abs(hashCode(todo.id)) % SUBJECT_COLORS.length];
         const endLabel = minutesToTime(start + dur);
         return `
-          <div class="timeline-event${todo.done ? " is-done" : ""}" style="top:${top}px; height:${height}px; left:calc(${left}% + 2px); width:calc(${width}% - 4px); background:${color};" title="${escapeHtml(todo.title)}">
+          <div class="timeline-event${todo.done ? " is-done" : ""}" data-id="${todo.id}" style="top:${top}px; height:${height}px; left:calc(${left}% + 2px); width:calc(${width}% - 4px); background:${color};" title="クリックして編集: ${escapeHtml(todo.title)}">
             <span class="te-title">${escapeHtml(todo.title)}</span>
             <span class="te-time">${todo.startTime}-${endLabel}</span>
           </div>
@@ -591,6 +586,9 @@
         <div class="timeline-hours" style="height:${totalHeight}px">${hoursHtml.join("")}</div>
         <div class="timeline-track" style="height:${totalHeight}px; --hour-px:${HOUR_PX}px;">${eventsHtml}</div>
       `;
+      timelineWrap.querySelectorAll(".timeline-event").forEach((el) => {
+        el.addEventListener("click", () => openEditTodoModal(el.dataset.id));
+      });
     }
 
     const unscheduledEl = document.getElementById("unscheduled-list");
@@ -599,23 +597,24 @@
     } else {
       unscheduledEl.innerHTML = `<h3>時間未設定のタスク</h3>` + unscheduled.map((t) => `
         <div class="unscheduled-item${t.done ? " is-done" : ""}">
-          <input type="checkbox" ${t.done ? "checked" : ""} data-id="${t.id}">
-          <div class="todo-main">
+          <input type="checkbox" ${t.done ? "checked" : ""} data-id="${t.id}" data-role="toggle">
+          <div class="todo-main" data-id="${t.id}" data-role="edit">
             <div class="todo-title">${escapeHtml(t.title)}</div>
             <div class="todo-meta">${t.minutes ? `<span>⏱ ${t.minutes}分</span>` : ""} ${t.tags.map((tag) => `<span class="tag-chip">${escapeHtml(tag)}</span>`).join("")}</div>
           </div>
         </div>
       `).join("");
-      unscheduledEl.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+      unscheduledEl.querySelectorAll('[data-role="toggle"]').forEach((cb) => {
         cb.addEventListener("change", (e) => {
           const todo = todos.find((t) => t.id === e.target.dataset.id);
           if (!todo) return;
           todo.done = e.target.checked;
           saveTodos();
-          renderTodos();
-          renderCalendarGrid();
-          renderDaySchedule(dateKey);
+          refreshAfterTodoChange();
         });
+      });
+      unscheduledEl.querySelectorAll('[data-role="edit"]').forEach((el) => {
+        el.addEventListener("click", () => openEditTodoModal(el.dataset.id));
       });
     }
   }
@@ -625,6 +624,64 @@
     for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
     return h;
   }
+
+  function refreshAfterTodoChange() {
+    renderTodos();
+    renderCalendarGrid();
+    if (openDayKey && dayScheduleEl && !dayScheduleEl.classList.contains("hidden")) renderDaySchedule(openDayKey);
+  }
+
+  /* ---- Todo edit modal ---- */
+
+  const editTodoModal = document.getElementById("edit-todo-modal");
+  const editTodoForm = document.getElementById("edit-todo-form");
+  let editingTodoId = null;
+
+  function openEditTodoModal(id) {
+    const todo = todos.find((t) => t.id === id);
+    if (!todo) return;
+    editingTodoId = id;
+    document.getElementById("edit-todo-title").value = todo.title;
+    document.getElementById("edit-todo-tags").value = todo.tags.join(", ");
+    document.getElementById("edit-todo-minutes").value = todo.minutes || "";
+    document.getElementById("edit-todo-date").value = todo.date || "";
+    document.getElementById("edit-todo-start-time").value = todo.startTime || "";
+    editTodoModal.classList.remove("hidden");
+  }
+
+  function closeEditTodoModal() {
+    editingTodoId = null;
+    editTodoModal.classList.add("hidden");
+  }
+
+  document.getElementById("btn-close-edit-todo").addEventListener("click", closeEditTodoModal);
+  editTodoModal.addEventListener("click", (e) => { if (e.target === editTodoModal) closeEditTodoModal(); });
+
+  editTodoForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const todo = todos.find((t) => t.id === editingTodoId);
+    if (!todo) return;
+    const title = document.getElementById("edit-todo-title").value.trim();
+    if (!title) return;
+    const tagsRaw = document.getElementById("edit-todo-tags").value.trim();
+    todo.title = title;
+    todo.tags = tagsRaw ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [];
+    todo.minutes = Number(document.getElementById("edit-todo-minutes").value) || 0;
+    todo.date = document.getElementById("edit-todo-date").value || "";
+    todo.startTime = document.getElementById("edit-todo-start-time").value || "";
+    saveTodos();
+    closeEditTodoModal();
+    refreshAfterTodoChange();
+  });
+
+  document.getElementById("btn-delete-edit-todo").addEventListener("click", () => {
+    if (!editingTodoId) return;
+    if (!confirm("このTodoを削除しますか？")) return;
+    todos = todos.filter((t) => t.id !== editingTodoId);
+    saveTodos();
+    closeEditTodoModal();
+    refreshAfterTodoChange();
+  });
 
   /* ============================== Quiz ============================== */
 
