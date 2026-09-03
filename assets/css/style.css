@@ -251,29 +251,41 @@ body {
 .yt-toggle-btn { white-space: nowrap; }
 
 .yt-widget {
-  position: fixed; right: 18px; bottom: 18px; width: 320px; max-width: calc(100vw - 36px);
+  position: fixed; right: 18px; bottom: 18px; width: 320px; height: 260px;
+  min-width: 220px; min-height: 160px;
+  display: flex; flex-direction: column;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   box-shadow: 0 8px 24px rgba(43, 42, 36, 0.25); z-index: 90; overflow: hidden;
   transition: opacity 0.15s, transform 0.15s;
 }
 .yt-widget.is-closed { opacity: 0; transform: translateY(16px) scale(0.98); pointer-events: none; }
+.yt-widget.is-resizing { transition: none; user-select: none; }
 
 .yt-widget-head {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
   background: var(--primary); color: #fff; padding: 8px 10px 8px 14px;
 }
 .yt-widget-title { font-weight: 700; font-size: 0.88rem; }
 .yt-widget-close { color: #fff; font-size: 1rem; line-height: 1; }
 
-.yt-url-form { display: flex; gap: 6px; padding: 10px; border-bottom: 1px solid var(--border); }
+.yt-url-form { display: flex; gap: 6px; padding: 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .yt-url-form input { flex: 1; padding: 7px 9px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.82rem; background: var(--surface); color: var(--text); }
 
-.yt-video-wrap { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; }
+.yt-video-wrap { position: relative; width: 100%; flex: 1; min-height: 0; background: #000; }
 .yt-video-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .yt-video-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 16px; color: #cfcabb; font-size: 0.82rem; }
+
+.yt-resize-handle {
+  position: absolute; top: -5px; left: -5px; width: 16px; height: 16px; z-index: 1;
+  cursor: nwse-resize; border-radius: 4px;
+  background:
+    linear-gradient(135deg, transparent 0 40%, var(--surface) 40% 46%, transparent 46% 54%, var(--surface) 54% 60%, transparent 60%),
+    var(--primary-strong);
+}
 
 @media (max-width: 600px) {
   .app-header { flex-direction: column; align-items: flex-start; }
   .todo-form input { flex: 1 1 100%; }
-  .yt-widget { right: 10px; left: 10px; bottom: 10px; width: auto; }
+  .yt-widget { right: 10px; left: 10px; bottom: 10px; width: auto !important; height: 220px !important; }
+  .yt-resize-handle { display: none; }
 }

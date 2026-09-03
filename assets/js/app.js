@@ -899,6 +899,51 @@
   const lastYtUrl = localStorage.getItem(YT_LAST_URL_KEY);
   if (lastYtUrl) ytUrlInput.value = lastYtUrl;
 
+  /* ---- Resize ---- */
+
+  const YT_SIZE_KEY = "sn_yt_size";
+  const YT_DEFAULT_SIZE = { w: 320, h: 260 };
+  const YT_MIN_SIZE = { w: 220, h: 160 };
+  const ytResizeHandle = document.getElementById("yt-resize-handle");
+  let resizeState = null;
+
+  function applyYtSize(w, h) {
+    const maxW = window.innerWidth - 36;
+    const maxH = window.innerHeight - 36;
+    ytWidget.style.width = Math.round(Math.min(Math.max(w, YT_MIN_SIZE.w), maxW)) + "px";
+    ytWidget.style.height = Math.round(Math.min(Math.max(h, YT_MIN_SIZE.h), maxH)) + "px";
+  }
+
+  ytResizeHandle.addEventListener("pointerdown", (e) => {
+    resizeState = { startX: e.clientX, startY: e.clientY, startW: ytWidget.offsetWidth, startH: ytWidget.offsetHeight };
+    ytResizeHandle.setPointerCapture(e.pointerId);
+    ytWidget.classList.add("is-resizing");
+    e.preventDefault();
+  });
+  ytResizeHandle.addEventListener("pointermove", (e) => {
+    if (!resizeState) return;
+    const w = resizeState.startW + (resizeState.startX - e.clientX);
+    const h = resizeState.startH + (resizeState.startY - e.clientY);
+    applyYtSize(w, h);
+  });
+  function endYtResize() {
+    if (!resizeState) return;
+    resizeState = null;
+    ytWidget.classList.remove("is-resizing");
+    localStorage.setItem(YT_SIZE_KEY, JSON.stringify({ w: ytWidget.offsetWidth, h: ytWidget.offsetHeight }));
+  }
+  ytResizeHandle.addEventListener("pointerup", endYtResize);
+  ytResizeHandle.addEventListener("pointercancel", endYtResize);
+  ytResizeHandle.addEventListener("dblclick", () => {
+    applyYtSize(YT_DEFAULT_SIZE.w, YT_DEFAULT_SIZE.h);
+    localStorage.removeItem(YT_SIZE_KEY);
+  });
+
+  try {
+    const savedSize = JSON.parse(localStorage.getItem(YT_SIZE_KEY));
+    if (savedSize && savedSize.w && savedSize.h) applyYtSize(savedSize.w, savedSize.h);
+  } catch (e) { /* ignore malformed saved size */ }
+
   /* ============================== Init ============================== */
 
   renderSubjectList();
