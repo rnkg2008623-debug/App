@@ -276,12 +276,13 @@ body {
 .yt-video-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 16px; color: #cfcabb; font-size: 0.82rem; }
 
 .yt-resize-handle {
-  position: absolute; top: -5px; left: -5px; width: 16px; height: 16px; z-index: 1;
-  cursor: nwse-resize; border-radius: 4px;
-  background:
-    linear-gradient(135deg, transparent 0 40%, var(--surface) 40% 46%, transparent 46% 54%, var(--surface) 54% 60%, transparent 60%),
-    var(--primary-strong);
+  position: absolute; top: 5px; left: 5px; width: 18px; height: 18px; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  cursor: nwse-resize; border-radius: 5px; font-size: 12px; line-height: 1;
+  background: rgba(255, 255, 255, 0.22); color: #fff;
 }
+.yt-resize-handle::before { content: "⤡"; }
+.yt-resize-handle:hover { background: rgba(255, 255, 255, 0.4); }
 
 @media (max-width: 600px) {
   .app-header { flex-direction: column; align-items: flex-start; }
