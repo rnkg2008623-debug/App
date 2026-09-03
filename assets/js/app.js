@@ -38,6 +38,7 @@
       btn.setAttribute("aria-selected", "true");
       document.getElementById("tab-" + btn.dataset.tab).classList.add("is-active");
       if (btn.dataset.tab === "quiz") renderQuizSetup();
+      if (btn.dataset.tab === "calendar" && openDayKey === null) renderCalendarGrid();
     });
   });
 
@@ -363,10 +364,14 @@
     const tagsRaw = document.getElementById("todo-tags").value.trim();
     const tags = tagsRaw ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [];
     const minutes = Number(document.getElementById("todo-minutes").value) || 0;
-    todos.push({ id: uid(), title, tags, minutes, done: false, createdAt: Date.now() });
+    const date = document.getElementById("todo-date").value || "";
+    const startTime = document.getElementById("todo-start-time").value || "";
+    todos.push({ id: uid(), title, tags, minutes, date, startTime, done: false, createdAt: Date.now() });
     saveTodos();
     todoForm.reset();
     renderTodos();
+    renderCalendarGrid();
+    if (dayScheduleEl && !dayScheduleEl.classList.contains("hidden") && date === openDayKey) renderDaySchedule(openDayKey);
   });
 
   todoTagFilter.addEventListener("change", renderTodos);
@@ -391,6 +396,7 @@
           <div class="todo-main">
             <div class="todo-title">${escapeHtml(todo.title)}</div>
             <div class="todo-meta">
+              ${scheduleLabel(todo) ? `<span class="todo-schedule">📅 ${scheduleLabel(todo)}</span>` : ""}
               ${todo.minutes ? `<span>⏱ ${todo.minutes}分</span>` : ""}
               ${todo.tags.map((t) => `<span class="tag-chip">${escapeHtml(t)}</span>`).join("")}
             </div>
@@ -401,11 +407,15 @@
           todo.done = e.target.checked;
           saveTodos();
           renderTodos();
+          renderCalendarGrid();
+          if (dayScheduleEl && !dayScheduleEl.classList.contains("hidden") && todo.date === openDayKey) renderDaySchedule(openDayKey);
         });
         li.querySelector('[data-role="delete"]').addEventListener("click", () => {
           todos = todos.filter((t) => t.id !== todo.id);
           saveTodos();
           renderTodos();
+          renderCalendarGrid();
+          if (dayScheduleEl && !dayScheduleEl.classList.contains("hidden") && todo.date === openDayKey) renderDaySchedule(openDayKey);
         });
         todoListEl.appendChild(li);
       });
@@ -414,6 +424,206 @@
     document.getElementById("todo-stat-total").textContent = `合計 ${todos.length} 件`;
     document.getElementById("todo-stat-done").textContent = `完了 ${todos.filter((t) => t.done).length} 件`;
     document.getElementById("todo-stat-minutes").textContent = `見積もり合計 ${todos.reduce((sum, t) => sum + (t.minutes || 0), 0)} 分`;
+  }
+
+  /* ============================== Calendar ============================== */
+
+  const pad2 = (n) => String(n).padStart(2, "0");
+  const dateKeyOf = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  const todayKey = dateKeyOf(new Date());
+
+  function timeToMinutes(hhmm) {
+    if (!hhmm) return null;
+    const [h, m] = hhmm.split(":").map(Number);
+    if (Number.isNaN(h) || Number.isNaN(m)) return null;
+    return h * 60 + m;
+  }
+  function minutesToTime(total) {
+    const h = Math.floor(total / 60);
+    const m = total % 60;
+    return `${pad2(h)}:${pad2(m)}`;
+  }
+  function scheduleLabel(todo) {
+    if (!todo.date) return "";
+    const md = todo.date.slice(5).replace("-", "/");
+    if (!todo.startTime) return md;
+    const startMin = timeToMinutes(todo.startTime);
+    const endLabel = todo.minutes ? minutesToTime(startMin + todo.minutes) : null;
+    return endLabel ? `${md} ${todo.startTime}-${endLabel}` : `${md} ${todo.startTime}〜`;
+  }
+
+  let calendarViewDate = new Date();
+  calendarViewDate.setDate(1);
+  let openDayKey = null;
+
+  const calendarViewEl = document.getElementById("calendar-view");
+  const calendarGridEl = document.getElementById("calendar-grid");
+  const calendarLabelEl = document.getElementById("calendar-label");
+  const dayScheduleEl = document.getElementById("day-schedule");
+
+  function renderCalendarGrid() {
+    const year = calendarViewDate.getFullYear();
+    const month = calendarViewDate.getMonth();
+    calendarLabelEl.textContent = `${year}年 ${month + 1}月`;
+
+    const firstWeekday = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const todosByDate = {};
+    todos.forEach((t) => {
+      if (!t.date) return;
+      (todosByDate[t.date] = todosByDate[t.date] || []).push(t);
+    });
+
+    calendarGridEl.innerHTML = "";
+    for (let i = 0; i < firstWeekday; i++) {
+      const filler = document.createElement("div");
+      filler.className = "calendar-day is-empty";
+      calendarGridEl.appendChild(filler);
+    }
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateKey = `${year}-${pad2(month + 1)}-${pad2(day)}`;
+      const dayTodos = todosByDate[dateKey] || [];
+      const totalMin = dayTodos.reduce((sum, t) => sum + (t.minutes || 0), 0);
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "calendar-day" + (dateKey === todayKey ? " is-today" : "") + (dayTodos.length ? " has-tasks" : "");
+      cell.innerHTML = `
+        <span class="cal-day-num">${day}</span>
+        ${dayTodos.length ? `<span class="cal-day-badge">${dayTodos.length}件 / ${totalMin}分</span>` : ""}
+      `;
+      cell.addEventListener("click", () => openDaySchedule(dateKey));
+      calendarGridEl.appendChild(cell);
+    }
+  }
+
+  document.getElementById("btn-cal-prev").addEventListener("click", () => {
+    calendarViewDate.setMonth(calendarViewDate.getMonth() - 1);
+    renderCalendarGrid();
+  });
+  document.getElementById("btn-cal-next").addEventListener("click", () => {
+    calendarViewDate.setMonth(calendarViewDate.getMonth() + 1);
+    renderCalendarGrid();
+  });
+  document.getElementById("btn-cal-today").addEventListener("click", () => {
+    calendarViewDate = new Date();
+    calendarViewDate.setDate(1);
+    renderCalendarGrid();
+  });
+  document.getElementById("btn-back-calendar").addEventListener("click", () => {
+    openDayKey = null;
+    dayScheduleEl.classList.add("hidden");
+    calendarViewEl.classList.remove("hidden");
+  });
+
+  function openDaySchedule(dateKey) {
+    openDayKey = dateKey;
+    calendarViewEl.classList.add("hidden");
+    dayScheduleEl.classList.remove("hidden");
+    renderDaySchedule(dateKey);
+  }
+
+  function formatDateHeading(dateKey) {
+    const [y, m, d] = dateKey.split("-").map(Number);
+    const weekday = ["日", "月", "火", "水", "木", "金", "土"][new Date(y, m - 1, d).getDay()];
+    return `${y}年${m}月${d}日（${weekday}）`;
+  }
+
+  const HOUR_PX = 48;
+
+  function renderDaySchedule(dateKey) {
+    document.getElementById("day-schedule-title").textContent = formatDateHeading(dateKey);
+    const dayTodos = todos.filter((t) => t.date === dateKey);
+    const scheduled = dayTodos.filter((t) => t.startTime).sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+    const unscheduled = dayTodos.filter((t) => !t.startTime);
+    const totalMin = dayTodos.reduce((sum, t) => sum + (t.minutes || 0), 0);
+
+    document.getElementById("day-total-minutes").textContent = `合計作業時間 ${totalMin}分（${Math.floor(totalMin / 60)}時間${totalMin % 60}分）`;
+    document.getElementById("day-task-count").textContent = `タスク ${dayTodos.length}件`;
+
+    const timelineWrap = document.getElementById("timeline-wrap");
+    if (!scheduled.length) {
+      timelineWrap.innerHTML = '<p class="timeline-empty">時間が設定されたタスクはありません。</p>';
+    } else {
+      let rangeStartHour = Math.min(6, Math.floor(timeToMinutes(scheduled[0].startTime) / 60));
+      let rangeEndHour = 22;
+      scheduled.forEach((t) => {
+        const endMin = timeToMinutes(t.startTime) + (t.minutes || 30);
+        rangeEndHour = Math.max(rangeEndHour, Math.ceil(endMin / 60));
+      });
+      rangeStartHour = Math.max(0, rangeStartHour);
+      rangeEndHour = Math.min(30, rangeEndHour);
+      const rangeStartMin = rangeStartHour * 60;
+      const totalHeight = (rangeEndHour - rangeStartHour) * HOUR_PX;
+
+      const hoursHtml = [];
+      for (let h = rangeStartHour; h <= rangeEndHour; h++) {
+        hoursHtml.push(`<span style="top:${(h - rangeStartHour) * HOUR_PX}px">${h % 24}:00</span>`);
+      }
+
+      const lanesEnd = [];
+      const placed = scheduled.map((t) => {
+        const start = timeToMinutes(t.startTime);
+        const dur = Math.max(t.minutes || 30, 15);
+        let lane = lanesEnd.findIndex((end) => end <= start);
+        if (lane === -1) { lane = lanesEnd.length; lanesEnd.push(start + dur); }
+        else lanesEnd[lane] = start + dur;
+        return { todo: t, start, dur, lane };
+      });
+      const laneCount = lanesEnd.length || 1;
+
+      const eventsHtml = placed.map(({ todo, start, dur, lane }) => {
+        const top = (start - rangeStartMin) / 60 * HOUR_PX;
+        const height = Math.max(dur / 60 * HOUR_PX, 20);
+        const width = 100 / laneCount;
+        const left = lane * width;
+        const color = SUBJECT_COLORS[Math.abs(hashCode(todo.id)) % SUBJECT_COLORS.length];
+        const endLabel = minutesToTime(start + dur);
+        return `
+          <div class="timeline-event${todo.done ? " is-done" : ""}" style="top:${top}px; height:${height}px; left:calc(${left}% + 2px); width:calc(${width}% - 4px); background:${color};" title="${escapeHtml(todo.title)}">
+            <span class="te-title">${escapeHtml(todo.title)}</span>
+            <span class="te-time">${todo.startTime}-${endLabel}</span>
+          </div>
+        `;
+      }).join("");
+
+      timelineWrap.innerHTML = `
+        <div class="timeline-hours" style="height:${totalHeight}px">${hoursHtml.join("")}</div>
+        <div class="timeline-track" style="height:${totalHeight}px; --hour-px:${HOUR_PX}px;">${eventsHtml}</div>
+      `;
+    }
+
+    const unscheduledEl = document.getElementById("unscheduled-list");
+    if (!unscheduled.length) {
+      unscheduledEl.innerHTML = "";
+    } else {
+      unscheduledEl.innerHTML = `<h3>時間未設定のタスク</h3>` + unscheduled.map((t) => `
+        <div class="unscheduled-item${t.done ? " is-done" : ""}">
+          <input type="checkbox" ${t.done ? "checked" : ""} data-id="${t.id}">
+          <div class="todo-main">
+            <div class="todo-title">${escapeHtml(t.title)}</div>
+            <div class="todo-meta">${t.minutes ? `<span>⏱ ${t.minutes}分</span>` : ""} ${t.tags.map((tag) => `<span class="tag-chip">${escapeHtml(tag)}</span>`).join("")}</div>
+          </div>
+        </div>
+      `).join("");
+      unscheduledEl.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+        cb.addEventListener("change", (e) => {
+          const todo = todos.find((t) => t.id === e.target.dataset.id);
+          if (!todo) return;
+          todo.done = e.target.checked;
+          saveTodos();
+          renderTodos();
+          renderCalendarGrid();
+          renderDaySchedule(dateKey);
+        });
+      });
+    }
+  }
+
+  function hashCode(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+    return h;
   }
 
   /* ============================== Quiz ============================== */
@@ -583,5 +793,6 @@
 
   renderSubjectList();
   renderTodos();
+  renderCalendarGrid();
   renderQuizSetup();
 })();

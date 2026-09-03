@@ -19,6 +19,7 @@
     <nav class="tabs" role="tablist">
       <button class="tab-btn is-active" data-tab="materials" role="tab" aria-selected="true">教材</button>
       <button class="tab-btn" data-tab="todo" role="tab" aria-selected="false">Todo</button>
+      <button class="tab-btn" data-tab="calendar" role="tab" aria-selected="false">カレンダー</button>
       <button class="tab-btn" data-tab="quiz" role="tab" aria-selected="false">クイズ</button>
     </nav>
   </header>
@@ -64,8 +65,11 @@
         <input id="todo-title" type="text" placeholder="タイトル（例: 第3章の復習）" required>
         <input id="todo-tags" type="text" placeholder="タグ（カンマ区切り 例: 数学, 復習）">
         <input id="todo-minutes" type="number" min="1" placeholder="所要時間(分)">
+        <input id="todo-date" type="date" title="実施日（任意）">
+        <input id="todo-start-time" type="time" title="開始時刻（任意）">
         <button type="submit" class="btn btn-primary">追加</button>
       </form>
+      <p class="panel-sub form-hint">日付と開始時刻を入れると、所要時間から終了時刻を自動計算してカレンダーに表示します。</p>
 
       <div class="todo-stats">
         <span id="todo-stat-total">合計 0 件</span>
@@ -81,6 +85,44 @@
       </div>
 
       <ul id="todo-list" class="todo-list"></ul>
+    </section>
+
+    <!-- ===================== カレンダータブ ===================== -->
+    <section id="tab-calendar" class="tab-panel">
+      <div class="panel-head">
+        <div>
+          <h1>カレンダー</h1>
+          <p class="panel-sub">Todoの予定日をカレンダーで確認し、日ごとのスケジュールと合計作業時間を見られます。</p>
+        </div>
+      </div>
+
+      <div id="calendar-view">
+        <div class="calendar-nav">
+          <button id="btn-cal-prev" class="btn-icon" aria-label="前の月">←</button>
+          <h2 id="calendar-label"></h2>
+          <button id="btn-cal-next" class="btn-icon" aria-label="次の月">→</button>
+          <button id="btn-cal-today" class="btn btn-outline btn-sm">今日</button>
+        </div>
+        <div class="calendar-weekdays">
+          <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+        </div>
+        <div id="calendar-grid" class="calendar-grid"></div>
+      </div>
+
+      <div id="day-schedule" class="day-schedule hidden">
+        <button id="btn-back-calendar" class="btn-link">← カレンダーに戻る</button>
+        <div class="detail-head">
+          <h2 id="day-schedule-title"></h2>
+          <div class="day-summary">
+            <span id="day-total-minutes"></span>
+            <span id="day-task-count"></span>
+          </div>
+        </div>
+
+        <div id="timeline-wrap" class="timeline-wrap"></div>
+
+        <div id="unscheduled-list" class="unscheduled-list"></div>
+      </div>
     </section>
 
     <!-- ===================== クイズタブ ===================== -->
