@@ -22,6 +22,7 @@
       <button class="tab-btn" data-tab="calendar" role="tab" aria-selected="false">カレンダー</button>
       <button class="tab-btn" data-tab="quiz" role="tab" aria-selected="false">クイズ</button>
     </nav>
+    <button id="btn-toggle-yt" class="btn btn-outline btn-sm yt-toggle-btn" aria-label="YouTube Playerを開閉">📺 動画</button>
   </header>
 
   <main class="app-main">
@@ -221,6 +222,22 @@
         <button type="submit" class="btn btn-primary">保存</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ===================== YouTube フローティングプレーヤー ===================== -->
+<div id="yt-widget" class="yt-widget is-closed">
+  <div class="yt-widget-head">
+    <span class="yt-widget-title">📺 YouTube Player</span>
+    <button id="btn-close-yt" class="btn-icon yt-widget-close" aria-label="最小化">─</button>
+  </div>
+  <form id="yt-url-form" class="yt-url-form">
+    <input id="yt-url-input" type="text" placeholder="YouTubeのURLまたは動画IDを貼り付け">
+    <button type="submit" class="btn btn-primary btn-sm">再生</button>
+  </form>
+  <div class="yt-video-wrap">
+    <p id="yt-video-empty" class="yt-video-empty">URLを入力して再生してください</p>
+    <iframe id="yt-iframe" class="hidden" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="YouTube Player"></iframe>
   </div>
 </div>
 

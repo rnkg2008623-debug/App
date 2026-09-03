@@ -846,6 +846,59 @@
 
   document.getElementById("btn-retry-quiz").addEventListener("click", renderQuizSetup);
 
+  /* ============================== YouTube Player ============================== */
+
+  const YT_LAST_URL_KEY = "sn_yt_last_url";
+  const ytWidget = document.getElementById("yt-widget");
+  const ytUrlInput = document.getElementById("yt-url-input");
+  const ytIframe = document.getElementById("yt-iframe");
+  const ytVideoEmpty = document.getElementById("yt-video-empty");
+
+  function extractYouTubeId(raw) {
+    const s = raw.trim();
+    if (!s) return null;
+    if (/^[\w-]{11}$/.test(s)) return s;
+    try {
+      const url = new URL(s);
+      if (/(^|\.)youtu\.be$/.test(url.hostname)) return url.pathname.slice(1).split("/")[0] || null;
+      if (/(^|\.)youtube(-nocookie)?\.com$/.test(url.hostname)) {
+        if (url.pathname === "/watch") return url.searchParams.get("v");
+        const m = url.pathname.match(/\/(embed|shorts|live)\/([\w-]{11})/);
+        if (m) return m[2];
+      }
+    } catch (e) { /* not a URL, and not a bare ID either */ }
+    return null;
+  }
+
+  function openYtWidget() { ytWidget.classList.remove("is-closed"); }
+  function closeYtWidget() { ytWidget.classList.add("is-closed"); }
+
+  document.getElementById("btn-toggle-yt").addEventListener("click", () => {
+    ytWidget.classList.toggle("is-closed");
+  });
+  document.getElementById("btn-close-yt").addEventListener("click", closeYtWidget);
+
+  document.getElementById("yt-url-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const raw = ytUrlInput.value;
+    const videoId = extractYouTubeId(raw);
+    if (!videoId) {
+      ytIframe.classList.add("hidden");
+      ytIframe.src = "";
+      ytVideoEmpty.textContent = raw.trim() ? "YouTubeのURLとして認識できませんでした" : "URLを入力して再生してください";
+      ytVideoEmpty.classList.remove("hidden");
+      return;
+    }
+    ytIframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`;
+    ytIframe.classList.remove("hidden");
+    ytVideoEmpty.classList.add("hidden");
+    localStorage.setItem(YT_LAST_URL_KEY, raw.trim());
+    openYtWidget();
+  });
+
+  const lastYtUrl = localStorage.getItem(YT_LAST_URL_KEY);
+  if (lastYtUrl) ytUrlInput.value = lastYtUrl;
+
   /* ============================== Init ============================== */
 
   renderSubjectList();
