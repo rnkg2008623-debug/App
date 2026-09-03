@@ -41,6 +41,7 @@
       document.getElementById("tab-" + btn.dataset.tab).classList.add("is-active");
       if (btn.dataset.tab === "quiz") renderQuizSetup();
       if (btn.dataset.tab === "calendar" && openDayKey === null) renderCalendarGrid();
+      if (btn.dataset.tab === "videos" && !videoGridRendered) renderVideoGrid();
     });
   });
 
@@ -904,7 +905,7 @@
   /* ---- Resize ---- */
 
   const YT_SIZE_KEY = "sn_yt_size";
-  const YT_DEFAULT_SIZE = { w: 320, h: 260 };
+  const YT_DEFAULT_SIZE = { w: 420, h: 340 };
   const YT_MIN_SIZE = { w: 220, h: 160 };
   const ytResizeHandle = document.getElementById("yt-resize-handle");
   let resizeState = null;
@@ -971,8 +972,10 @@
   }
 
   const videoGridEl = document.getElementById("video-grid");
+  let videoGridRendered = false;
 
   function renderVideoGrid() {
+    videoGridRendered = true;
     videoGridEl.innerHTML = "";
     if (!videos.length) {
       videoGridEl.innerHTML = '<p class="panel-sub">動画がまだありません。URLを追加してください。</p>';
@@ -982,7 +985,7 @@
       const cell = document.createElement("div");
       cell.className = "video-cell";
       cell.innerHTML = `
-        <iframe src="https://www.youtube-nocookie.com/embed/${v.videoId}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="${escapeHtml(v.url)}"></iframe>
+        <iframe src="https://www.youtube-nocookie.com/embed/${v.videoId}?autoplay=1&mute=1&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="${escapeHtml(v.url)}"></iframe>
         <button class="video-cell-delete" aria-label="削除">✕</button>
       `;
       cell.querySelector(".video-cell-delete").addEventListener("click", () => {
@@ -1014,5 +1017,4 @@
   renderTodos();
   renderCalendarGrid();
   renderQuizSetup();
-  renderVideoGrid();
 })();
