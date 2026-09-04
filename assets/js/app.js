@@ -1098,6 +1098,85 @@
     renderPdfView();
   }
 
+  function renamePdfFolder(folder) {
+    const name = prompt("新しいフォルダ名を入力してください", folder.name);
+    if (!name || !name.trim() || name.trim() === folder.name) return;
+    folder.name = name.trim();
+    savePdfFolders();
+    renderPdfView();
+  }
+
+  function renamePdfFile(file) {
+    const name = prompt("新しいファイル名を入力してください", file.name);
+    if (!name || !name.trim() || name.trim() === file.name) return;
+    file.name = name.trim();
+    savePdfFiles();
+    renderPdfView();
+  }
+
+  function isFolderOrDescendant(candidateId, ancestorId) {
+    let cur = candidateId;
+    while (cur) {
+      if (cur === ancestorId) return true;
+      const f = pdfFolders.find((x) => x.id === cur);
+      cur = f ? f.parentId : null;
+    }
+    return false;
+  }
+
+  let draggedPdfItem = null;
+
+  function movePdfItem(dragged, targetFolderId) {
+    if (dragged.kind === "folder") {
+      if (dragged.id === targetFolderId) return false;
+      const folder = pdfFolders.find((f) => f.id === dragged.id);
+      if (!folder || folder.parentId === targetFolderId) return false;
+      if (isFolderOrDescendant(targetFolderId, dragged.id)) {
+        alert("フォルダを自分自身または、その中のフォルダには移動できません。");
+        return false;
+      }
+      folder.parentId = targetFolderId;
+      savePdfFolders();
+    } else {
+      const file = pdfFiles.find((f) => f.id === dragged.id);
+      if (!file || file.folderId === targetFolderId) return false;
+      file.folderId = targetFolderId;
+      savePdfFiles();
+    }
+    return true;
+  }
+
+  function makePdfDropTarget(el, targetFolderId) {
+    el.addEventListener("dragover", (e) => {
+      if (!draggedPdfItem) return;
+      e.preventDefault();
+      el.classList.add("is-drop-target");
+    });
+    el.addEventListener("dragleave", () => el.classList.remove("is-drop-target"));
+    el.addEventListener("drop", (e) => {
+      e.preventDefault();
+      el.classList.remove("is-drop-target");
+      if (!draggedPdfItem) return;
+      const moved = movePdfItem(draggedPdfItem, targetFolderId);
+      draggedPdfItem = null;
+      if (moved) renderPdfView();
+    });
+  }
+
+  function makePdfDraggable(el, id, kind) {
+    el.draggable = true;
+    el.addEventListener("dragstart", (e) => {
+      draggedPdfItem = { id, kind };
+      el.classList.add("is-dragging");
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", id);
+    });
+    el.addEventListener("dragend", () => {
+      el.classList.remove("is-dragging");
+      draggedPdfItem = null;
+    });
+  }
+
   const pdfViewModal = document.getElementById("pdf-view-modal");
   document.getElementById("btn-close-pdf-view").addEventListener("click", () => pdfViewModal.classList.add("hidden"));
   pdfViewModal.addEventListener("click", (e) => { if (e.target === pdfViewModal) pdfViewModal.classList.add("hidden"); });
@@ -1150,6 +1229,7 @@
         currentPdfFolderId = btn.dataset.id || null;
         renderPdfView();
       });
+      makePdfDropTarget(btn, btn.dataset.id || null);
     });
   }
 
@@ -1172,13 +1252,19 @@
         <span class="pdf-item-icon">📁</span>
         <div class="pdf-item-name">${escapeHtml(folder.name)}</div>
         <div class="pdf-item-meta">${childCount}件</div>
+        <div class="pdf-item-actions">
+          <button type="button" class="btn btn-outline btn-sm" data-role="rename-folder">名前を変更</button>
+        </div>
       `;
       card.addEventListener("click", (e) => {
-        if (e.target.closest('[data-role="delete-folder"]')) return;
+        if (e.target.closest("button")) return;
         currentPdfFolderId = folder.id;
         renderPdfView();
       });
       card.querySelector('[data-role="delete-folder"]').addEventListener("click", (e) => { e.stopPropagation(); deletePdfFolder(folder); });
+      card.querySelector('[data-role="rename-folder"]').addEventListener("click", (e) => { e.stopPropagation(); renamePdfFolder(folder); });
+      makePdfDraggable(card, folder.id, "folder");
+      makePdfDropTarget(card, folder.id);
       listEl.appendChild(card);
     });
     files.forEach((file) => {
@@ -1192,11 +1278,14 @@
         <div class="pdf-item-actions">
           <button type="button" class="btn btn-outline btn-sm" data-role="read">内容を読む</button>
           <button type="button" class="btn btn-outline btn-sm" data-role="open">開く</button>
+          <button type="button" class="btn btn-outline btn-sm" data-role="rename-file">名前を変更</button>
         </div>
       `;
       card.querySelector('[data-role="delete-file"]').addEventListener("click", (e) => { e.stopPropagation(); deletePdfFile(file); });
       card.querySelector('[data-role="read"]').addEventListener("click", (e) => { e.stopPropagation(); openPdfTextViewer(file); });
       card.querySelector('[data-role="open"]').addEventListener("click", (e) => { e.stopPropagation(); openPdfRaw(file); });
+      card.querySelector('[data-role="rename-file"]').addEventListener("click", (e) => { e.stopPropagation(); renamePdfFile(file); });
+      makePdfDraggable(card, file.id, "file");
       listEl.appendChild(card);
     });
   }
