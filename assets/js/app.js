@@ -3,7 +3,7 @@
 
   /* ============================== Storage ============================== */
 
-  const STORAGE_KEYS = { subjects: "sn_subjects", todos: "sn_todos", videos: "sn_videos" };
+  const STORAGE_KEYS = { subjects: "sn_subjects", todos: "sn_todos", videos: "sn_videos", pdfFolders: "sn_pdf_folders", pdfFiles: "sn_pdf_files" };
   const SUBJECT_COLORS = ["#3f5744", "#b5602f", "#a9821c", "#3f6b4a", "#6b5b95", "#2f6f76"];
 
   const uid = () => (crypto.randomUUID ? crypto.randomUUID() : "id-" + Date.now() + "-" + Math.random().toString(16).slice(2));
@@ -25,10 +25,14 @@
   let subjects = Store.load(STORAGE_KEYS.subjects, []);
   let todos = Store.load(STORAGE_KEYS.todos, []);
   let videos = Store.load(STORAGE_KEYS.videos, null);
+  let pdfFolders = Store.load(STORAGE_KEYS.pdfFolders, []);
+  let pdfFiles = Store.load(STORAGE_KEYS.pdfFiles, []);
 
   const saveSubjects = () => Store.save(STORAGE_KEYS.subjects, subjects);
   const saveTodos = () => Store.save(STORAGE_KEYS.todos, todos);
   const saveVideos = () => Store.save(STORAGE_KEYS.videos, videos);
+  const savePdfFolders = () => Store.save(STORAGE_KEYS.pdfFolders, pdfFolders);
+  const savePdfFiles = () => Store.save(STORAGE_KEYS.pdfFiles, pdfFiles);
 
   /* ============================== Tabs ============================== */
 
@@ -1011,10 +1015,232 @@
     renderVideoGrid();
   });
 
+  /* ============================== PDF Folders ============================== */
+
+  const PDF_DB_NAME = "sn_pdf_store";
+  const PDF_DB_STORE = "files";
+  let pdfDbPromise = null;
+
+  function openPdfDb() {
+    if (!pdfDbPromise) {
+      pdfDbPromise = new Promise((resolve, reject) => {
+        const req = indexedDB.open(PDF_DB_NAME, 1);
+        req.onupgradeneeded = () => {
+          if (!req.result.objectStoreNames.contains(PDF_DB_STORE)) req.result.createObjectStore(PDF_DB_STORE, { keyPath: "id" });
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    return pdfDbPromise;
+  }
+
+  async function savePdfBlob(id, blob) {
+    const db = await openPdfDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(PDF_DB_STORE, "readwrite");
+      tx.objectStore(PDF_DB_STORE).put({ id, blob });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function loadPdfBlob(id) {
+    const db = await openPdfDb();
+    return new Promise((resolve, reject) => {
+      const req = db.transaction(PDF_DB_STORE, "readonly").objectStore(PDF_DB_STORE).get(id);
+      req.onsuccess = () => resolve(req.result ? req.result.blob : null);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function deletePdfBlob(id) {
+    const db = await openPdfDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(PDF_DB_STORE, "readwrite");
+      tx.objectStore(PDF_DB_STORE).delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  function formatBytes(bytes) {
+    if (!bytes) return "0 KB";
+    const kb = bytes / 1024;
+    return kb < 1024 ? `${Math.max(1, Math.round(kb))} KB` : `${(kb / 1024).toFixed(1)} MB`;
+  }
+
+  let currentPdfFolderId = null;
+
+  function collectDescendantFolderIds(folderId) {
+    const result = [folderId];
+    pdfFolders.filter((f) => f.parentId === folderId).forEach((child) => result.push(...collectDescendantFolderIds(child.id)));
+    return result;
+  }
+
+  async function deletePdfFolder(folder) {
+    if (!confirm(`「${folder.name}」を削除しますか？中のフォルダとPDFもすべて削除されます。`)) return;
+    const idsToRemove = collectDescendantFolderIds(folder.id);
+    const filesToRemove = pdfFiles.filter((f) => idsToRemove.includes(f.folderId));
+    await Promise.all(filesToRemove.map((f) => deletePdfBlob(f.id)));
+    pdfFiles = pdfFiles.filter((f) => !idsToRemove.includes(f.folderId));
+    pdfFolders = pdfFolders.filter((f) => !idsToRemove.includes(f.id));
+    savePdfFolders();
+    savePdfFiles();
+    renderPdfView();
+  }
+
+  async function deletePdfFile(file) {
+    if (!confirm(`「${file.name}」を削除しますか？`)) return;
+    await deletePdfBlob(file.id);
+    pdfFiles = pdfFiles.filter((f) => f.id !== file.id);
+    savePdfFiles();
+    renderPdfView();
+  }
+
+  const pdfViewModal = document.getElementById("pdf-view-modal");
+  document.getElementById("btn-close-pdf-view").addEventListener("click", () => pdfViewModal.classList.add("hidden"));
+  pdfViewModal.addEventListener("click", (e) => { if (e.target === pdfViewModal) pdfViewModal.classList.add("hidden"); });
+
+  async function openPdfTextViewer(file) {
+    document.getElementById("pdf-view-title").textContent = file.name;
+    const bodyEl = document.getElementById("pdf-view-body");
+    bodyEl.textContent = "読み込み中…";
+    pdfViewModal.classList.remove("hidden");
+    try {
+      const blob = await loadPdfBlob(file.id);
+      if (!blob) { bodyEl.textContent = "PDFデータが見つかりませんでした。"; return; }
+      const text = await extractTextFromPdf(blob);
+      bodyEl.textContent = text.trim() || "(このPDFからはテキストを抽出できませんでした)";
+    } catch (err) {
+      console.error(err);
+      bodyEl.textContent = "PDFの読み込みに失敗しました。文字を選択できないスキャン画像のみのPDFには対応していません。また、この機能はインターネット接続が必要です。";
+    }
+  }
+
+  async function openPdfRaw(file) {
+    try {
+      const blob = await loadPdfBlob(file.id);
+      if (!blob) { alert("PDFデータが見つかりませんでした。"); return; }
+      window.open(URL.createObjectURL(blob), "_blank");
+    } catch (err) {
+      console.error(err);
+      alert("PDFを開けませんでした。");
+    }
+  }
+
+  function renderPdfBreadcrumb() {
+    const path = [];
+    let cur = currentPdfFolderId;
+    while (cur) {
+      const folder = pdfFolders.find((f) => f.id === cur);
+      if (!folder) break;
+      path.unshift(folder);
+      cur = folder.parentId;
+    }
+    const crumbEl = document.getElementById("pdf-breadcrumb");
+    const rootBtn = `<button type="button" data-id="" ${currentPdfFolderId === null ? "disabled" : ""}>📁 PDFフォルダ</button>`;
+    const rest = path.map((f, idx) => {
+      const isLast = idx === path.length - 1;
+      return `<span class="crumb-sep">/</span><button type="button" data-id="${f.id}" ${isLast ? "disabled" : ""}>${escapeHtml(f.name)}</button>`;
+    }).join("");
+    crumbEl.innerHTML = rootBtn + rest;
+    crumbEl.querySelectorAll("button:not([disabled])").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        currentPdfFolderId = btn.dataset.id || null;
+        renderPdfView();
+      });
+    });
+  }
+
+  function renderPdfView() {
+    renderPdfBreadcrumb();
+    const listEl = document.getElementById("pdf-item-list");
+    const folders = pdfFolders.filter((f) => f.parentId === currentPdfFolderId);
+    const files = pdfFiles.filter((f) => f.folderId === currentPdfFolderId);
+    listEl.innerHTML = "";
+    if (!folders.length && !files.length) {
+      listEl.innerHTML = '<p class="panel-sub">このフォルダは空です。フォルダを作るかPDFを追加してください。</p>';
+      return;
+    }
+    folders.forEach((folder) => {
+      const card = document.createElement("div");
+      card.className = "pdf-item";
+      const childCount = pdfFolders.filter((f) => f.parentId === folder.id).length + pdfFiles.filter((f) => f.folderId === folder.id).length;
+      card.innerHTML = `
+        <button class="pdf-item-delete" data-role="delete-folder" aria-label="削除">✕</button>
+        <span class="pdf-item-icon">📁</span>
+        <div class="pdf-item-name">${escapeHtml(folder.name)}</div>
+        <div class="pdf-item-meta">${childCount}件</div>
+      `;
+      card.addEventListener("click", (e) => {
+        if (e.target.closest('[data-role="delete-folder"]')) return;
+        currentPdfFolderId = folder.id;
+        renderPdfView();
+      });
+      card.querySelector('[data-role="delete-folder"]').addEventListener("click", (e) => { e.stopPropagation(); deletePdfFolder(folder); });
+      listEl.appendChild(card);
+    });
+    files.forEach((file) => {
+      const card = document.createElement("div");
+      card.className = "pdf-item";
+      card.innerHTML = `
+        <button class="pdf-item-delete" data-role="delete-file" aria-label="削除">✕</button>
+        <span class="pdf-item-icon">📄</span>
+        <div class="pdf-item-name">${escapeHtml(file.name)}</div>
+        <div class="pdf-item-meta">${formatBytes(file.size)}</div>
+        <div class="pdf-item-actions">
+          <button type="button" class="btn btn-outline btn-sm" data-role="read">内容を読む</button>
+          <button type="button" class="btn btn-outline btn-sm" data-role="open">開く</button>
+        </div>
+      `;
+      card.querySelector('[data-role="delete-file"]').addEventListener("click", (e) => { e.stopPropagation(); deletePdfFile(file); });
+      card.querySelector('[data-role="read"]').addEventListener("click", (e) => { e.stopPropagation(); openPdfTextViewer(file); });
+      card.querySelector('[data-role="open"]').addEventListener("click", (e) => { e.stopPropagation(); openPdfRaw(file); });
+      listEl.appendChild(card);
+    });
+  }
+
+  document.getElementById("btn-pdf-new-folder").addEventListener("click", () => {
+    const name = prompt("新しいフォルダ名を入力してください");
+    if (!name || !name.trim()) return;
+    pdfFolders.push({ id: uid(), name: name.trim(), parentId: currentPdfFolderId, createdAt: Date.now() });
+    savePdfFolders();
+    renderPdfView();
+  });
+
+  const pdfUploadInput = document.getElementById("pdf-upload-input");
+  document.getElementById("btn-pdf-upload").addEventListener("click", () => pdfUploadInput.click());
+  pdfUploadInput.addEventListener("change", async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const btn = document.getElementById("btn-pdf-upload");
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "アップロード中…";
+    try {
+      for (const file of files) {
+        const id = uid();
+        await savePdfBlob(id, file);
+        pdfFiles.push({ id, folderId: currentPdfFolderId, name: file.name, size: file.size, addedAt: Date.now() });
+      }
+      savePdfFiles();
+      renderPdfView();
+    } catch (err) {
+      console.error(err);
+      alert("PDFの保存に失敗しました。");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+      e.target.value = "";
+    }
+  });
+
   /* ============================== Init ============================== */
 
   renderSubjectList();
   renderTodos();
   renderCalendarGrid();
   renderQuizSetup();
+  renderPdfView();
 })();

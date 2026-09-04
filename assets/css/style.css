@@ -307,6 +307,31 @@ body {
   .video-grid { grid-template-columns: 1fr; }
 }
 
+/* PDF folders */
+.pdf-breadcrumb { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin-bottom: 16px; font-size: 0.9rem; }
+.pdf-breadcrumb button { background: none; border: none; color: var(--primary-strong); font-weight: 600; cursor: pointer; padding: 4px 2px; font-size: 0.9rem; }
+.pdf-breadcrumb button:hover { text-decoration: underline; }
+.pdf-breadcrumb button[disabled] { color: var(--text); cursor: default; text-decoration: none; font-weight: 700; }
+.pdf-breadcrumb .crumb-sep { color: var(--text-muted); }
+
+.pdf-item-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.pdf-item {
+  position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 14px; cursor: pointer; box-shadow: var(--shadow); text-align: left;
+}
+.pdf-item:hover { border-color: var(--primary); }
+.pdf-item .pdf-item-icon { font-size: 1.6rem; display: block; margin-bottom: 8px; }
+.pdf-item .pdf-item-name { font-weight: 600; font-size: 0.9rem; word-break: break-word; }
+.pdf-item .pdf-item-meta { font-size: 0.76rem; color: var(--text-muted); margin-top: 4px; }
+.pdf-item-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.pdf-item-actions button { font-size: 0.78rem; padding: 4px 10px; }
+.pdf-item-delete {
+  position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--surface-alt); color: var(--danger); border: none; font-size: 0.75rem; cursor: pointer;
+}
+
+.pdf-view-body { white-space: pre-wrap; font-size: 0.88rem; max-height: 60vh; overflow-y: auto; color: var(--text); }
+
 @media (max-width: 600px) {
   .app-header { flex-direction: column; align-items: flex-start; }
   .todo-form input { flex: 1 1 100%; }

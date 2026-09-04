@@ -22,6 +22,7 @@
       <button class="tab-btn" data-tab="calendar" role="tab" aria-selected="false">カレンダー</button>
       <button class="tab-btn" data-tab="quiz" role="tab" aria-selected="false">クイズ</button>
       <button class="tab-btn" data-tab="videos" role="tab" aria-selected="false">プレイリスト</button>
+      <button class="tab-btn" data-tab="pdfs" role="tab" aria-selected="false">PDFフォルダ</button>
     </nav>
     <button id="btn-toggle-yt" class="btn btn-outline btn-sm yt-toggle-btn" aria-label="YouTube Playerを開閉">📺 動画</button>
   </header>
@@ -192,6 +193,25 @@
       <div id="video-grid" class="video-grid"></div>
     </section>
 
+    <!-- ===================== PDFフォルダタブ ===================== -->
+    <section id="tab-pdfs" class="tab-panel">
+      <div class="panel-head">
+        <div>
+          <h1>PDFフォルダ</h1>
+          <p class="panel-sub">フォルダを作成してPDFを整理できます。PDFはブラウザ内（IndexedDB）に保存され、後から開いたり内容を読んだりできます。</p>
+        </div>
+        <div class="panel-actions">
+          <button id="btn-pdf-new-folder" class="btn btn-outline">新しいフォルダ</button>
+          <button id="btn-pdf-upload" class="btn btn-primary">PDFを追加</button>
+          <input id="pdf-upload-input" type="file" accept=".pdf,application/pdf" multiple class="hidden">
+        </div>
+      </div>
+
+      <nav id="pdf-breadcrumb" class="pdf-breadcrumb"></nav>
+
+      <div id="pdf-item-list" class="pdf-item-list"></div>
+    </section>
+
   </main>
 </div>
 
@@ -258,6 +278,17 @@
     <iframe id="yt-iframe" class="hidden" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="YouTube Player"></iframe>
   </div>
   <div id="yt-resize-handle" class="yt-resize-handle" title="ドラッグしてサイズ変更（ダブルクリックで元のサイズに戻す）" aria-hidden="true"></div>
+</div>
+
+<!-- ===================== PDF内容ビューアーモーダル ===================== -->
+<div id="pdf-view-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="pdf-view-title">PDFの内容</h2>
+      <button id="btn-close-pdf-view" class="btn-icon" aria-label="閉じる">✕</button>
+    </div>
+    <div id="pdf-view-body" class="pdf-view-body"></div>
+  </div>
 </div>
 
 <script src="assets/js/app.js"></script>
