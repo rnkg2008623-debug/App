@@ -126,5 +126,6 @@ enum AppThemeMode: String, Codable, CaseIterable, Identifiable, Hashable {
 struct ThemeSettings: Codable, Hashable {
     var mode: AppThemeMode = .dark
     var backgroundColorHex: String = "0C1720"
-    var backgroundImagePath: String? = nil
+    /// Path to a static image, animated GIF, or video file used as the home screen background.
+    var backgroundMediaPath: String? = nil
 }

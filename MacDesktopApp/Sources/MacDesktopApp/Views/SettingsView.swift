@@ -34,30 +34,34 @@ struct SettingsView: View {
                         set: { newColor in
                             var theme = store.theme
                             theme.backgroundColorHex = newColor.toHex
-                            theme.backgroundImagePath = nil
+                            theme.backgroundMediaPath = nil
                             store.updateTheme(theme)
                         }
                     ))
                     .foregroundStyle(Theme.textPrimary)
 
+                    Text("画像・GIF・動画（mp4/mov/m4v）を背景に設定できます。動画・GIFは自動でループ再生されます。")
+                        .font(.caption)
+                        .foregroundStyle(Theme.textSecondary)
+
                     HStack {
-                        Button("背景画像を選択…") {
+                        Button("背景メディアを選択…") {
                             let panel = NSOpenPanel()
-                            panel.allowedContentTypes = [.image]
+                            panel.allowedContentTypes = [.image, .movie]
                             panel.allowsMultipleSelection = false
                             panel.canChooseDirectories = false
                             if panel.runModal() == .OK, let url = panel.url {
                                 var theme = store.theme
-                                theme.backgroundImagePath = url.path
+                                theme.backgroundMediaPath = url.path
                                 store.updateTheme(theme)
                             }
                         }
                         .buttonStyle(GlowButtonStyle())
 
-                        if store.theme.backgroundImagePath != nil {
-                            Button("画像をやめて色に戻す") {
+                        if store.theme.backgroundMediaPath != nil {
+                            Button("メディアをやめて色に戻す") {
                                 var theme = store.theme
-                                theme.backgroundImagePath = nil
+                                theme.backgroundMediaPath = nil
                                 store.updateTheme(theme)
                             }
                             .buttonStyle(GlowButtonStyle())

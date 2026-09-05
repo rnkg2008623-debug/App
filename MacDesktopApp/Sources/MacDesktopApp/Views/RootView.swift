@@ -122,13 +122,24 @@ struct RootView: View {
     /// The video player stays mounted at all times (instead of being torn down and
     /// recreated by a plain `switch`), so its WKWebView keeps playing audio/video
     /// when the user browses other tabs. Every other tab is mounted lazily as before.
+    ///
+    /// Hiding it with just `.opacity(0)` + `.allowsHitTesting(false)` is not enough:
+    /// the embedded WKWebView is a native AppKit view, and clicks on it could still
+    /// reach its content underneath whatever tab is actually showing, changing the
+    /// selected video. Collapsing it to a zero-size frame when inactive removes it
+    /// from the clickable area entirely while keeping it alive (and playing) offscreen.
     @ViewBuilder
     private var detailView: some View {
         ZStack(alignment: .topLeading) {
             VideoPlayerView()
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .frame(
+                    maxWidth: selection == .video ? .infinity : 0,
+                    maxHeight: selection == .video ? .infinity : 0,
+                    alignment: .topLeading
+                )
                 .opacity(selection == .video ? 1 : 0)
                 .allowsHitTesting(selection == .video)
+                .clipped()
 
             if selection != .video {
                 Group {

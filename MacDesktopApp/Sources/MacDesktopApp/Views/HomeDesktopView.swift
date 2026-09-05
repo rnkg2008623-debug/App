@@ -43,11 +43,21 @@ struct HomeDesktopView: View {
     @ViewBuilder
     private var backgroundView: some View {
         ZStack {
-            if let path = store.theme.backgroundImagePath, let nsImage = NSImage(contentsOfFile: path) {
-                Image(nsImage: nsImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } else {
+            let path = store.theme.backgroundMediaPath
+            switch BackgroundMediaKind.kind(forPath: path) {
+            case .video:
+                LoopingVideoBackground(url: URL(fileURLWithPath: path!))
+            case .animatedGIF:
+                AnimatedImageView(path: path!)
+            case .image:
+                if let nsImage = NSImage(contentsOfFile: path!) {
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } else {
+                    Color(hex: store.theme.backgroundColorHex)
+                }
+            case .none:
                 Color(hex: store.theme.backgroundColorHex)
             }
 
