@@ -75,6 +75,5 @@ struct SNSLinksView: View {
             }
         }
         .padding()
-        .navigationTitle("SNSアカウント")
     }
 }

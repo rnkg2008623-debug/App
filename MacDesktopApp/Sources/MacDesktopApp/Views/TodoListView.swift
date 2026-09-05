@@ -94,7 +94,6 @@ struct TodoListView: View {
             }
         }
         .padding()
-        .navigationTitle("Todo")
         .sheet(item: $editingTodo) { todo in
             TodoEditor(todo: todo) { updated in
                 store.updateTodo(updated)

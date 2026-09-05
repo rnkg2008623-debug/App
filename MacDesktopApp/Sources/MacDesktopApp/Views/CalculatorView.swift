@@ -80,7 +80,6 @@ struct CalculatorView: View {
                 .frame(minWidth: 240)
             }
         }
-        .navigationTitle("電卓")
     }
 
     private func isOperatorKey(_ key: String) -> Bool {

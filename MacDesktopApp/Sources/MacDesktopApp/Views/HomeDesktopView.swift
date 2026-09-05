@@ -38,7 +38,6 @@ struct HomeDesktopView: View {
                 handleDrop(providers: providers, location: location)
             }
         }
-        .navigationTitle("ホーム")
     }
 
     @ViewBuilder

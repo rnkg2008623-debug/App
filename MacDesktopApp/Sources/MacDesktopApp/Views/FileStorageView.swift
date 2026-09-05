@@ -66,7 +66,6 @@ struct FileStorageView: View {
                 }
             }
         }
-        .navigationTitle("ファイル")
         .fileImporter(isPresented: $showImporter, allowedContentTypes: [.item], allowsMultipleSelection: true) { result in
             if case .success(let urls) = result {
                 for url in urls {

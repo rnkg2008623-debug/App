@@ -87,7 +87,6 @@ struct NotesView: View {
                 .themedBackground()
             }
         }
-        .navigationTitle("ノート")
     }
 
     private func categoryRow(_ category: String) -> some View {

@@ -26,6 +26,20 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
         case .settings: return "gearshape"
         }
     }
+
+    var title: String {
+        switch self {
+        case .home: return "ホーム"
+        case .video: return "動画プレイヤー"
+        case .files: return "ファイル"
+        case .timetable: return "タイムテーブル"
+        case .sns: return "SNSアカウント"
+        case .calculator: return "電卓"
+        case .todo: return "Todo"
+        case .notes: return "ノート"
+        case .settings: return "設定"
+        }
+    }
 }
 
 struct RootView: View {
@@ -38,6 +52,7 @@ struct RootView: View {
         } detail: {
             detailView
                 .themedBackground()
+                .navigationTitle(selection.title)
         }
         .tint(Theme.accent)
     }
@@ -104,18 +119,29 @@ struct RootView: View {
         .buttonStyle(.plain)
     }
 
+    /// The video player stays mounted at all times (instead of being torn down and
+    /// recreated by a plain `switch`), so its WKWebView keeps playing audio/video
+    /// when the user browses other tabs. Every other tab is mounted lazily as before.
     @ViewBuilder
     private var detailView: some View {
-        switch selection {
-        case .home: HomeDesktopView()
-        case .video: VideoPlayerView()
-        case .files: FileStorageView()
-        case .timetable: TimetableView()
-        case .sns: SNSLinksView()
-        case .calculator: CalculatorView()
-        case .todo: TodoListView()
-        case .notes: NotesView()
-        case .settings: SettingsView()
+        ZStack {
+            VideoPlayerView()
+                .opacity(selection == .video ? 1 : 0)
+                .allowsHitTesting(selection == .video)
+
+            if selection != .video {
+                switch selection {
+                case .home: HomeDesktopView()
+                case .files: FileStorageView()
+                case .timetable: TimetableView()
+                case .sns: SNSLinksView()
+                case .calculator: CalculatorView()
+                case .todo: TodoListView()
+                case .notes: NotesView()
+                case .settings: SettingsView()
+                case .video: EmptyView()
+                }
+            }
         }
     }
 }

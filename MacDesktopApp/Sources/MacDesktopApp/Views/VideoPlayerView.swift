@@ -24,7 +24,6 @@ struct VideoPlayerView: View {
             playerPane
             folderPane
         }
-        .navigationTitle("動画プレイヤー")
         .onChange(of: selectedFolderFilter) { newFolderID = $0 }
         .alert("新しいフォルダ", isPresented: $showNewFolderAlert) {
             TextField("フォルダ名", text: $newFolderName)

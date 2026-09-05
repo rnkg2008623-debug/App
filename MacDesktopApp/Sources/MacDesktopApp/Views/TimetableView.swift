@@ -80,7 +80,6 @@ struct TimetableView: View {
                 .padding(.horizontal)
             }
         }
-        .navigationTitle("タイムテーブル")
         .sheet(item: $editingEvent) { event in
             TimetableEventEditor(
                 event: event,
