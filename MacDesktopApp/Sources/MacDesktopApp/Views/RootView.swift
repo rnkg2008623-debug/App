@@ -124,23 +124,27 @@ struct RootView: View {
     /// when the user browses other tabs. Every other tab is mounted lazily as before.
     @ViewBuilder
     private var detailView: some View {
-        ZStack {
+        ZStack(alignment: .topLeading) {
             VideoPlayerView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .opacity(selection == .video ? 1 : 0)
                 .allowsHitTesting(selection == .video)
 
             if selection != .video {
-                switch selection {
-                case .home: HomeDesktopView()
-                case .files: FileStorageView()
-                case .timetable: TimetableView()
-                case .sns: SNSLinksView()
-                case .calculator: CalculatorView()
-                case .todo: TodoListView()
-                case .notes: NotesView()
-                case .settings: SettingsView()
-                case .video: EmptyView()
+                Group {
+                    switch selection {
+                    case .home: HomeDesktopView()
+                    case .files: FileStorageView()
+                    case .timetable: TimetableView()
+                    case .sns: SNSLinksView()
+                    case .calculator: CalculatorView()
+                    case .todo: TodoListView()
+                    case .notes: NotesView()
+                    case .settings: SettingsView()
+                    case .video: EmptyView()
+                    }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
         }
     }

@@ -78,8 +78,11 @@ struct TimetableView: View {
                     }
                 }
                 .padding(.horizontal)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
+            .frame(maxHeight: .infinity, alignment: .top)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .sheet(item: $editingEvent) { event in
             TimetableEventEditor(
                 event: event,
