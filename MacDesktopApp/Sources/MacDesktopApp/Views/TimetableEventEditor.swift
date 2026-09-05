@@ -35,9 +35,9 @@ struct TimetableEventEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(isNew ? "予定を追加" : "予定を編集").font(.title2).bold()
+            SectionHeading(title: isNew ? "予定を追加" : "予定を編集")
 
-            TextField("タイトル", text: $event.title).textFieldStyle(.roundedBorder)
+            TextField("タイトル", text: $event.title).themedField()
 
             Picker("週", selection: $event.weekType) {
                 ForEach(WeekType.allCases) { week in
@@ -57,19 +57,19 @@ struct TimetableEventEditor: View {
             }
 
             HStack {
-                Text("色")
+                Text("色").foregroundStyle(Theme.textSecondary)
                 ForEach(Self.colorOptions, id: \.self) { hex in
                     Circle()
                         .fill(Color(hex: hex))
                         .frame(width: 22, height: 22)
                         .overlay(
-                            Circle().stroke(Color.primary, lineWidth: event.colorHex == hex ? 2 : 0)
+                            Circle().stroke(Theme.accentGold, lineWidth: event.colorHex == hex ? 2 : 0)
                         )
                         .onTapGesture { event.colorHex = hex }
                 }
             }
 
-            TextField("メモ", text: $event.note).textFieldStyle(.roundedBorder)
+            TextField("メモ", text: $event.note).themedField()
 
             HStack {
                 if !isNew {
@@ -77,20 +77,24 @@ struct TimetableEventEditor: View {
                         onDelete(event)
                         dismiss()
                     }
+                    .buttonStyle(GlowButtonStyle(destructive: true))
                 }
                 Spacer()
                 Button("キャンセル") { dismiss() }
+                    .buttonStyle(GlowButtonStyle())
                 Button("保存") {
                     event.startMinutes = Self.minutesFrom(startDate)
                     event.endMinutes = Self.minutesFrom(endDate)
                     onSave(event)
                     dismiss()
                 }
+                .buttonStyle(GlowButtonStyle(prominent: true))
                 .keyboardShortcut(.defaultAction)
                 .disabled(event.title.trimmingCharacters(in: .whitespaces).isEmpty)
             }
         }
         .padding(24)
         .frame(width: 420)
+        .background(Theme.backgroundGradient)
     }
 }

@@ -16,20 +16,24 @@ struct TimetableView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Picker("週", selection: $store.selectedWeek) {
-                    Text(WeekType.weekA.rawValue).tag(WeekType.weekA)
-                    Text(WeekType.weekB.rawValue).tag(WeekType.weekB)
-                }
-                .pickerStyle(.segmented)
-                .frame(width: 200)
+                SectionHeading(title: "タイムテーブル")
 
                 Spacer()
+
+                HStack(spacing: 0) {
+                    weekToggle(.weekA)
+                    weekToggle(.weekB)
+                }
+                .padding(3)
+                .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).stroke(Theme.panelBorder, lineWidth: 1))
 
                 Button {
                     editingEvent = TimetableEvent(title: "", weekType: store.selectedWeek)
                 } label: {
                     Label("予定を追加", systemImage: "plus")
                 }
+                .buttonStyle(GlowButtonStyle(prominent: true))
             }
             .padding()
 
@@ -37,11 +41,12 @@ struct TimetableView: View {
                 Color.clear.frame(width: 50)
                 ForEach(Weekday.allCases) { day in
                     Text(day.shortLabel)
-                        .font(.headline)
+                        .font(.system(size: 13, weight: .bold, design: .serif))
+                        .foregroundStyle(Theme.accentGold)
                         .frame(width: dayColumnWidth)
                 }
             }
-            .padding(.bottom, 4)
+            .padding(.bottom, 6)
 
             ScrollView(.vertical) {
                 HStack(alignment: .top, spacing: 0) {
@@ -49,7 +54,7 @@ struct TimetableView: View {
                         ForEach(dayStartHour...dayEndHour, id: \.self) { hour in
                             Text(String(format: "%02d:00", hour))
                                 .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Theme.textSecondary)
                                 .frame(width: 50, height: hourHeight, alignment: .top)
                         }
                     }
@@ -58,7 +63,10 @@ struct TimetableView: View {
                         ZStack(alignment: .top) {
                             VStack(spacing: 0) {
                                 ForEach(dayStartHour...dayEndHour, id: \.self) { _ in
-                                    Divider().frame(height: hourHeight)
+                                    Rectangle()
+                                        .fill(Theme.panelBorder)
+                                        .frame(height: 1)
+                                        .frame(height: hourHeight, alignment: .top)
                                 }
                             }
                             ForEach(eventsFor(day)) { event in
@@ -66,9 +74,10 @@ struct TimetableView: View {
                             }
                         }
                         .frame(width: dayColumnWidth)
-                        .overlay(Rectangle().stroke(Color.gray.opacity(0.2)))
+                        .overlay(Rectangle().stroke(Theme.panelBorder, lineWidth: 1))
                     }
                 }
+                .padding(.horizontal)
             }
         }
         .navigationTitle("タイムテーブル")
@@ -87,6 +96,24 @@ struct TimetableView: View {
                 }
             )
         }
+    }
+
+    private func weekToggle(_ week: WeekType) -> some View {
+        let isSelected = store.selectedWeek == week
+        return Button {
+            store.selectedWeek = week
+        } label: {
+            Text(week.rawValue)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(isSelected ? Color.black : Theme.textSecondary)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(isSelected ? Theme.accent : Color.clear)
+                )
+        }
+        .buttonStyle(.plain)
     }
 
     private func eventsFor(_ day: Weekday) -> [TimetableEvent] {
@@ -108,6 +135,7 @@ struct TimetableView: View {
         .background(Color(hex: event.colorHex).opacity(0.85))
         .foregroundStyle(.white)
         .clipShape(RoundedRectangle(cornerRadius: 6))
+        .shadow(color: Color(hex: event.colorHex).opacity(0.4), radius: 4)
         .offset(x: 4, y: top)
         .onTapGesture { editingEvent = event }
     }

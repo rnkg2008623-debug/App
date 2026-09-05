@@ -17,11 +17,13 @@ struct HomeDesktopView: View {
                 }
 
                 if store.files.isEmpty {
-                    VStack(spacing: 12) {
+                    VStack(spacing: 14) {
                         Image(systemName: "arrow.down.doc")
-                            .font(.system(size: 40))
+                            .font(.system(size: 36))
+                            .foregroundStyle(Theme.accentGold)
                         Text("Finderからファイルをここにドラッグ＆ドロップして置けます")
-                            .font(.title3)
+                            .font(.system(size: 15, weight: .medium, design: .serif))
+                            .tracking(0.5)
                     }
                     .foregroundStyle(.white.opacity(0.85))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -29,7 +31,7 @@ struct HomeDesktopView: View {
             }
             .overlay {
                 if isTargeted {
-                    Rectangle().stroke(Color.accentColor, lineWidth: 3)
+                    Rectangle().stroke(Theme.accent, lineWidth: 3)
                 }
             }
             .onDrop(of: [.fileURL], isTargeted: $isTargeted) { providers, location in
@@ -41,15 +43,23 @@ struct HomeDesktopView: View {
 
     @ViewBuilder
     private var backgroundView: some View {
-        if let path = store.theme.backgroundImagePath, let nsImage = NSImage(contentsOfFile: path) {
-            Image(nsImage: nsImage)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-        } else {
-            Color(hex: store.theme.backgroundColorHex)
+        ZStack {
+            if let path = store.theme.backgroundImagePath, let nsImage = NSImage(contentsOfFile: path) {
+                Image(nsImage: nsImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else {
+                Color(hex: store.theme.backgroundColorHex)
+            }
+
+            LinearGradient(
+                colors: [Color.black.opacity(0.5), .clear, .clear, Color.black.opacity(0.6)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipped()
     }
 
     private func handleDrop(providers: [NSItemProvider], location: CGPoint) -> Bool {
@@ -82,12 +92,12 @@ struct DesktopIconView: View {
                 .resizable()
                 .frame(width: 48, height: 48)
             Text(file.displayName)
-                .font(.caption)
+                .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.white)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
                 .frame(width: 84)
-                .shadow(radius: 2)
+                .shadow(color: .black.opacity(0.8), radius: 3)
         }
         .padding(6)
         .offset(dragOffset)

@@ -25,27 +25,32 @@ struct NotesView: View {
 
     var body: some View {
         HSplitView {
-            VStack(alignment: .leading, spacing: 0) {
-                Text("カテゴリー").font(.headline).padding([.horizontal, .top])
-                List(categories, id: \.self, selection: $selectedCategory) { category in
-                    Text(category).tag(category)
+            VStack(alignment: .leading, spacing: 10) {
+                SectionHeading(title: "カテゴリー")
+                ScrollView {
+                    VStack(spacing: 4) {
+                        ForEach(categories, id: \.self) { category in
+                            categoryRow(category)
+                        }
+                    }
                 }
                 HStack {
-                    TextField("新しいカテゴリー", text: $newCategoryName).textFieldStyle(.roundedBorder)
+                    TextField("新しいカテゴリー", text: $newCategoryName).themedField()
                     Button("追加") {
                         let trimmed = newCategoryName.trimmingCharacters(in: .whitespaces)
                         guard !trimmed.isEmpty else { return }
                         selectedCategory = trimmed
                         newCategoryName = ""
                     }
+                    .buttonStyle(GlowButtonStyle())
                 }
-                .padding(8)
             }
-            .frame(minWidth: 180, idealWidth: 200)
+            .padding()
+            .frame(minWidth: 200, idealWidth: 220)
 
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text(selectedCategory ?? "カテゴリーを選択").font(.headline)
+                    SectionHeading(title: selectedCategory ?? "カテゴリーを選択")
                     Spacer()
                     Button {
                         guard let selectedCategory else { return }
@@ -55,35 +60,77 @@ struct NotesView: View {
                     } label: {
                         Label("新規ノート", systemImage: "plus")
                     }
+                    .buttonStyle(GlowButtonStyle(prominent: true))
                     .disabled(selectedCategory == nil)
                 }
-                .padding()
 
-                List(notesInCategory, selection: $selectedNoteID) { note in
-                    VStack(alignment: .leading) {
-                        Text(note.title).font(.subheadline)
-                        Text(note.updatedAt.formatted(date: .abbreviated, time: .shortened))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                ScrollView {
+                    VStack(spacing: 4) {
+                        ForEach(notesInCategory) { note in
+                            noteRow(note)
+                        }
                     }
-                    .tag(note.id)
                 }
             }
-            .frame(minWidth: 220, idealWidth: 240)
+            .padding()
+            .frame(minWidth: 240, idealWidth: 260)
 
             if let selectedNote {
                 NoteEditorView(note: selectedNote)
                     .id(selectedNote.id)
             } else {
                 VStack(spacing: 10) {
-                    Image(systemName: "note.text").font(.system(size: 44))
-                    Text("ノートを選択するか、新規作成してください")
+                    Image(systemName: "note.text").font(.system(size: 44)).foregroundStyle(Theme.accentGold)
+                    Text("ノートを選択するか、新規作成してください").foregroundStyle(Theme.textSecondary)
                 }
-                .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .themedBackground()
             }
         }
         .navigationTitle("ノート")
+    }
+
+    private func categoryRow(_ category: String) -> some View {
+        let isSelected = selectedCategory == category
+        return Button {
+            selectedCategory = category
+        } label: {
+            Text(category)
+                .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                .foregroundStyle(isSelected ? Theme.accent : Theme.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(isSelected ? Theme.accent.opacity(0.12) : Color.clear)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func noteRow(_ note: Note) -> some View {
+        let isSelected = selectedNoteID == note.id
+        return Button {
+            selectedNoteID = note.id
+        } label: {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(note.title)
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                    .foregroundStyle(isSelected ? Theme.accent : Theme.textPrimary)
+                Text(note.updatedAt.formatted(date: .abbreviated, time: .shortened))
+                    .font(.caption2)
+                    .foregroundStyle(Theme.textSecondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(isSelected ? Theme.accent.opacity(0.12) : Color.clear)
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -99,8 +146,9 @@ struct NoteEditorView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 TextField("タイトル", text: $note.title)
-                    .font(.title2)
+                    .font(.themeTitle(20))
                     .textFieldStyle(.plain)
+                    .foregroundStyle(Theme.textPrimary)
                     .onChange(of: note.title) { _ in save() }
                 Spacer()
                 Button {
@@ -108,18 +156,24 @@ struct NoteEditorView: View {
                 } label: {
                     Label("PDFで保存", systemImage: "doc.richtext")
                 }
+                .buttonStyle(GlowButtonStyle())
                 Button(role: .destructive) {
                     store.removeNote(note.id)
                 } label: {
                     Image(systemName: "trash")
                 }
+                .buttonStyle(.plain)
+                .foregroundStyle(Theme.textSecondary)
             }
             TextEditor(text: $note.content)
                 .font(.body)
+                .foregroundStyle(Theme.textPrimary)
+                .scrollContentBackground(.hidden)
                 .onChange(of: note.content) { _ in save() }
-                .border(Color.gray.opacity(0.2))
+                .panelStyle(padding: 8)
         }
         .padding()
+        .themedBackground()
     }
 
     private func save() {

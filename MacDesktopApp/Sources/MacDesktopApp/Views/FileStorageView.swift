@@ -17,23 +17,25 @@ struct FileStorageView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                TextField("検索", text: $searchText)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(maxWidth: 260)
+                SectionHeading(title: "ファイル")
                 Spacer()
+                TextField("検索", text: $searchText)
+                    .themedField()
+                    .frame(maxWidth: 220)
                 Button {
                     showImporter = true
                 } label: {
-                    Label("ファイルを追加", systemImage: "plus")
+                    Label("追加", systemImage: "plus")
                 }
+                .buttonStyle(GlowButtonStyle(prominent: true))
             }
             .padding()
 
             if filtered.isEmpty {
                 VStack(spacing: 10) {
-                    Image(systemName: "tray").font(.system(size: 40)).foregroundStyle(.secondary)
-                    Text("ファイルがありません。「ファイルを追加」から取り込んでください。")
-                        .foregroundStyle(.secondary)
+                    Image(systemName: "tray").font(.system(size: 40)).foregroundStyle(Theme.accentGold)
+                    Text("ファイルがありません。「追加」から取り込んでください。")
+                        .foregroundStyle(Theme.textSecondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -46,12 +48,12 @@ struct FileStorageView: View {
                                     .frame(width: 56, height: 56)
                                 Text(file.displayName)
                                     .font(.caption)
+                                    .foregroundStyle(Theme.textPrimary)
                                     .lineLimit(2)
                                     .multilineTextAlignment(.center)
                             }
-                            .padding(10)
                             .frame(width: 130)
-                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                            .panelStyle(padding: 10)
                             .onTapGesture(count: 2) { NSWorkspace.shared.open(file.url) }
                             .contextMenu {
                                 Button("開く") { NSWorkspace.shared.open(file.url) }

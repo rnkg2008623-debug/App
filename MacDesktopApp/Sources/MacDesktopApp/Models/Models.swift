@@ -118,7 +118,7 @@ enum AppThemeMode: String, Codable, CaseIterable, Identifiable, Hashable {
 }
 
 struct ThemeSettings: Codable, Hashable {
-    var mode: AppThemeMode = .system
-    var backgroundColorHex: String = "1E2733"
+    var mode: AppThemeMode = .dark
+    var backgroundColorHex: String = "0C1720"
     var backgroundImagePath: String? = nil
 }
