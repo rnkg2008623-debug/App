@@ -31,9 +31,10 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
 struct RootView: View {
     @EnvironmentObject var store: AppStore
     @State private var selection: AppTab = .home
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             sidebar
         } detail: {
             detailView
@@ -43,6 +44,19 @@ struct RootView: View {
         .tint(Theme.accent)
         .ignoresSafeArea()
         .toolbar(.hidden, for: .windowToolbar)
+        .background(resetSidebarShortcut)
+    }
+
+    /// Hiding the window toolbar also hides NavigationSplitView's built-in sidebar
+    /// toggle button, so dragging the sidebar closed (or too narrow) leaves no way
+    /// to reopen it with the mouse. This invisible button restores it via ⌘⌥0.
+    private var resetSidebarShortcut: some View {
+        Button("サイドバーをリセット") {
+            columnVisibility = .all
+        }
+        .keyboardShortcut("0", modifiers: [.command, .option])
+        .opacity(0)
+        .frame(width: 0, height: 0)
     }
 
     private var sidebar: some View {
