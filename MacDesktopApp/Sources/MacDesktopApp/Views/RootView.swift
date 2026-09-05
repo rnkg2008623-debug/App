@@ -42,6 +42,7 @@ struct RootView: View {
         }
         .tint(Theme.accent)
         .ignoresSafeArea()
+        .toolbar(.hidden, for: .windowToolbar)
     }
 
     private var sidebar: some View {
