@@ -3,6 +3,7 @@ import Foundation
 final class AppStore: ObservableObject {
     @Published var files: [StoredFile] = []
     @Published var videos: [VideoLink] = []
+    @Published var videoFolders: [VideoFolder] = []
     @Published var events: [TimetableEvent] = []
     @Published var snsLinks: [SNSLink] = []
     @Published var todos: [TodoItem] = []
@@ -15,6 +16,7 @@ final class AppStore: ObservableObject {
     private struct PersistedData: Codable {
         var files: [StoredFile] = []
         var videos: [VideoLink] = []
+        var videoFolders: [VideoFolder] = []
         var events: [TimetableEvent] = []
         var snsLinks: [SNSLink] = []
         var todos: [TodoItem] = []
@@ -28,7 +30,12 @@ final class AppStore: ObservableObject {
         let dir = base.appendingPathComponent("MacDesktopApp", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         saveURL = dir.appendingPathComponent("store.json")
+        let isFirstRun = !FileManager.default.fileExists(atPath: saveURL.path)
         load()
+        if isFirstRun {
+            videoFolders = [VideoFolder(name: "フォルダ1"), VideoFolder(name: "フォルダ2")]
+            save()
+        }
     }
 
     func load() {
@@ -36,6 +43,7 @@ final class AppStore: ObservableObject {
               let decoded = try? JSONDecoder().decode(PersistedData.self, from: data) else { return }
         files = decoded.files
         videos = decoded.videos
+        videoFolders = decoded.videoFolders
         events = decoded.events
         snsLinks = decoded.snsLinks
         todos = decoded.todos
@@ -47,6 +55,7 @@ final class AppStore: ObservableObject {
         let data = PersistedData(
             files: files,
             videos: videos,
+            videoFolders: videoFolders,
             events: events,
             snsLinks: snsLinks,
             todos: todos,
@@ -85,6 +94,25 @@ final class AppStore: ObservableObject {
 
     func removeVideo(_ id: UUID) {
         videos.removeAll { $0.id == id }
+        save()
+    }
+
+    func addVideoFolder(_ folder: VideoFolder) {
+        videoFolders.append(folder)
+        save()
+    }
+
+    func renameVideoFolder(_ id: UUID, name: String) {
+        guard let idx = videoFolders.firstIndex(where: { $0.id == id }) else { return }
+        videoFolders[idx].name = name
+        save()
+    }
+
+    func removeVideoFolder(_ id: UUID) {
+        videoFolders.removeAll { $0.id == id }
+        for idx in videos.indices where videos[idx].folderID == id {
+            videos[idx].folderID = nil
+        }
         save()
     }
 

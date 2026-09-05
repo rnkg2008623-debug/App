@@ -19,7 +19,13 @@ struct VideoLink: Identifiable, Codable, Hashable {
     var id: UUID = UUID()
     var title: String
     var urlString: String
+    var folderID: UUID? = nil
     var addedAt: Date = Date()
+}
+
+struct VideoFolder: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var name: String
 }
 
 // MARK: - タイムテーブル（機能3）
