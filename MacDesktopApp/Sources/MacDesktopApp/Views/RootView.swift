@@ -55,7 +55,7 @@ struct RootView: View {
                     .frame(width: 36, height: 2)
             }
             .padding(.horizontal, 20)
-            .padding(.top, 24)
+            .padding(.top, 34)
             .padding(.bottom, 20)
 
             ScrollView {

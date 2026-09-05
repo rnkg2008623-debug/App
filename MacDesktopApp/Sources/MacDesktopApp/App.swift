@@ -21,5 +21,6 @@ struct DesktopApp: App {
                 .preferredColorScheme(store.theme.mode.colorScheme)
                 .frame(minWidth: 1080, minHeight: 700)
         }
+        .windowStyle(.hiddenTitleBar)
     }
 }
