@@ -26,20 +26,6 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
         case .settings: return "gearshape"
         }
     }
-
-    var title: String {
-        switch self {
-        case .home: return "ホーム"
-        case .video: return "動画プレイヤー"
-        case .files: return "ファイル"
-        case .timetable: return "タイムテーブル"
-        case .sns: return "SNSアカウント"
-        case .calculator: return "電卓"
-        case .todo: return "Todo"
-        case .notes: return "ノート"
-        case .settings: return "設定"
-        }
-    }
 }
 
 struct RootView: View {
@@ -52,7 +38,7 @@ struct RootView: View {
         } detail: {
             detailView
                 .themedBackground()
-                .navigationTitle(selection.title)
+                .navigationTitle("")
         }
         .tint(Theme.accent)
     }
