@@ -118,6 +118,7 @@ struct RootView: View {
     private var detailView: some View {
         ZStack(alignment: .topLeading) {
             VideoPlayerView()
+                .padding(.top, 28)
                 .frame(
                     maxWidth: selection == .video ? .infinity : 0,
                     maxHeight: selection == .video ? .infinity : 0,
@@ -141,6 +142,7 @@ struct RootView: View {
                     case .video: EmptyView()
                     }
                 }
+                .padding(.top, 28)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
         }
