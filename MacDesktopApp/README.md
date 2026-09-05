@@ -42,6 +42,22 @@ open Package.swift
 
 Xcodeが起動するので、上部のスキームが `MacDesktopApp` になっていることを確認し、▶（実行）ボタンを押してください。Xcode上でブレークポイントを置いたりデバッグしたりもできます。
 
+### 方法3: ビルド済み `.app` をダウンロードする
+
+このリポジトリには GitHub Actions のワークフロー（`.github/workflows/build-mac-app.yml`）が含まれており、macOSランナー上で実際にビルドして Apple Silicon / Intel 両対応のユニバーサルバイナリの `.app` を作成し、ワークフローの Artifacts からダウンロードできます。
+
+1. GitHubの **Actions** タブ → **Build macOS App** ワークフローを開く
+2. **Run workflow** で手動実行、または `MacDesktopApp/` に変更をpushすると自動実行されます
+3. 実行が終わったら、そのワークフロー実行ページ下部の **Artifacts** から `MacDesktopApp-macOS` をダウンロードして展開すると `MacDesktopApp.app` が入っています
+
+このアプリは開発者署名（Apple Developer Programの有料登録）をしていないため、初回起動時にmacOSのGatekeeperが警告を出します。以下のどちらかで開いてください。
+
+- Finderで `MacDesktopApp.app` を **右クリック（またはControlキー+クリック）→「開く」** を選び、出てきたダイアログでも「開く」を選択する
+- またはターミナルで以下を実行してから通常通りダブルクリックで開く
+  ```bash
+  xattr -cr /path/to/MacDesktopApp.app
+  ```
+
 ## データの保存場所
 
 すべての情報（ファイル配置・動画リンク・タイムテーブル・SNSリンク・Todo・ノート・テーマ設定）は、以下のJSONファイルに自動保存されます。
