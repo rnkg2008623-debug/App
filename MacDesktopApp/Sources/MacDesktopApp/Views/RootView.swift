@@ -143,6 +143,7 @@ struct RootView: View {
                     }
                 }
                 .padding(.top, selection == .home ? 0 : 28)
+                .ignoresSafeArea(edges: selection == .home ? .top : [])
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
         }
