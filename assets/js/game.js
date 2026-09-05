@@ -168,6 +168,7 @@
     loader.load(
       'assets/models/mao.fbx',
       (obj) => {
+        if (hint) hint.textContent = 'キャラクターモデルを解析中…(数秒かかる場合があります)';
         obj.traverse((c) => {
           if (c.isMesh && PLAYER_MODEL_EXCLUDE_MESHES.has(c.name)) c.visible = false;
         });
@@ -198,7 +199,13 @@
         playerMesh.add(obj);
         if (hint) hint.classList.add('hidden');
       },
-      undefined,
+      (progress) => {
+        if (hint && progress.lengthComputable) {
+          const pct = Math.min(100, Math.round((progress.loaded / progress.total) * 100));
+          const mb = (progress.total / 1024 / 1024).toFixed(0);
+          hint.textContent = `キャラクターモデルを読み込み中… ${pct}%(${mb}MB / 先に「プレイ開始」を押しても1人称視点はすぐ遊べます)`;
+        }
+      },
       (err) => {
         console.error('プレイヤーモデルの読み込みに失敗しました。簡易モデルで続行します。', err);
         if (hint) hint.classList.add('hidden');
