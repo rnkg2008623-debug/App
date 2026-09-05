@@ -23,6 +23,7 @@
       <button class="tab-btn" data-tab="quiz" role="tab" aria-selected="false">クイズ</button>
       <button class="tab-btn" data-tab="videos" role="tab" aria-selected="false">プレイリスト</button>
       <button class="tab-btn" data-tab="pdfs" role="tab" aria-selected="false">PDFフォルダ</button>
+      <button class="tab-btn" data-tab="econ" role="tab" aria-selected="false">経済学</button>
     </nav>
     <button id="btn-toggle-yt" class="btn btn-outline btn-sm yt-toggle-btn" aria-label="YouTube Playerを開閉">📺 動画</button>
   </header>
@@ -212,6 +213,20 @@
       <div id="pdf-item-list" class="pdf-item-list"></div>
     </section>
 
+    <!-- ===================== 経済学タブ ===================== -->
+    <section id="tab-econ" class="tab-panel">
+      <div class="panel-head">
+        <div>
+          <h1>経済学</h1>
+          <p class="panel-sub">左のメニューから科目・ユニットを選んでください。</p>
+        </div>
+      </div>
+      <div class="econ-layout">
+        <aside id="econ-sidebar" class="econ-sidebar"></aside>
+        <div id="econ-content" class="econ-content"></div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -292,5 +307,6 @@
 </div>
 
 <script src="assets/js/app.js"></script>
+<script src="assets/js/econ.js"></script>
 </body>
 </html>
