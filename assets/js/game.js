@@ -122,7 +122,9 @@
   // ------------------------------------------------------------------
   // プレイヤー(三人称視点で表示するモデル)
   // ------------------------------------------------------------------
-  function createPlayerMesh() {
+  const PLAYER_MODEL_HEIGHT = 1.8;
+
+  function createFallbackModel() {
     const group = new THREE.Group();
     const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3b6fd4 });
     const body = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.5, 1.4, 10), bodyMat);
@@ -136,11 +138,74 @@
     const visor = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.1), visorMat);
     visor.position.set(0, 1.85, 0.3); // 正面方向の目印
     group.add(body, head, visor);
-    group.visible = false;
-    scene.add(group);
     return group;
   }
-  const playerMesh = createPlayerMesh();
+
+  const playerMesh = new THREE.Group();
+  playerMesh.visible = false;
+  scene.add(playerMesh);
+  let fallbackModel = createFallbackModel();
+  playerMesh.add(fallbackModel);
+
+  // モデル内の "body_b" / "Body" は本来クローンで隠れる内部メッシュだが、
+  // 寸法(バウンディングボックス)が破綻しており、含めるとサイズ計算も
+  // 見た目も大きく崩れるため非表示にし、採寸からも除外する
+  const PLAYER_MODEL_EXCLUDE_MESHES = new Set(['body_b', 'Body']);
+
+  function computeVisibleBounds(root) {
+    const box = new THREE.Box3();
+    root.updateWorldMatrix(true, true);
+    root.traverse((c) => {
+      if (c.isMesh && c.visible) box.expandByObject(c);
+    });
+    return box;
+  }
+
+  // プレイヤーキャラクターモデル(FBX)を読み込み、足元をy=0・身長を揃えて反映する
+  function loadPlayerModel() {
+    const hint = document.getElementById('model-loading-hint');
+    const loader = new THREE.FBXLoader();
+    loader.load(
+      'assets/models/mao.fbx',
+      (obj) => {
+        obj.traverse((c) => {
+          if (c.isMesh && PLAYER_MODEL_EXCLUDE_MESHES.has(c.name)) c.visible = false;
+        });
+
+        const size = new THREE.Vector3();
+        computeVisibleBounds(obj).getSize(size);
+        const scale = PLAYER_MODEL_HEIGHT / size.y;
+        obj.scale.setScalar(scale);
+        obj.updateMatrixWorld(true);
+
+        const box2 = computeVisibleBounds(obj);
+        obj.position.y -= box2.min.y; // 足元をy=0に合わせる
+
+        // T字ポーズの腕を自然な体側に下ろす
+        obj.traverse((c) => {
+          if (c.isBone && c.name === 'Upperarm_L') c.rotation.x = THREE.MathUtils.degToRad(-80);
+          if (c.isBone && c.name === 'Upperarm_R') c.rotation.x = THREE.MathUtils.degToRad(-80);
+          if (c.isMesh) {
+            c.castShadow = true;
+            c.receiveShadow = true;
+          }
+        });
+
+        if (fallbackModel) {
+          playerMesh.remove(fallbackModel);
+          fallbackModel = null;
+        }
+        playerMesh.add(obj);
+        if (hint) hint.classList.add('hidden');
+      },
+      undefined,
+      (err) => {
+        console.error('プレイヤーモデルの読み込みに失敗しました。簡易モデルで続行します。', err);
+        if (hint) hint.classList.add('hidden');
+      }
+    );
+  }
+  loadPlayerModel();
 
   // ------------------------------------------------------------------
   // 敵
