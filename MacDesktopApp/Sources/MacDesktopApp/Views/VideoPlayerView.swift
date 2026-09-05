@@ -1,0 +1,242 @@
+import SwiftUI
+
+struct VideoPlayerView: View {
+    @EnvironmentObject var store: AppStore
+    @State private var newTitle = ""
+    @State private var newURL = ""
+    @State private var newFolderID: UUID?
+    @State private var selected: VideoLink?
+    @State private var selectedFolderFilter: UUID?
+
+    @State private var showNewFolderAlert = false
+    @State private var newFolderName = ""
+    @State private var renamingFolder: VideoFolder?
+    @State private var renameText = ""
+    @State private var showAddForm = true
+
+    var body: some View {
+        HSplitView {
+            VStack(alignment: .leading, spacing: 16) {
+                addFormPane
+                playerCard
+            }
+            .padding()
+            .frame(minWidth: 420)
+            .animation(.easeInOut(duration: 0.2), value: showAddForm)
+
+            folderPane
+        }
+        .onChange(of: selectedFolderFilter) { newFolderID = $0 }
+        .alert("新しいフォルダ", isPresented: $showNewFolderAlert) {
+            TextField("フォルダ名", text: $newFolderName)
+            Button("作成") {
+                let trimmed = newFolderName.trimmingCharacters(in: .whitespaces)
+                guard !trimmed.isEmpty else { return }
+                store.addVideoFolder(VideoFolder(name: trimmed))
+            }
+            Button("キャンセル", role: .cancel) {}
+        }
+        .alert("フォルダ名を変更", isPresented: Binding(
+            get: { renamingFolder != nil },
+            set: { if !$0 { renamingFolder = nil } }
+        )) {
+            TextField("フォルダ名", text: $renameText)
+            Button("保存") {
+                if let folder = renamingFolder {
+                    let trimmed = renameText.trimmingCharacters(in: .whitespaces)
+                    if !trimmed.isEmpty {
+                        store.renameVideoFolder(folder.id, name: trimmed)
+                    }
+                }
+                renamingFolder = nil
+            }
+            Button("キャンセル", role: .cancel) { renamingFolder = nil }
+        }
+    }
+
+    private var addFormPane: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                SectionHeading(title: "動画リンクを追加")
+                Spacer()
+                Button {
+                    showAddForm.toggle()
+                } label: {
+                    Image(systemName: showAddForm ? "chevron.up.circle" : "chevron.down.circle")
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Theme.textSecondary)
+                .help(showAddForm ? "セクションを隠す" : "セクションを表示")
+            }
+
+            if showAddForm {
+                VStack(alignment: .leading, spacing: 8) {
+                    TextField("タイトル", text: $newTitle).themedField()
+                    TextField("URL（YouTubeなど）", text: $newURL).themedField()
+
+                    Picker("フォルダ", selection: $newFolderID) {
+                        Text("フォルダなし").tag(Optional<UUID>.none)
+                        ForEach(store.videoFolders) { folder in
+                            Text(folder.name).tag(Optional(folder.id))
+                        }
+                    }
+
+                    Button("追加") {
+                        guard !newURL.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+                        let link = VideoLink(
+                            title: newTitle.isEmpty ? newURL : newTitle,
+                            urlString: newURL,
+                            folderID: newFolderID
+                        )
+                        store.addVideo(link)
+                        selected = link
+                        newTitle = ""
+                        newURL = ""
+                    }
+                    .buttonStyle(GlowButtonStyle(prominent: true))
+                    .disabled(newURL.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+                .panelStyle()
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+    }
+
+    private var playerCard: some View {
+        Group {
+            if let selected, let url = URL(string: selected.urlString) {
+                WebView(url: url)
+            } else {
+                VStack(spacing: 16) {
+                    Image(systemName: "play.rectangle.fill")
+                        .font(.system(size: 44))
+                        .foregroundStyle(Theme.accentGold)
+                    Text("動画プレイヤー")
+                        .font(.system(size: 32, weight: .bold, design: .serif))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("右のフォルダから動画を選択してください")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .stroke(Theme.panelBorder, lineWidth: 1)
+        )
+    }
+
+    private var folderPane: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeading(title: "動画ファイル")
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 4) {
+                    folderSection(id: nil, name: "保存した動画（すべて）")
+
+                    ForEach(store.videoFolders) { folder in
+                        folderSection(id: folder.id, name: folder.name)
+                            .contextMenu {
+                                Button("名前を変更") {
+                                    renamingFolder = folder
+                                    renameText = folder.name
+                                }
+                                Button("削除", role: .destructive) {
+                                    store.removeVideoFolder(folder.id)
+                                    if selectedFolderFilter == folder.id { selectedFolderFilter = nil }
+                                    if newFolderID == folder.id { newFolderID = nil }
+                                }
+                            }
+                    }
+                }
+            }
+
+            Button {
+                newFolderName = ""
+                showNewFolderAlert = true
+            } label: {
+                Label("新しいフォルダ", systemImage: "folder.badge.plus")
+            }
+            .buttonStyle(GlowButtonStyle())
+        }
+        .padding()
+        .frame(minWidth: 240, idealWidth: 270)
+    }
+
+    @ViewBuilder
+    private func folderSection(id: UUID?, name: String) -> some View {
+        let isExpanded = selectedFolderFilter == id
+        VStack(alignment: .leading, spacing: 2) {
+            folderRow(name: name, isSelected: isExpanded) {
+                selectedFolderFilter = id
+            }
+
+            if isExpanded {
+                let videos = id == nil ? store.videos : store.videos.filter { $0.folderID == id }
+                if videos.isEmpty {
+                    Text("動画がありません")
+                        .font(.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                        .padding(.leading, 18)
+                        .padding(.vertical, 4)
+                } else {
+                    VStack(spacing: 3) {
+                        ForEach(videos) { video in
+                            videoRow(video)
+                        }
+                    }
+                    .padding(.leading, 12)
+                }
+            }
+        }
+    }
+
+    private func videoRow(_ video: VideoLink) -> some View {
+        Button {
+            selected = video
+        } label: {
+            HStack {
+                Text(video.title)
+                    .font(.system(size: 12, weight: selected?.id == video.id ? .semibold : .regular))
+                    .foregroundStyle(selected?.id == video.id ? Theme.accent : Theme.textPrimary)
+                    .lineLimit(1)
+                Spacer()
+                Button {
+                    store.removeVideo(video.id)
+                    if selected?.id == video.id { selected = nil }
+                } label: {
+                    Image(systemName: "trash")
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Theme.textSecondary)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(selected?.id == video.id ? Theme.accent.opacity(0.12) : Color.white.opacity(0.04))
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func folderRow(name: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(name)
+                .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                .foregroundStyle(isSelected ? Theme.accent : Theme.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(isSelected ? Theme.accent.opacity(0.12) : Color.clear)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+}
