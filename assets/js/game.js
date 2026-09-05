@@ -16,6 +16,9 @@
   const ENEMY_CONTACT_RANGE = 1.6;
   const ENEMY_CONTACT_DAMAGE = 8;
   const ENEMY_CONTACT_INTERVAL = 0.9;
+  const THIRD_PERSON_DISTANCE = 5;
+  const THIRD_PERSON_HEIGHT = 1.4;
+  const CAMERA_COLLISION_MARGIN = 0.4;
 
   // ------------------------------------------------------------------
   // DOM
@@ -114,6 +117,30 @@
     }
   }
   createObstacles(14);
+  const cameraCollidables = obstacles.map(o => o.mesh);
+
+  // ------------------------------------------------------------------
+  // プレイヤー(三人称視点で表示するモデル)
+  // ------------------------------------------------------------------
+  function createPlayerMesh() {
+    const group = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3b6fd4 });
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.5, 1.4, 10), bodyMat);
+    body.position.y = 1.0;
+    body.castShadow = true;
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xffd8a8 });
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 12), headMat);
+    head.position.y = 1.85;
+    head.castShadow = true;
+    const visorMat = new THREE.MeshStandardMaterial({ color: 0x1c2733 });
+    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.1), visorMat);
+    visor.position.set(0, 1.85, 0.3); // 正面方向の目印
+    group.add(body, head, visor);
+    group.visible = false;
+    scene.add(group);
+    return group;
+  }
+  const playerMesh = createPlayerMesh();
 
   // ------------------------------------------------------------------
   // 敵
@@ -154,7 +181,10 @@
   // 入力
   // ------------------------------------------------------------------
   const keys = {};
-  window.addEventListener('keydown', (e) => { keys[e.code] = true; });
+  window.addEventListener('keydown', (e) => {
+    keys[e.code] = true;
+    if (e.code === 'KeyF' && !e.repeat && state === 'playing') toggleViewMode();
+  });
   window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
   let yaw = 0;
@@ -165,7 +195,6 @@
     pitch -= e.movementY * MOUSE_SENSITIVITY;
     const limit = Math.PI / 2 - 0.05;
     pitch = Math.max(-limit, Math.min(limit, pitch));
-    camera.rotation.set(pitch, yaw, 0, 'YXZ');
   });
 
   let isFiring = false;
@@ -195,6 +224,47 @@
   let velocityY = 0;
   let canJump = true;
   let fireCooldown = 0;
+  let viewMode = 'first'; // first | third
+  const eyePos = new THREE.Vector3(0, EYE_HEIGHT, 18);
+
+  function toggleViewMode() {
+    viewMode = viewMode === 'first' ? 'third' : 'first';
+  }
+
+  // eyePos/yaw/pitch から実際のカメラ位置・向きを反映する
+  const camCollisionRay = new THREE.Raycaster();
+  function syncCamera() {
+    camera.rotation.set(pitch, yaw, 0, 'YXZ');
+
+    if (viewMode === 'first') {
+      playerMesh.visible = false;
+      camera.position.copy(eyePos);
+      return;
+    }
+
+    playerMesh.visible = true;
+    playerMesh.position.set(eyePos.x, eyePos.y - EYE_HEIGHT, eyePos.z);
+    playerMesh.rotation.y = yaw + Math.PI;
+
+    const flatForward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+    const desired = eyePos.clone()
+      .addScaledVector(flatForward, -THIRD_PERSON_DISTANCE)
+      .add(new THREE.Vector3(0, THIRD_PERSON_HEIGHT, 0));
+
+    const toDesired = desired.clone().sub(eyePos);
+    const fullDist = toDesired.length();
+    toDesired.normalize();
+
+    let finalDist = fullDist;
+    if (cameraCollidables.length > 0) {
+      camCollisionRay.set(eyePos, toDesired);
+      const hits = camCollisionRay.intersectObjects(cameraCollidables, false);
+      if (hits.length > 0 && hits[0].distance < fullDist) {
+        finalDist = Math.max(1.2, hits[0].distance - CAMERA_COLLISION_MARGIN);
+      }
+    }
+    camera.position.copy(eyePos).addScaledVector(toDesired, finalDist);
+  }
 
   function updateHUD() {
     hudHealth.textContent = Math.max(0, Math.round(health));
@@ -242,6 +312,7 @@
   function shoot() {
     fireCooldown = FIRE_COOLDOWN;
     raycaster.setFromCamera({ x: 0, y: 0 }, camera);
+    raycaster.ray.origin.copy(eyePos); // 三人称視点でも照準はカメラ中央、発射元は本来の目線位置
 
     const targets = [];
     for (const en of enemies) {
@@ -266,11 +337,9 @@
         }
       }
     } else {
-      const dir = new THREE.Vector3();
-      camera.getWorldDirection(dir);
-      tracerEnd = camera.position.clone().add(dir.multiplyScalar(60));
+      tracerEnd = eyePos.clone().addScaledVector(raycaster.ray.direction, 60);
     }
-    drawTracer(camera.position, tracerEnd);
+    drawTracer(eyePos, tracerEnd);
   }
 
   function drawTracer(from, to) {
@@ -318,8 +387,9 @@
     fireCooldown = 0;
     yaw = 0;
     pitch = 0;
-    camera.position.set(0, EYE_HEIGHT, 10);
-    camera.rotation.set(0, 0, 0, 'YXZ');
+    viewMode = 'first';
+    eyePos.set(0, EYE_HEIGHT, 10);
+    syncCamera();
     for (const en of enemies) scene.remove(en.group);
     enemies.length = 0;
     if (waveTransitionTimer) { clearTimeout(waveTransitionTimer); waveTransitionTimer = null; }
@@ -359,8 +429,8 @@
         .addScaledVector(forward, forwardInput)
         .addScaledVector(right, sideInput);
       move.normalize().multiplyScalar(MOVE_SPEED * delta);
-      camera.position.x += move.x;
-      camera.position.z += move.z;
+      eyePos.x += move.x;
+      eyePos.z += move.z;
     }
 
     if (keys['Space'] && canJump) {
@@ -369,15 +439,16 @@
     }
 
     velocityY -= GRAVITY * delta;
-    camera.position.y += velocityY * delta;
-    if (camera.position.y <= EYE_HEIGHT) {
-      camera.position.y = EYE_HEIGHT;
+    eyePos.y += velocityY * delta;
+    if (eyePos.y <= EYE_HEIGHT) {
+      eyePos.y = EYE_HEIGHT;
       velocityY = 0;
       canJump = true;
     }
 
-    resolveObstacleCollision(camera.position);
-    clampToArena(camera.position);
+    resolveObstacleCollision(eyePos);
+    clampToArena(eyePos);
+    syncCamera();
 
     if (fireCooldown > 0) fireCooldown -= delta;
     if (isFiring && fireCooldown <= 0) shoot();
@@ -386,8 +457,8 @@
   function updateEnemies(delta) {
     for (const en of enemies) {
       if (!en.alive) continue;
-      const dx = camera.position.x - en.group.position.x;
-      const dz = camera.position.z - en.group.position.z;
+      const dx = eyePos.x - en.group.position.x;
+      const dz = eyePos.z - en.group.position.z;
       const dist = Math.hypot(dx, dz);
 
       if (dist > ENEMY_CONTACT_RANGE) {
@@ -400,7 +471,7 @@
           takeDamage(ENEMY_CONTACT_DAMAGE);
         }
       }
-      en.group.lookAt(camera.position.x, en.group.position.y, camera.position.z);
+      en.group.lookAt(eyePos.x, en.group.position.y, eyePos.z);
     }
   }
 
