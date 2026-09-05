@@ -13,15 +13,10 @@ struct VideoPlayerView: View {
     @State private var renamingFolder: VideoFolder?
     @State private var renameText = ""
 
-    private var filteredVideos: [VideoLink] {
-        guard let selectedFolderFilter else { return store.videos }
-        return store.videos.filter { $0.folderID == selectedFolderFilter }
-    }
-
     var body: some View {
         HSplitView {
             VStack(alignment: .leading, spacing: 16) {
-                addAndListPane
+                addFormPane
                 playerCard
             }
             .padding()
@@ -57,7 +52,7 @@ struct VideoPlayerView: View {
         }
     }
 
-    private var addAndListPane: some View {
+    private var addFormPane: some View {
         VStack(alignment: .leading, spacing: 14) {
             SectionHeading(title: "動画リンクを追加")
 
@@ -88,17 +83,6 @@ struct VideoPlayerView: View {
                 .disabled(newURL.trimmingCharacters(in: .whitespaces).isEmpty)
             }
             .panelStyle()
-
-            SectionHeading(title: "保存した動画")
-
-            ScrollView {
-                VStack(spacing: 6) {
-                    ForEach(filteredVideos) { video in
-                        videoRow(video)
-                    }
-                }
-            }
-            .frame(maxHeight: 220)
         }
     }
 
@@ -114,7 +98,7 @@ struct VideoPlayerView: View {
                     Text("動画プレイヤー")
                         .font(.system(size: 32, weight: .bold, design: .serif))
                         .foregroundStyle(Theme.textPrimary)
-                    Text("左のリストから動画を選択してください")
+                    Text("右のフォルダから動画を選択してください")
                         .font(.subheadline)
                         .foregroundStyle(Theme.textSecondary)
                 }
@@ -134,32 +118,26 @@ struct VideoPlayerView: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeading(title: "動画ファイル")
 
-            folderRow(name: "保存した動画（すべて）", isSelected: selectedFolderFilter == nil) {
-                selectedFolderFilter = nil
-            }
-
             ScrollView {
-                VStack(spacing: 4) {
+                VStack(alignment: .leading, spacing: 4) {
+                    folderSection(id: nil, name: "保存した動画（すべて）")
+
                     ForEach(store.videoFolders) { folder in
-                        folderRow(name: folder.name, isSelected: selectedFolderFilter == folder.id) {
-                            selectedFolderFilter = folder.id
-                        }
-                        .contextMenu {
-                            Button("名前を変更") {
-                                renamingFolder = folder
-                                renameText = folder.name
+                        folderSection(id: folder.id, name: folder.name)
+                            .contextMenu {
+                                Button("名前を変更") {
+                                    renamingFolder = folder
+                                    renameText = folder.name
+                                }
+                                Button("削除", role: .destructive) {
+                                    store.removeVideoFolder(folder.id)
+                                    if selectedFolderFilter == folder.id { selectedFolderFilter = nil }
+                                    if newFolderID == folder.id { newFolderID = nil }
+                                }
                             }
-                            Button("削除", role: .destructive) {
-                                store.removeVideoFolder(folder.id)
-                                if selectedFolderFilter == folder.id { selectedFolderFilter = nil }
-                                if newFolderID == folder.id { newFolderID = nil }
-                            }
-                        }
                     }
                 }
             }
-
-            Spacer()
 
             Button {
                 newFolderName = ""
@@ -170,7 +148,35 @@ struct VideoPlayerView: View {
             .buttonStyle(GlowButtonStyle())
         }
         .padding()
-        .frame(minWidth: 220, idealWidth: 250)
+        .frame(minWidth: 240, idealWidth: 270)
+    }
+
+    @ViewBuilder
+    private func folderSection(id: UUID?, name: String) -> some View {
+        let isExpanded = selectedFolderFilter == id
+        VStack(alignment: .leading, spacing: 2) {
+            folderRow(name: name, isSelected: isExpanded) {
+                selectedFolderFilter = id
+            }
+
+            if isExpanded {
+                let videos = id == nil ? store.videos : store.videos.filter { $0.folderID == id }
+                if videos.isEmpty {
+                    Text("動画がありません")
+                        .font(.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                        .padding(.leading, 18)
+                        .padding(.vertical, 4)
+                } else {
+                    VStack(spacing: 3) {
+                        ForEach(videos) { video in
+                            videoRow(video)
+                        }
+                    }
+                    .padding(.leading, 12)
+                }
+            }
+        }
     }
 
     private func videoRow(_ video: VideoLink) -> some View {
@@ -179,7 +185,7 @@ struct VideoPlayerView: View {
         } label: {
             HStack {
                 Text(video.title)
-                    .font(.system(size: 13, weight: selected?.id == video.id ? .semibold : .regular))
+                    .font(.system(size: 12, weight: selected?.id == video.id ? .semibold : .regular))
                     .foregroundStyle(selected?.id == video.id ? Theme.accent : Theme.textPrimary)
                     .lineLimit(1)
                 Spacer()
@@ -192,9 +198,10 @@ struct VideoPlayerView: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(Theme.textSecondary)
             }
-            .padding(10)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
             .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
                     .fill(selected?.id == video.id ? Theme.accent.opacity(0.12) : Color.white.opacity(0.04))
             )
         }
