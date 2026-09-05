@@ -20,8 +20,13 @@ struct VideoPlayerView: View {
 
     var body: some View {
         HSplitView {
-            addAndListPane
-            playerPane
+            VStack(alignment: .leading, spacing: 16) {
+                addAndListPane
+                playerCard
+            }
+            .padding()
+            .frame(minWidth: 420)
+
             folderPane
         }
         .onChange(of: selectedFolderFilter) { newFolderID = $0 }
@@ -93,27 +98,36 @@ struct VideoPlayerView: View {
                     }
                 }
             }
+            .frame(maxHeight: 220)
         }
-        .padding()
-        .frame(minWidth: 300, idealWidth: 340)
     }
 
-    private var playerPane: some View {
+    private var playerCard: some View {
         Group {
             if let selected, let url = URL(string: selected.urlString) {
                 WebView(url: url)
             } else {
-                VStack(spacing: 10) {
-                    Image(systemName: "play.rectangle")
-                        .font(.system(size: 50))
+                VStack(spacing: 16) {
+                    Image(systemName: "play.rectangle.fill")
+                        .font(.system(size: 44))
                         .foregroundStyle(Theme.accentGold)
+                    Text("動画プレイヤー")
+                        .font(.system(size: 32, weight: .bold, design: .serif))
+                        .foregroundStyle(Theme.textPrimary)
                     Text("左のリストから動画を選択してください")
+                        .font(.subheadline)
                         .foregroundStyle(Theme.textSecondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .themedBackground()
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .stroke(Theme.panelBorder, lineWidth: 1)
+        )
     }
 
     private var folderPane: some View {
