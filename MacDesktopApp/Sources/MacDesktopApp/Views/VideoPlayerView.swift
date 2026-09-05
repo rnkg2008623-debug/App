@@ -12,6 +12,7 @@ struct VideoPlayerView: View {
     @State private var newFolderName = ""
     @State private var renamingFolder: VideoFolder?
     @State private var renameText = ""
+    @State private var showAddForm = true
 
     var body: some View {
         HSplitView {
@@ -21,6 +22,7 @@ struct VideoPlayerView: View {
             }
             .padding()
             .frame(minWidth: 420)
+            .animation(.easeInOut(duration: 0.2), value: showAddForm)
 
             folderPane
         }
@@ -54,35 +56,49 @@ struct VideoPlayerView: View {
 
     private var addFormPane: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionHeading(title: "動画リンクを追加")
-
-            VStack(alignment: .leading, spacing: 8) {
-                TextField("タイトル", text: $newTitle).themedField()
-                TextField("URL（YouTubeなど）", text: $newURL).themedField()
-
-                Picker("フォルダ", selection: $newFolderID) {
-                    Text("フォルダなし").tag(Optional<UUID>.none)
-                    ForEach(store.videoFolders) { folder in
-                        Text(folder.name).tag(Optional(folder.id))
-                    }
+            HStack {
+                SectionHeading(title: "動画リンクを追加")
+                Spacer()
+                Button {
+                    showAddForm.toggle()
+                } label: {
+                    Image(systemName: showAddForm ? "chevron.up.circle" : "chevron.down.circle")
                 }
-
-                Button("追加") {
-                    guard !newURL.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-                    let link = VideoLink(
-                        title: newTitle.isEmpty ? newURL : newTitle,
-                        urlString: newURL,
-                        folderID: newFolderID
-                    )
-                    store.addVideo(link)
-                    selected = link
-                    newTitle = ""
-                    newURL = ""
-                }
-                .buttonStyle(GlowButtonStyle(prominent: true))
-                .disabled(newURL.trimmingCharacters(in: .whitespaces).isEmpty)
+                .buttonStyle(.plain)
+                .foregroundStyle(Theme.textSecondary)
+                .help(showAddForm ? "セクションを隠す" : "セクションを表示")
             }
-            .panelStyle()
+
+            if showAddForm {
+                VStack(alignment: .leading, spacing: 8) {
+                    TextField("タイトル", text: $newTitle).themedField()
+                    TextField("URL（YouTubeなど）", text: $newURL).themedField()
+
+                    Picker("フォルダ", selection: $newFolderID) {
+                        Text("フォルダなし").tag(Optional<UUID>.none)
+                        ForEach(store.videoFolders) { folder in
+                            Text(folder.name).tag(Optional(folder.id))
+                        }
+                    }
+
+                    Button("追加") {
+                        guard !newURL.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+                        let link = VideoLink(
+                            title: newTitle.isEmpty ? newURL : newTitle,
+                            urlString: newURL,
+                            folderID: newFolderID
+                        )
+                        store.addVideo(link)
+                        selected = link
+                        newTitle = ""
+                        newURL = ""
+                    }
+                    .buttonStyle(GlowButtonStyle(prominent: true))
+                    .disabled(newURL.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+                .panelStyle()
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
         }
     }
 
