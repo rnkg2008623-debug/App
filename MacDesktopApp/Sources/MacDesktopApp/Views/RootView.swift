@@ -41,6 +41,7 @@ struct RootView: View {
                 .navigationTitle("")
         }
         .tint(Theme.accent)
+        .ignoresSafeArea()
     }
 
     private var sidebar: some View {
