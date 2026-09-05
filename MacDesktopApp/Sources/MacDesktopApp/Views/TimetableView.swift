@@ -7,7 +7,9 @@ struct TimetableView: View {
     private let dayStartHour = 6
     private let dayEndHour = 23
     private let hourHeight: CGFloat = 60
-    private let dayColumnWidth: CGFloat = 130
+    private let dayColumnWidth: CGFloat = 140
+    private let headerHeight: CGFloat = 46
+    private let cardCornerRadius: CGFloat = 18
 
     private var visibleEvents: [TimetableEvent] {
         store.events.filter { $0.weekType == .everyWeek || $0.weekType == store.selectedWeek }
@@ -37,20 +39,10 @@ struct TimetableView: View {
             }
             .padding()
 
-            HStack(spacing: 0) {
-                Color.clear.frame(width: 50)
-                ForEach(Weekday.allCases) { day in
-                    Text(day.shortLabel)
-                        .font(.system(size: 13, weight: .bold, design: .serif))
-                        .foregroundStyle(Theme.accentGold)
-                        .frame(width: dayColumnWidth)
-                }
-            }
-            .padding(.bottom, 6)
-
             ScrollView(.vertical) {
-                HStack(alignment: .top, spacing: 0) {
+                HStack(alignment: .top, spacing: 10) {
                     VStack(spacing: 0) {
+                        Color.clear.frame(height: headerHeight)
                         ForEach(dayStartHour...dayEndHour, id: \.self) { hour in
                             Text(String(format: "%02d:00", hour))
                                 .font(.caption2)
@@ -60,24 +52,10 @@ struct TimetableView: View {
                     }
 
                     ForEach(Weekday.allCases) { day in
-                        ZStack(alignment: .top) {
-                            VStack(spacing: 0) {
-                                ForEach(dayStartHour...dayEndHour, id: \.self) { _ in
-                                    Rectangle()
-                                        .fill(Theme.panelBorder)
-                                        .frame(height: 1)
-                                        .frame(height: hourHeight, alignment: .top)
-                                }
-                            }
-                            ForEach(eventsFor(day)) { event in
-                                eventBlock(event)
-                            }
-                        }
-                        .frame(width: dayColumnWidth)
-                        .overlay(Rectangle().stroke(Theme.panelBorder, lineWidth: 1))
+                        dayCard(day)
                     }
                 }
-                .padding(.horizontal)
+                .padding()
                 .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .frame(maxHeight: .infinity, alignment: .top)
@@ -98,6 +76,38 @@ struct TimetableView: View {
                 }
             )
         }
+    }
+
+    private func dayCard(_ day: Weekday) -> some View {
+        VStack(spacing: 0) {
+            Text(day.shortLabel)
+                .font(.system(size: 14, weight: .bold, design: .serif))
+                .foregroundStyle(Theme.accentGold)
+                .frame(maxWidth: .infinity)
+                .frame(height: headerHeight)
+                .background(Color.white.opacity(0.06))
+
+            ZStack(alignment: .top) {
+                VStack(spacing: 0) {
+                    ForEach(dayStartHour...dayEndHour, id: \.self) { _ in
+                        Rectangle()
+                            .fill(Theme.panelBorder)
+                            .frame(height: 1)
+                            .frame(height: hourHeight, alignment: .top)
+                    }
+                }
+                ForEach(eventsFor(day)) { event in
+                    eventBlock(event)
+                }
+            }
+        }
+        .frame(width: dayColumnWidth)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: cardCornerRadius, style: .continuous)
+                .stroke(Theme.panelBorder, lineWidth: 1)
+        )
     }
 
     private func weekToggle(_ week: WeekType) -> some View {
