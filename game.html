@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3Dシューティング - 学習ナビ</title>
+<meta name="description" content="ブラウザだけで動く3Dシューティングゲーム。サーバー不要、無料でプレイできます。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
+<link rel="stylesheet" href="assets/css/game.css">
+</head>
+<body>
+
+<div id="game-root">
+
+  <canvas id="game-canvas"></canvas>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div class="hud-top">
+      <div class="hud-stat">❤️ <span id="hud-health">100</span></div>
+      <div class="hud-stat">⭐ <span id="hud-score">0</span></div>
+      <div class="hud-stat">🌊 WAVE <span id="hud-wave">1</span></div>
+      <div class="hud-stat">👾 <span id="hud-enemies">0</span></div>
+    </div>
+    <div id="crosshair">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <div id="hit-flash"></div>
+  </div>
+
+  <!-- スタート画面 -->
+  <div id="screen-start" class="overlay-screen">
+    <div class="overlay-box">
+      <a href="index.html" class="btn-link back-link">← 学習ナビに戻る</a>
+      <h1>🎮 3Dシューティング</h1>
+      <p class="sub">3D空間を歩き回って、迫りくる敵を撃退しよう。</p>
+      <ul class="howto">
+        <li><b>W A S D</b> : 移動</li>
+        <li><b>マウス</b> : 視点操作</li>
+        <li><b>左クリック</b> : 射撃</li>
+        <li><b>Space</b> : ジャンプ</li>
+      </ul>
+      <button id="btn-start" class="btn-primary">クリックしてプレイ開始</button>
+      <p class="hint">※ PCでのマウス操作を推奨します</p>
+    </div>
+  </div>
+
+  <!-- ポインターロック解除時の再開画面 -->
+  <div id="screen-paused" class="overlay-screen hidden">
+    <div class="overlay-box">
+      <h2>一時停止中</h2>
+      <button id="btn-resume" class="btn-primary">クリックして再開</button>
+    </div>
+  </div>
+
+  <!-- ゲームオーバー画面 -->
+  <div id="screen-gameover" class="overlay-screen hidden">
+    <div class="overlay-box">
+      <h1>GAME OVER</h1>
+      <p class="sub">スコア: <span id="final-score">0</span> / 到達WAVE: <span id="final-wave">1</span></p>
+      <button id="btn-restart" class="btn-primary">もう一度プレイ</button>
+      <a href="index.html" class="btn-link back-link">← 学習ナビに戻る</a>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="assets/js/game.js"></script>
+</body>
+</html>
