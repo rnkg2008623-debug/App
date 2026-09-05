@@ -142,7 +142,7 @@ struct RootView: View {
                     case .video: EmptyView()
                     }
                 }
-                .padding(.top, 28)
+                .padding(.top, selection == .home ? 0 : 28)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
         }
