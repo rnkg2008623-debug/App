@@ -10,7 +10,11 @@ struct TimetableEventEditor: View {
     let onSave: (TimetableEvent) -> Void
     let onDelete: (TimetableEvent) -> Void
 
-    private static let colorOptions = ["4A90D9", "D9534F", "5CB85C", "F0AD4E", "9B59B6", "1ABC9C"]
+    private static let colorOptions = [
+        "4A90D9", "2E86DE", "1ABC9C", "26C6DA", "5CB85C", "8BC34A",
+        "F0AD4E", "FF7043", "D9534F", "E91E8C", "EC407A", "9B59B6",
+        "8D6E63", "607D8B", "C0CA33", "5D4037"
+    ]
 
     init(event: TimetableEvent, onSave: @escaping (TimetableEvent) -> Void, onDelete: @escaping (TimetableEvent) -> Void) {
         _event = State(initialValue: event)
@@ -56,16 +60,45 @@ struct TimetableEventEditor: View {
                 DatePicker("終了", selection: $endDate, displayedComponents: .hourAndMinute)
             }
 
-            HStack {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("色").foregroundStyle(Theme.textSecondary)
-                ForEach(Self.colorOptions, id: \.self) { hex in
+
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 8) {
+                    ForEach(Self.colorOptions, id: \.self) { hex in
+                        Circle()
+                            .fill(Color(hex: hex))
+                            .frame(width: 24, height: 24)
+                            .overlay(
+                                Circle().stroke(Theme.accentGold, lineWidth: event.colorHex.uppercased() == hex ? 2 : 0)
+                            )
+                            .onTapGesture { event.colorHex = hex }
+                    }
+                }
+
+                HStack(spacing: 8) {
+                    ColorPicker("", selection: Binding(
+                        get: { Color(hex: event.colorHex) },
+                        set: { event.colorHex = $0.toHex }
+                    ))
+                    .labelsHidden()
+                    .frame(width: 36)
+
+                    Text("#").foregroundStyle(Theme.textSecondary)
+
+                    TextField("RRGGBB", text: Binding(
+                        get: { event.colorHex },
+                        set: { newValue in
+                            let filtered = newValue.uppercased().filter { $0.isHexDigit }
+                            event.colorHex = String(filtered.prefix(6))
+                        }
+                    ))
+                    .themedField()
+                    .frame(width: 100)
+
                     Circle()
-                        .fill(Color(hex: hex))
+                        .fill(Color(hex: event.colorHex))
                         .frame(width: 22, height: 22)
-                        .overlay(
-                            Circle().stroke(Theme.accentGold, lineWidth: event.colorHex == hex ? 2 : 0)
-                        )
-                        .onTapGesture { event.colorHex = hex }
+                        .overlay(Circle().stroke(Theme.panelBorder, lineWidth: 1))
                 }
             }
 
