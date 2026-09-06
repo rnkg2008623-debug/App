@@ -50,6 +50,15 @@ final class CalculatorEngine: ObservableObject {
         case "sin": result = sin(value * .pi / 180)
         case "cos": result = cos(value * .pi / 180)
         case "tan": result = tan(value * .pi / 180)
+        case "csc": result = 1 / sin(value * .pi / 180)
+        case "sec": result = 1 / cos(value * .pi / 180)
+        case "cot": result = 1 / tan(value * .pi / 180)
+        case "sin⁻¹": result = asin(value) * 180 / .pi
+        case "cos⁻¹": result = acos(value) * 180 / .pi
+        case "tan⁻¹": result = atan(value) * 180 / .pi
+        case "csc⁻¹": result = asin(1 / value) * 180 / .pi
+        case "sec⁻¹": result = acos(1 / value) * 180 / .pi
+        case "cot⁻¹": result = atan(1 / value) * 180 / .pi
         case "√": result = sqrt(value)
         case "x²": result = value * value
         case "1/x": result = value == 0 ? .nan : 1 / value
@@ -75,6 +84,15 @@ final class CalculatorEngine: ObservableObject {
         pendingValue = nil
         pendingOp = nil
         startingNewNumber = true
+    }
+
+    func backspace() {
+        guard !startingNewNumber, display.count > 1 else {
+            display = "0"
+            startingNewNumber = true
+            return
+        }
+        display.removeLast()
     }
 
     private func apply(_ op: String, _ a: Double, _ b: Double) -> Double {

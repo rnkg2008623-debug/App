@@ -15,7 +15,7 @@ MacBook上で動く、**完全無料**のMacネイティブデスクトップア
 
 ## 必要なもの（すべて無料）
 
-- macOS 13 (Ventura) 以降のMacBook
+- macOS 14 (Sonoma) 以降のMacBook
 - **Xcode Command Line Tools**（無料）: ターミナルで以下を実行してインストール
   ```bash
   xcode-select --install

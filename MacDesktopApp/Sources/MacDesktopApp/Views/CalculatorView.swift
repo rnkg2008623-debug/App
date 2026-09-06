@@ -3,6 +3,7 @@ import SwiftUI
 struct CalculatorView: View {
     @StateObject private var engine = CalculatorEngine()
     @State private var showFunctions = true
+    @FocusState private var isFocused: Bool
 
     private let basicRows: [[String]] = [
         ["C", "±", "%", "÷"],
@@ -12,7 +13,14 @@ struct CalculatorView: View {
         ["0", ".", "="]
     ]
 
-    private let functionButtons = ["log", "ln", "sin", "cos", "tan", "√", "x²", "xʸ", "1/x", "x!"]
+    private let functionButtons = [
+        "sin", "cos", "tan",
+        "csc", "sec", "cot",
+        "sin⁻¹", "cos⁻¹", "tan⁻¹",
+        "csc⁻¹", "sec⁻¹", "cot⁻¹",
+        "log", "ln", "√",
+        "x²", "xʸ", "1/x", "x!"
+    ]
 
     var body: some View {
         HStack(spacing: 0) {
@@ -43,6 +51,10 @@ struct CalculatorView: View {
                     .foregroundStyle(Theme.textSecondary)
                     .padding(.top, 6)
 
+                Text("キーボードでも入力できます（数字・+ - × ÷・Enter・Delete）")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.textSecondary)
+
                 Spacer()
             }
             .padding()
@@ -52,19 +64,22 @@ struct CalculatorView: View {
                 Rectangle().fill(Theme.panelBorder).frame(width: 1)
                 VStack(alignment: .leading, spacing: 10) {
                     SectionHeading(title: "関数")
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                        ForEach(functionButtons, id: \.self) { fn in
-                            Button(fn) {
-                                if fn == "xʸ" {
-                                    engine.setOperator("xʸ")
-                                } else {
-                                    engine.applyFunction(fn)
+                    ScrollView {
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                            ForEach(functionButtons, id: \.self) { fn in
+                                Button(fn) {
+                                    if fn == "xʸ" {
+                                        engine.setOperator("xʸ")
+                                    } else {
+                                        engine.applyFunction(fn)
+                                    }
                                 }
+                                .buttonStyle(GlowButtonStyle())
+                                .frame(maxWidth: .infinity)
                             }
-                            .buttonStyle(GlowButtonStyle())
-                            .frame(maxWidth: .infinity)
                         }
                     }
+                    .frame(maxHeight: 280)
 
                     SectionHeading(title: "履歴")
                     ScrollView {
@@ -79,6 +94,13 @@ struct CalculatorView: View {
                 .padding()
                 .frame(minWidth: 240)
             }
+        }
+        .focusable()
+        .focusEffectDisabled()
+        .focused($isFocused)
+        .onAppear { isFocused = true }
+        .onKeyPress { press in
+            handleKeyPress(press)
         }
     }
 
@@ -95,6 +117,37 @@ struct CalculatorView: View {
         case "=": engine.equals()
         default: engine.input(key)
         }
+    }
+
+    private func handleKeyPress(_ press: KeyPress) -> KeyPress.Result {
+        switch press.key {
+        case .delete, .deleteForward:
+            engine.backspace()
+            return .handled
+        case .clear, .escape:
+            engine.clear()
+            return .handled
+        case .return:
+            engine.equals()
+            return .handled
+        default:
+            break
+        }
+
+        for character in press.characters {
+            switch character {
+            case "0"..."9": handle(String(character))
+            case ".": handle(".")
+            case "+": handle("+")
+            case "-": handle("-")
+            case "*", "x", "X": handle("×")
+            case "/": handle("÷")
+            case "%": handle("%")
+            case "=": handle("=")
+            default: return .ignored
+            }
+        }
+        return .handled
     }
 }
 
