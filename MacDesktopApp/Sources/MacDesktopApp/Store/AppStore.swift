@@ -9,9 +9,11 @@ final class AppStore: ObservableObject {
     @Published var todos: [TodoItem] = []
     @Published var notes: [Note] = []
     @Published var theme: ThemeSettings = ThemeSettings()
+    @Published var backgroundMediaHistory: [String] = []
     @Published var selectedWeek: WeekType = .weekA
 
     private let saveURL: URL
+    private let maxBackgroundHistory = 24
 
     private struct PersistedData: Codable {
         var files: [StoredFile] = []
@@ -22,6 +24,7 @@ final class AppStore: ObservableObject {
         var todos: [TodoItem] = []
         var notes: [Note] = []
         var theme: ThemeSettings = ThemeSettings()
+        var backgroundMediaHistory: [String] = []
     }
 
     init() {
@@ -49,6 +52,7 @@ final class AppStore: ObservableObject {
         todos = decoded.todos
         notes = decoded.notes
         theme = decoded.theme
+        backgroundMediaHistory = decoded.backgroundMediaHistory
     }
 
     func save() {
@@ -60,7 +64,8 @@ final class AppStore: ObservableObject {
             snsLinks: snsLinks,
             todos: todos,
             notes: notes,
-            theme: theme
+            theme: theme,
+            backgroundMediaHistory: backgroundMediaHistory
         )
         guard let encoded = try? JSONEncoder().encode(data) else { return }
         try? encoded.write(to: saveURL, options: .atomic)
@@ -186,6 +191,20 @@ final class AppStore: ObservableObject {
 
     func updateTheme(_ theme: ThemeSettings) {
         self.theme = theme
+        save()
+    }
+
+    func addBackgroundMediaHistory(_ path: String) {
+        backgroundMediaHistory.removeAll { $0 == path }
+        backgroundMediaHistory.insert(path, at: 0)
+        if backgroundMediaHistory.count > maxBackgroundHistory {
+            backgroundMediaHistory = Array(backgroundMediaHistory.prefix(maxBackgroundHistory))
+        }
+        save()
+    }
+
+    func removeBackgroundMediaHistory(_ path: String) {
+        backgroundMediaHistory.removeAll { $0 == path }
         save()
     }
 }
