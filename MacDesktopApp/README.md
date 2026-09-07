@@ -66,7 +66,9 @@ Xcodeが起動するので、上部のスキームが `MacDesktopApp` になっ�
 ~/Library/Application Support/MacDesktopApp/store.json
 ```
 
-アプリをアンインストールしたい場合は、ビルド成果物（`.build/`フォルダ）とこのファイルを削除するだけです。
+保存のたびに、上書き前の内容が同じフォルダの `store.backup.json` に1世代分バックアップされます。万が一 `store.json` が壊れたりデータが消えてしまった場合は、`store.backup.json` を `store.json` にコピーし直すことで直前の状態に戻せます。
+
+アプリをアンインストールしたい場合は、ビルド成果物（`.build/`フォルダ）とこれらのファイルを削除するだけです。
 
 ## 補足
 

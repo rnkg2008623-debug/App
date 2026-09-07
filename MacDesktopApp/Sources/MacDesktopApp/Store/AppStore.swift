@@ -111,6 +111,11 @@ final class AppStore: ObservableObject {
             backgroundMediaHistory: backgroundMediaHistory
         )
         guard let encoded = try? JSONEncoder().encode(data) else { return }
+        if FileManager.default.fileExists(atPath: saveURL.path) {
+            let backupURL = saveURL.deletingLastPathComponent().appendingPathComponent("store.backup.json")
+            try? FileManager.default.removeItem(at: backupURL)
+            try? FileManager.default.copyItem(at: saveURL, to: backupURL)
+        }
         try? encoded.write(to: saveURL, options: .atomic)
     }
 
