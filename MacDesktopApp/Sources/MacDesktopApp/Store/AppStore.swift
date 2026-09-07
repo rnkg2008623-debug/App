@@ -25,6 +25,49 @@ final class AppStore: ObservableObject {
         var notes: [Note] = []
         var theme: ThemeSettings = ThemeSettings()
         var backgroundMediaHistory: [String] = []
+
+        init(
+            files: [StoredFile] = [],
+            videos: [VideoLink] = [],
+            videoFolders: [VideoFolder] = [],
+            events: [TimetableEvent] = [],
+            snsLinks: [SNSLink] = [],
+            todos: [TodoItem] = [],
+            notes: [Note] = [],
+            theme: ThemeSettings = ThemeSettings(),
+            backgroundMediaHistory: [String] = []
+        ) {
+            self.files = files
+            self.videos = videos
+            self.videoFolders = videoFolders
+            self.events = events
+            self.snsLinks = snsLinks
+            self.todos = todos
+            self.notes = notes
+            self.theme = theme
+            self.backgroundMediaHistory = backgroundMediaHistory
+        }
+
+        // Decoded field-by-field with `decodeIfPresent` so that adding a new
+        // field in a future update never breaks loading of data saved by an
+        // older version of the app (a missing key falls back to its default
+        // instead of failing the entire decode).
+        enum CodingKeys: String, CodingKey {
+            case files, videos, videoFolders, events, snsLinks, todos, notes, theme, backgroundMediaHistory
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            files = try container.decodeIfPresent([StoredFile].self, forKey: .files) ?? []
+            videos = try container.decodeIfPresent([VideoLink].self, forKey: .videos) ?? []
+            videoFolders = try container.decodeIfPresent([VideoFolder].self, forKey: .videoFolders) ?? []
+            events = try container.decodeIfPresent([TimetableEvent].self, forKey: .events) ?? []
+            snsLinks = try container.decodeIfPresent([SNSLink].self, forKey: .snsLinks) ?? []
+            todos = try container.decodeIfPresent([TodoItem].self, forKey: .todos) ?? []
+            notes = try container.decodeIfPresent([Note].self, forKey: .notes) ?? []
+            theme = try container.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? ThemeSettings()
+            backgroundMediaHistory = try container.decodeIfPresent([String].self, forKey: .backgroundMediaHistory) ?? []
+        }
     }
 
     init() {
