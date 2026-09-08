@@ -38,7 +38,15 @@
     <div id="crosshair">
       <span></span><span></span><span></span><span></span>
     </div>
+    <div id="charge-bar" class="charge-bar hidden">
+      <div id="charge-fill" class="charge-fill"></div>
+    </div>
     <div id="hit-flash"></div>
+
+    <div class="hud-weapon">
+      <span class="weapon-caption">武器 [1/2/3]</span>
+      <span id="weapon-name" class="weapon-name">シューター</span>
+    </div>
 
     <div class="hud-bottom">
       <div class="gauge-block">
@@ -67,9 +75,15 @@
       <ul class="howto">
         <li><b>W A S D</b> : 移動</li>
         <li><b>マウス</b> : 視点操作</li>
-        <li><b>左クリック</b> : インクを発射</li>
+        <li><b>左クリック</b> : 攻撃(武器ごとに操作が変わる)</li>
+        <li><b>1 / 2 / 3</b> : 武器を切り替え</li>
         <li><b>Space</b> : ジャンプ</li>
         <li><b>E</b> : スペシャル発動(ゲージが溜まったら)</li>
+      </ul>
+      <ul class="howto weapon-list">
+        <li><b>1 シューター</b> : 連射が速い万能タイプ</li>
+        <li><b>2 ローラー</b> : 近距離で地面を広く塗り、当てると一撃</li>
+        <li><b>3 チャージャー</b> : 長押しでチャージして離すと遠距離に強力な一撃</li>
       </ul>
       <button id="btn-start" class="btn-primary">クリックしてプレイ開始</button>
       <p class="hint">※ PCでのマウス操作を推奨します</p>

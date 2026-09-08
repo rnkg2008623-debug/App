@@ -30,8 +30,6 @@
   const CAMERA_COLLISION_MARGIN = 0.4;
 
   const SHOT_RADIUS = 1.5;
-  const SHOT_COST = 7;
-  const FIRE_INTERVAL = 0.16;
   const INK_MAX = 100;
   const INK_REGEN = 20;
   const PROJECTILE_SPEED = 27;
@@ -43,6 +41,27 @@
   const HIT_DAMAGE = 34;
   const RESPAWN_DELAY = 2.0;
   const INVULN_TIME = 1.0;
+
+  // ------------------------------------------------------------------
+  // 武器の種類(スプラトゥーン風): シューター/ローラー/チャージャー
+  // ------------------------------------------------------------------
+  const WEAPONS = [
+    {
+      id: 'shooter', name: 'シューター', mode: 'shot',
+      fireInterval: 0.08, inkCost: 4,
+      projectileSpeed: 30, upArc: 5, shotRadius: 1.25, hitRadius: 1.7, damage: 28,
+    },
+    {
+      id: 'roller', name: 'ローラー', mode: 'melee',
+      fireInterval: 0.42, inkCost: 13,
+      range: 3.4, width: 2.6, hitRadius: 2.4, damage: 100,
+    },
+    {
+      id: 'charger', name: 'チャージャー', mode: 'charge',
+      chargeTime: 0.95, minChargeFraction: 0.3, inkCostPerFullCharge: 55,
+      projectileSpeedMax: 55, upArcMax: 2.2, shotRadiusMax: 1.9, hitRadiusMax: 2.6, damageMax: 100,
+    },
+  ];
 
   const ENEMY_COUNT = 3;
   const ENEMY_SPEED = 4.3;
@@ -103,6 +122,9 @@
   const inkFill = document.getElementById('ink-fill');
   const specialFill = document.getElementById('special-fill');
   const specialReady = document.getElementById('special-ready');
+  const weaponNameEl = document.getElementById('weapon-name');
+  const chargeBar = document.getElementById('charge-bar');
+  const chargeFill = document.getElementById('charge-fill');
   const respawnBanner = document.getElementById('respawn-banner');
   const hitFlash = document.getElementById('hit-flash');
   const screenStart = document.getElementById('screen-start');
@@ -360,6 +382,8 @@
     fireCooldown: 0,
     swimTime: 0,
     splatCount: 0,
+    weaponIndex: 0,
+    charge: 0,
   };
   const playerMesh = createCharacterMesh(PLAYER_COLOR);
   scene.add(playerMesh);
@@ -405,13 +429,13 @@
   const inkBallGeo = new THREE.SphereGeometry(0.22, 8, 8);
   const projectiles = [];
 
-  function fireInk(originPos, dir, ownerType, colorHex) {
-    const vel = dir.clone().multiplyScalar(PROJECTILE_SPEED);
-    vel.y += PROJECTILE_UP_ARC;
+  function fireInk(originPos, dir, ownerType, colorHex, speed = PROJECTILE_SPEED, upArc = PROJECTILE_UP_ARC, paintRadius = SHOT_RADIUS, hitRadius = HIT_RADIUS, damage = HIT_DAMAGE) {
+    const vel = dir.clone().multiplyScalar(speed);
+    vel.y += upArc;
     const mesh = new THREE.Mesh(inkBallGeo, new THREE.MeshBasicMaterial({ color: colorHex }));
     mesh.position.copy(originPos);
     scene.add(mesh);
-    projectiles.push({ mesh, vel, ownerType, colorHex, life: 2.4 });
+    projectiles.push({ mesh, vel, ownerType, colorHex, life: 2.4, paintRadius, hitRadius, damage });
   }
 
   function updateProjectiles(delta) {
@@ -428,7 +452,7 @@
       if (pos.y <= groundY || p.life <= 0 || outOfBounds) {
         if (!outOfBounds) {
           const ownerId = p.ownerType === 'player' ? OWNER_PLAYER : OWNER_ENEMY;
-          const gained = paintAt(pos.x, pos.z, ownerId, p.colorHex, SHOT_RADIUS);
+          const gained = paintAt(pos.x, pos.z, ownerId, p.colorHex, p.paintRadius);
           if (gained > 0 && p.ownerType === 'player') {
             player.special = Math.min(SPECIAL_MAX, player.special + gained * SPECIAL_PAINT_GAIN);
           }
@@ -436,10 +460,10 @@
           if (p.ownerType === 'player') {
             for (const en of enemies) {
               if (!en.alive) continue;
-              if (Math.hypot(en.x - pos.x, en.z - pos.z) < HIT_RADIUS) damageEnemy(en);
+              if (Math.hypot(en.x - pos.x, en.z - pos.z) < p.hitRadius) damageEnemy(en, p.damage);
             }
           } else if (player.alive && player.invuln <= 0) {
-            if (Math.hypot(player.x - pos.x, player.z - pos.z) < HIT_RADIUS) damagePlayer();
+            if (Math.hypot(player.x - pos.x, player.z - pos.z) < p.hitRadius) damagePlayer(p.damage);
           }
         }
         scene.remove(p.mesh);
@@ -451,13 +475,15 @@
   // ==================================================================
   // ダメージ/リスポーン
   // ==================================================================
-  function damagePlayer() {
-    player.hp -= HIT_DAMAGE;
+  function damagePlayer(damage = HIT_DAMAGE) {
+    player.hp -= damage;
     player.invuln = INVULN_TIME;
     flashHit();
     if (player.hp <= 0 && player.alive) {
       player.alive = false;
       player.respawnTimer = RESPAWN_DELAY;
+      player.charge = 0;
+      isFiring = false;
       respawnBanner.classList.remove('hidden');
     }
   }
@@ -473,8 +499,8 @@
     respawnBanner.classList.add('hidden');
   }
 
-  function damageEnemy(en) {
-    en.hp -= HIT_DAMAGE;
+  function damageEnemy(en, damage = HIT_DAMAGE) {
+    en.hp -= damage;
     if (en.hp <= 0 && en.alive) {
       en.alive = false;
       en.mesh.visible = false;
@@ -499,6 +525,11 @@
   window.addEventListener('keydown', (e) => {
     keys[e.code] = true;
     if (e.code === 'KeyE' && !e.repeat && state === 'playing') tryActivateSpecial();
+    if (state === 'playing') {
+      if (e.code === 'Digit1') switchWeapon(0);
+      else if (e.code === 'Digit2') switchWeapon(1);
+      else if (e.code === 'Digit3') switchWeapon(2);
+    }
   });
   window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
@@ -550,6 +581,16 @@
     specialFill.style.width = Math.max(0, player.special) + '%';
     const ready = player.special >= SPECIAL_MAX;
     specialReady.classList.toggle('hidden', !ready);
+
+    const weapon = WEAPONS[player.weaponIndex];
+    weaponNameEl.textContent = weapon.name;
+    if (weapon.mode === 'charge' && isFiring) {
+      chargeBar.classList.remove('hidden');
+      chargeFill.style.width = Math.min(100, player.charge * 100) + '%';
+      chargeFill.classList.toggle('ready', player.charge >= 1);
+    } else {
+      chargeBar.classList.add('hidden');
+    }
   }
 
   function flashHit() {
@@ -576,6 +617,78 @@
         en.z += (en.z - targetZ) * 0.3;
       }
     }
+  }
+
+  // ==================================================================
+  // 武器アクション
+  // ==================================================================
+  function switchWeapon(idx) {
+    if (idx === player.weaponIndex || !player.alive) return;
+    player.weaponIndex = idx;
+    player.charge = 0;
+    player.fireCooldown = 0;
+    isFiring = false;
+  }
+
+  function aimDirection() {
+    const dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
+    if (dir.y > -0.05) dir.y = -0.05;
+    dir.normalize();
+    return dir;
+  }
+
+  function muzzlePosition(dir) {
+    const groundY = heightAt(player.x, player.z);
+    return new THREE.Vector3(player.x, groundY + EYE_HEIGHT + player.vertOffset, player.z)
+      .addScaledVector(dir, 0.7);
+  }
+
+  function fireWeaponShot(weapon) {
+    const dir = aimDirection();
+    const muzzle = muzzlePosition(dir);
+    fireInk(muzzle, dir, 'player', PLAYER_COLOR, weapon.projectileSpeed, weapon.upArc, weapon.shotRadius, weapon.hitRadius, weapon.damage);
+  }
+
+  function performRollerSwing(weapon) {
+    const dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
+    dir.y = 0;
+    if (dir.lengthSq() < 0.0001) dir.set(0, 0, -1);
+    dir.normalize();
+    const right = new THREE.Vector3(-dir.z, 0, dir.x);
+
+    const steps = 5;
+    let gainedTotal = 0;
+    for (let i = 0; i <= steps; i++) {
+      const dist = (i / steps) * weapon.range;
+      const px = player.x + dir.x * dist;
+      const pz = player.z + dir.z * dist;
+      gainedTotal += paintAt(px, pz, OWNER_PLAYER, PLAYER_COLOR, weapon.width / 2);
+    }
+    if (gainedTotal > 0) {
+      player.special = Math.min(SPECIAL_MAX, player.special + gainedTotal * SPECIAL_PAINT_GAIN);
+    }
+
+    for (const en of enemies) {
+      if (!en.alive) continue;
+      const dx = en.x - player.x;
+      const dz = en.z - player.z;
+      const along = dx * dir.x + dz * dir.z;
+      if (along < -0.5 || along > weapon.range + 0.5) continue;
+      const lateral = Math.abs(dx * right.x + dz * right.z);
+      if (lateral <= weapon.width / 2 + 0.6) damageEnemy(en, weapon.damage);
+    }
+  }
+
+  function fireChargerShot(weapon, chargeFrac) {
+    const dir = aimDirection();
+    const muzzle = muzzlePosition(dir);
+    const speed = weapon.projectileSpeedMax * (0.55 + 0.45 * chargeFrac);
+    const radius = weapon.shotRadiusMax * (0.5 + 0.5 * chargeFrac);
+    const hitRadius = weapon.hitRadiusMax * (0.5 + 0.5 * chargeFrac);
+    const damage = weapon.damageMax * chargeFrac;
+    fireInk(muzzle, dir, 'player', PLAYER_COLOR, speed, weapon.upArcMax, radius, hitRadius, damage);
   }
 
   // ==================================================================
@@ -678,17 +791,22 @@
     player.ink = Math.min(INK_MAX, player.ink + inkRegen * delta);
 
     if (player.fireCooldown > 0) player.fireCooldown -= delta;
-    if (isFiring && player.fireCooldown <= 0 && player.ink >= SHOT_COST) {
-      player.fireCooldown = FIRE_INTERVAL;
-      player.ink -= SHOT_COST;
-      const dir = new THREE.Vector3();
-      camera.getWorldDirection(dir);
-      if (dir.y > -0.05) dir.y = -0.05;
-      dir.normalize();
-      const groundY = heightAt(player.x, player.z);
-      const muzzle = new THREE.Vector3(player.x, groundY + EYE_HEIGHT + player.vertOffset, player.z)
-        .addScaledVector(dir, 0.7);
-      fireInk(muzzle, dir, 'player', PLAYER_COLOR);
+    const weapon = WEAPONS[player.weaponIndex];
+    if (weapon.mode === 'shot' || weapon.mode === 'melee') {
+      if (isFiring && player.fireCooldown <= 0 && player.ink >= weapon.inkCost) {
+        player.fireCooldown = weapon.fireInterval;
+        player.ink -= weapon.inkCost;
+        if (weapon.mode === 'shot') fireWeaponShot(weapon);
+        else performRollerSwing(weapon);
+      }
+    } else if (weapon.mode === 'charge') {
+      if (isFiring && player.ink > 0) {
+        player.charge = Math.min(1, player.charge + delta / weapon.chargeTime);
+        player.ink = Math.max(0, player.ink - (weapon.inkCostPerFullCharge / weapon.chargeTime) * delta);
+      } else if (!isFiring && player.charge > 0) {
+        if (player.charge >= weapon.minChargeFraction) fireChargerShot(weapon, player.charge);
+        player.charge = 0;
+      }
     }
 
     syncCamera();
@@ -780,6 +898,8 @@
     player.swimTime = 0;
     player.splatCount = 0;
     player.invuln = INVULN_TIME;
+    player.weaponIndex = 0;
+    player.charge = 0;
     respawnBanner.classList.add('hidden');
     yaw = 0;
     pitch = -0.15;
