@@ -137,6 +137,43 @@ html, body {
   opacity: 0;
   transition: opacity 0.12s ease-out;
 }
+
+.charge-bar {
+  position: absolute;
+  top: calc(50% + 30px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.3);
+  overflow: hidden;
+}
+.charge-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #3ce0ff, #7dfaff);
+  transition: width 0.05s linear;
+}
+.charge-fill.ready { background: linear-gradient(90deg, #ffdf3c, #fff27d); }
+
+.hud-weapon {
+  position: absolute;
+  top: 62px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 16px;
+  background: rgba(10, 10, 14, 0.45);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.weapon-caption { opacity: 0.7; font-size: 0.7rem; }
+.weapon-name { color: var(--ink-player-strong); }
 #hit-flash.show { opacity: 1; transition: none; }
 
 /* ---------- 下部ゲージ ---------- */
@@ -211,6 +248,11 @@ html, body {
   min-width: 88px;
   color: var(--ink-player-strong);
 }
+.weapon-list {
+  font-size: 0.85rem;
+  margin-top: -12px;
+}
+.weapon-list b { min-width: 132px; }
 
 .btn-primary {
   border: none;
