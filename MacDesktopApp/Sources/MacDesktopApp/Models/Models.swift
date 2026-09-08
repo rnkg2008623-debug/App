@@ -105,6 +105,21 @@ struct Note: Identifiable, Codable, Hashable {
     var updatedAt: Date = Date()
 }
 
+// MARK: - PDFライブラリ
+
+struct PDFFolder: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var name: String
+}
+
+struct PDFItem: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var title: String
+    var path: String
+    var folderID: UUID? = nil
+    var addedAt: Date = Date()
+}
+
 // MARK: - テーマ（機能7）
 
 enum AppThemeMode: String, Codable, CaseIterable, Identifiable, Hashable {

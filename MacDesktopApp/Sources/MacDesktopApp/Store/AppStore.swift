@@ -8,6 +8,8 @@ final class AppStore: ObservableObject {
     @Published var snsLinks: [SNSLink] = []
     @Published var todos: [TodoItem] = []
     @Published var notes: [Note] = []
+    @Published var pdfItems: [PDFItem] = []
+    @Published var pdfFolders: [PDFFolder] = []
     @Published var theme: ThemeSettings = ThemeSettings()
     @Published var backgroundMediaHistory: [String] = []
     @Published var selectedWeek: WeekType = .weekA
@@ -23,6 +25,8 @@ final class AppStore: ObservableObject {
         var snsLinks: [SNSLink] = []
         var todos: [TodoItem] = []
         var notes: [Note] = []
+        var pdfItems: [PDFItem] = []
+        var pdfFolders: [PDFFolder] = []
         var theme: ThemeSettings = ThemeSettings()
         var backgroundMediaHistory: [String] = []
 
@@ -34,6 +38,8 @@ final class AppStore: ObservableObject {
             snsLinks: [SNSLink] = [],
             todos: [TodoItem] = [],
             notes: [Note] = [],
+            pdfItems: [PDFItem] = [],
+            pdfFolders: [PDFFolder] = [],
             theme: ThemeSettings = ThemeSettings(),
             backgroundMediaHistory: [String] = []
         ) {
@@ -44,6 +50,8 @@ final class AppStore: ObservableObject {
             self.snsLinks = snsLinks
             self.todos = todos
             self.notes = notes
+            self.pdfItems = pdfItems
+            self.pdfFolders = pdfFolders
             self.theme = theme
             self.backgroundMediaHistory = backgroundMediaHistory
         }
@@ -53,7 +61,7 @@ final class AppStore: ObservableObject {
         // older version of the app (a missing key falls back to its default
         // instead of failing the entire decode).
         enum CodingKeys: String, CodingKey {
-            case files, videos, videoFolders, events, snsLinks, todos, notes, theme, backgroundMediaHistory
+            case files, videos, videoFolders, events, snsLinks, todos, notes, pdfItems, pdfFolders, theme, backgroundMediaHistory
         }
 
         init(from decoder: Decoder) throws {
@@ -65,6 +73,8 @@ final class AppStore: ObservableObject {
             snsLinks = try container.decodeIfPresent([SNSLink].self, forKey: .snsLinks) ?? []
             todos = try container.decodeIfPresent([TodoItem].self, forKey: .todos) ?? []
             notes = try container.decodeIfPresent([Note].self, forKey: .notes) ?? []
+            pdfItems = try container.decodeIfPresent([PDFItem].self, forKey: .pdfItems) ?? []
+            pdfFolders = try container.decodeIfPresent([PDFFolder].self, forKey: .pdfFolders) ?? []
             theme = try container.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? ThemeSettings()
             backgroundMediaHistory = try container.decodeIfPresent([String].self, forKey: .backgroundMediaHistory) ?? []
         }
@@ -94,6 +104,8 @@ final class AppStore: ObservableObject {
         snsLinks = decoded.snsLinks
         todos = decoded.todos
         notes = decoded.notes
+        pdfItems = decoded.pdfItems
+        pdfFolders = decoded.pdfFolders
         theme = decoded.theme
         backgroundMediaHistory = decoded.backgroundMediaHistory
     }
@@ -107,6 +119,8 @@ final class AppStore: ObservableObject {
             snsLinks: snsLinks,
             todos: todos,
             notes: notes,
+            pdfItems: pdfItems,
+            pdfFolders: pdfFolders,
             theme: theme,
             backgroundMediaHistory: backgroundMediaHistory
         )
@@ -232,6 +246,37 @@ final class AppStore: ObservableObject {
 
     func removeNote(_ id: UUID) {
         notes.removeAll { $0.id == id }
+        save()
+    }
+
+    // MARK: - PDFライブラリ
+
+    func addPDFItem(_ item: PDFItem) {
+        pdfItems.append(item)
+        save()
+    }
+
+    func removePDFItem(_ id: UUID) {
+        pdfItems.removeAll { $0.id == id }
+        save()
+    }
+
+    func addPDFFolder(_ folder: PDFFolder) {
+        pdfFolders.append(folder)
+        save()
+    }
+
+    func renamePDFFolder(_ id: UUID, name: String) {
+        guard let idx = pdfFolders.firstIndex(where: { $0.id == id }) else { return }
+        pdfFolders[idx].name = name
+        save()
+    }
+
+    func removePDFFolder(_ id: UUID) {
+        pdfFolders.removeAll { $0.id == id }
+        for idx in pdfItems.indices where pdfItems[idx].folderID == id {
+            pdfItems[idx].folderID = nil
+        }
         save()
     }
 
