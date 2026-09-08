@@ -1,0 +1,242 @@
+:root {
+  --ink-player: #f5d300;
+  --ink-player-strong: #ffe14d;
+  --ink-enemy: #b400e0;
+  --ink-enemy-strong: #d24bff;
+  --gg-hp-good: #4caf6a;
+  --gg-hp-mid: #e0a83a;
+  --gg-hp-bad: #d84343;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: "Hiragino Sans", "Yu Gothic Medium", "Meiryo", "Segoe UI", system-ui, sans-serif;
+}
+
+#game-root {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+#game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+.hidden { display: none !important; }
+
+/* ---------- HUD ---------- */
+#hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.85);
+}
+
+.hud-top {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+  background: rgba(10, 10, 14, 0.5);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
+.turf-meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.turf-label { font-size: 0.75rem; opacity: 0.9; }
+.turf-label-p { color: var(--ink-player-strong); }
+.turf-label-e { color: var(--ink-enemy-strong); }
+
+.turf-bar {
+  position: relative;
+  width: 220px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.15);
+  overflow: hidden;
+  display: flex;
+}
+.turf-fill { height: 100%; transition: width 0.25s ease-out; }
+.turf-fill-player { background: linear-gradient(90deg, var(--ink-player), var(--ink-player-strong)); }
+.turf-fill-enemy { background: linear-gradient(90deg, var(--ink-enemy-strong), var(--ink-enemy)); margin-left: auto; }
+
+.turf-pct { display: flex; gap: 6px; font-variant-numeric: tabular-nums; }
+.turf-pct .vs { opacity: 0.6; font-size: 0.75rem; }
+#hud-pct-player { color: var(--ink-player-strong); }
+#hud-pct-enemy { color: var(--ink-enemy-strong); }
+
+.hud-timer {
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  padding-left: 6px;
+  border-left: 1px solid rgba(255,255,255,0.25);
+}
+
+.respawn-banner {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #ff5a3c;
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+
+#crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+}
+#crosshair span {
+  position: absolute;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 0 2px rgba(0,0,0,0.8);
+}
+#crosshair span:nth-child(1), #crosshair span:nth-child(2) {
+  width: 2px; height: 8px; left: 11px;
+}
+#crosshair span:nth-child(1) { top: 0; }
+#crosshair span:nth-child(2) { bottom: 0; }
+#crosshair span:nth-child(3), #crosshair span:nth-child(4) {
+  height: 2px; width: 8px; top: 11px;
+}
+#crosshair span:nth-child(3) { left: 0; }
+#crosshair span:nth-child(4) { right: 0; }
+
+#hit-flash {
+  position: absolute;
+  inset: 0;
+  background: rgba(216, 67, 67, 0.35);
+  opacity: 0;
+  transition: opacity 0.12s ease-out;
+}
+#hit-flash.show { opacity: 1; transition: none; }
+
+/* ---------- 下部ゲージ ---------- */
+.hud-bottom {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+.gauge-block { display: flex; align-items: center; gap: 8px; }
+.gauge-caption { font-size: 0.7rem; opacity: 0.85; min-width: 52px; text-align: right; }
+.gauge-track {
+  width: 160px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.15);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.gauge-fill { height: 100%; transition: width 0.15s linear; }
+.ink-fill { background: linear-gradient(90deg, var(--ink-player), var(--ink-player-strong)); }
+.special-fill { background: linear-gradient(90deg, #3ce0ff, #7dfaff); }
+.special-ready {
+  font-size: 0.72rem;
+  color: #7dfaff;
+  animation: pulse 0.9s ease-in-out infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+/* ---------- Overlays ---------- */
+.overlay-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(40,20,50,0.92) 0%, rgba(8,4,12,0.97) 100%);
+  z-index: 20;
+}
+
+.overlay-box {
+  max-width: 440px;
+  width: 90%;
+  text-align: center;
+  color: #f2f0e9;
+  padding: 32px 28px;
+  background: rgba(20, 16, 26, 0.7);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.overlay-box h1 { margin: 4px 0 8px; font-size: 1.7rem; }
+.overlay-box h2 { margin: 4px 0 16px; }
+.overlay-box .sub { color: #d8d0e0; margin: 0 0 14px; }
+
+.howto {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 22px;
+  text-align: left;
+  display: inline-block;
+  color: #d8d5cb;
+  font-size: 0.95rem;
+  line-height: 2;
+}
+.howto b {
+  display: inline-block;
+  min-width: 88px;
+  color: var(--ink-player-strong);
+}
+
+.btn-primary {
+  border: none;
+  background: linear-gradient(135deg, var(--ink-player), #ff8a3c);
+  color: #1a1206;
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 14px 30px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(245, 211, 0, 0.35);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(245, 211, 0, 0.45); }
+.btn-primary:active { transform: translateY(0); }
+
+.hint { margin: 14px 0 0; font-size: 0.8rem; color: #b3ada8; }
+
+.btn-link {
+  display: inline-block;
+  margin-top: 4px;
+  color: #a8a49a;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+.btn-link:hover { color: #fff; }
+.back-link { margin-bottom: 10px; text-align: left; }
+#screen-start .back-link { display: block; }
+#screen-result .back-link { margin-top: 14px; }
