@@ -1,0 +1,150 @@
+:root {
+  --bg: #f6f4ee;
+  --surface: #ffffff;
+  --surface-alt: #efece2;
+  --border: #ddd8c8;
+  --text: #2b2a24;
+  --text-muted: #6b6a5c;
+  --primary: #3f5744;
+  --primary-strong: #2e4033;
+  --primary-soft: #dce6dd;
+  --accent: #b5602f;
+  --accent-strong: #94491f;
+  --accent-soft: #f3ddcc;
+  --gold: #a9821c;
+  --gold-soft: #f1e6c4;
+  --danger: #a1402b;
+  --danger-soft: #f4dcd4;
+  --success: #3f6b4a;
+  --success-soft: #dcebe0;
+  --radius: 12px;
+  --shadow: 0 2px 10px rgba(43, 42, 36, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Hiragino Sans", "Yu Gothic Medium", "Meiryo", "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.hidden { display: none !important; }
+
+.vk-shell { max-width: 920px; margin: 0 auto; padding: 0 16px 60px; }
+
+.vk-header {
+  padding: 20px 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+.back-link {
+  display: inline-block;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+.back-link:hover { text-decoration: underline; }
+.vk-header h1 { margin: 0 0 6px; font-size: 1.6rem; color: var(--primary-strong); }
+.vk-header p { margin: 0; color: var(--text-muted); font-size: 0.92rem; }
+
+.vk-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+  margin-top: 18px;
+}
+.vk-card h2 { margin: 0 0 10px; font-size: 1.05rem; color: var(--primary-strong); }
+.vk-note { font-size: 0.85rem; color: var(--text-muted); margin: 6px 0 0; }
+
+/* Dropzone */
+.vk-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 28px 16px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--surface-alt);
+  transition: border-color 0.15s, background 0.15s;
+}
+.vk-dropzone.is-drag { border-color: var(--primary); background: var(--primary-soft); }
+.vk-dropzone .vk-drop-icon { font-size: 2rem; display: block; margin-bottom: 6px; }
+.vk-dropzone .vk-drop-main { font-weight: 600; color: var(--text); }
+.vk-dropzone .vk-drop-sub { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+.vk-file-info { margin-top: 12px; font-size: 0.9rem; color: var(--text); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.vk-file-info .vk-file-name { font-weight: 600; }
+
+.vk-actions { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+.btn {
+  border: none; border-radius: 999px; padding: 10px 20px; font-size: 0.92rem; font-weight: 700;
+  cursor: pointer; transition: background 0.15s, opacity 0.15s;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-strong); }
+.btn-primary:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
+.btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--primary-soft); }
+.btn-outline:hover { background: var(--primary-soft); }
+.btn-sm { padding: 6px 14px; font-size: 0.82rem; }
+
+/* Advanced settings */
+.vk-adv-toggle {
+  background: none; border: none; color: var(--primary); font-weight: 600; cursor: pointer;
+  font-size: 0.88rem; padding: 4px 0; margin-top: 10px;
+}
+.vk-adv-panel {
+  margin-top: 10px; padding: 14px; background: var(--surface-alt); border-radius: var(--radius);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;
+}
+.vk-field label { display: block; font-size: 0.82rem; color: var(--text-muted); margin-bottom: 4px; }
+.vk-field .vk-field-val { font-weight: 700; color: var(--text); }
+.vk-field input[type="range"] { width: 100%; }
+.vk-field-row { display: flex; gap: 8px; }
+.vk-field-row input[type="number"] { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; }
+
+/* Progress */
+.vk-progress-wrap { margin-top: 14px; }
+.vk-progress-track {
+  width: 100%; height: 10px; border-radius: 999px; background: var(--surface-alt); overflow: hidden;
+}
+.vk-progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.15s; }
+.vk-progress-label { font-size: 0.82rem; color: var(--text-muted); margin-top: 6px; }
+
+.vk-error { margin-top: 12px; background: var(--danger-soft); color: var(--danger); border-radius: var(--radius); padding: 12px 14px; font-size: 0.88rem; }
+
+/* Player */
+.vk-player-row { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+.vk-player-row video { max-width: 320px; width: 100%; border-radius: var(--radius); background: #000; }
+.vk-now-note {
+  flex: 1; min-width: 220px; background: var(--primary-strong); color: #fff; border-radius: var(--radius);
+  padding: 18px; text-align: center;
+}
+.vk-now-note .vk-now-label { font-size: 0.8rem; opacity: 0.75; letter-spacing: 0.05em; }
+.vk-now-note .vk-now-value { font-size: 2.6rem; font-weight: 800; margin: 6px 0; font-family: "Segoe UI", system-ui, sans-serif; }
+.vk-now-note .vk-now-freq { font-size: 0.9rem; opacity: 0.85; }
+
+/* Graph */
+.vk-graph-wrap { margin-top: 16px; overflow-x: auto; }
+#vk-graph { display: block; background: var(--surface-alt); border-radius: var(--radius); cursor: pointer; }
+
+/* Table */
+.vk-table-wrap { margin-top: 14px; max-height: 420px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+table.vk-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+table.vk-table thead th {
+  position: sticky; top: 0; background: var(--surface-alt); text-align: left; padding: 8px 12px;
+  border-bottom: 1px solid var(--border); font-size: 0.8rem; color: var(--text-muted);
+}
+table.vk-table tbody td { padding: 7px 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
+table.vk-table tbody tr:hover { background: var(--surface-alt); }
+table.vk-table tbody tr.is-current { background: var(--gold-soft); }
+.vk-note-tag { font-weight: 700; color: var(--primary-strong); }
+
+.vk-legend { font-size: 0.82rem; color: var(--text-muted); margin-top: 10px; line-height: 1.8; }
+.vk-legend code { background: var(--surface-alt); padding: 1px 6px; border-radius: 6px; }
+
+.vk-table-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }

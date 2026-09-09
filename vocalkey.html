@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ボーカルキー分析 - 学習ナビ</title>
+<meta name="description" content="MP4動画をアップロードすると、歌声のメロディーの音程（キー）をMid2D#・HiAのような表記で時系列に検出するツール。サーバー不要・ブラウザ内だけで解析します。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎤</text></svg>">
+<link rel="stylesheet" href="assets/css/vocalkey.css">
+</head>
+<body>
+<div class="vk-shell">
+
+  <header class="vk-header">
+    <a href="index.html" class="back-link">← 学習ナビに戻る</a>
+    <h1>🎤 ボーカルキー分析</h1>
+    <p>MP4をアップロードすると、歌声（メロディー）の音程を <code>Mid2D#</code> や <code>HiA</code> のような表記で時系列に検出します。解析はすべてブラウザ内で行われ、ファイルはサーバーに送信されません。</p>
+  </header>
+
+  <!-- ===================== アップロード ===================== -->
+  <section class="vk-card">
+    <h2>1. ファイルを選ぶ</h2>
+
+    <div id="vk-dropzone" class="vk-dropzone">
+      <span class="vk-drop-icon">📤</span>
+      <div class="vk-drop-main">クリックして選択、またはMP4ファイルをドラッグ＆ドロップ</div>
+      <div class="vk-drop-sub">MP4のほかMP3・WAV・M4Aなどの音声/動画ファイルにも対応</div>
+      <input id="vk-file-input" type="file" accept="video/mp4,audio/mp4,audio/*,video/*" class="hidden">
+    </div>
+
+    <div id="vk-file-info" class="vk-file-info hidden">
+      <span>📄</span>
+      <span class="vk-file-name" id="vk-file-name"></span>
+      <span id="vk-file-duration"></span>
+    </div>
+
+    <button id="vk-adv-toggle" class="vk-adv-toggle" type="button" aria-expanded="false">▶ 詳細設定（検出感度・音域など）</button>
+    <div id="vk-adv-panel" class="vk-adv-panel hidden">
+      <div class="vk-field">
+        <label for="vk-clarity">検出感度（高いほど厳密） <span class="vk-field-val" id="vk-clarity-val">0.50</span></label>
+        <input id="vk-clarity" type="range" min="0.2" max="0.9" step="0.05" value="0.5">
+      </div>
+      <div class="vk-field">
+        <label for="vk-rms">音量ゲート（小さいほど静かな声も拾う） <span class="vk-field-val" id="vk-rms-val">0.015</span></label>
+        <input id="vk-rms" type="range" min="0" max="0.05" step="0.005" value="0.015">
+      </div>
+      <div class="vk-field">
+        <label for="vk-mindur">最短ノート長（ms） <span class="vk-field-val" id="vk-mindur-val">80</span></label>
+        <input id="vk-mindur" type="range" min="30" max="300" step="10" value="80">
+      </div>
+      <div class="vk-field">
+        <label>検出する音域（Hz）</label>
+        <div class="vk-field-row">
+          <input id="vk-minfreq" type="number" value="65" min="30" max="500">
+          <input id="vk-maxfreq" type="number" value="1400" min="200" max="3000">
+        </div>
+      </div>
+    </div>
+
+    <div class="vk-actions">
+      <button id="vk-analyze-btn" class="btn btn-primary" disabled>解析を開始</button>
+      <button id="vk-reset-btn" class="btn btn-outline hidden">やり直す</button>
+    </div>
+
+    <div id="vk-progress-wrap" class="vk-progress-wrap hidden">
+      <div class="vk-progress-track"><div id="vk-progress-fill" class="vk-progress-fill"></div></div>
+      <div id="vk-progress-label" class="vk-progress-label">読み込み中...</div>
+    </div>
+
+    <div id="vk-error" class="vk-error hidden"></div>
+
+    <p class="vk-note">※ 曲全体の中で最も大きく鳴っているメロディーの音程を検出します（AIによるボーカル単独抽出は行っていないため、伴奏が大きい曲では検出がずれる場合があります）。うまく検出できない場合は「詳細設定」で感度や音量ゲートを調整してください。</p>
+  </section>
+
+  <!-- ===================== プレイヤー & 現在の音 ===================== -->
+  <section id="vk-player-card" class="vk-card hidden">
+    <h2>2. 再生しながら確認</h2>
+    <div class="vk-player-row">
+      <video id="vk-video" controls></video>
+      <div class="vk-now-note">
+        <div class="vk-now-label">現在の音</div>
+        <div class="vk-now-value" id="vk-now-value">--</div>
+        <div class="vk-now-freq" id="vk-now-freq">再生すると表示されます</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== グラフ & 一覧 ===================== -->
+  <section id="vk-result-card" class="vk-card hidden">
+    <h2>3. 検出結果</h2>
+
+    <div class="vk-graph-wrap">
+      <canvas id="vk-graph" width="880" height="260"></canvas>
+    </div>
+
+    <div class="vk-table-actions">
+      <button id="vk-copy-btn" class="btn btn-outline btn-sm">一覧をコピー</button>
+      <button id="vk-download-btn" class="btn btn-outline btn-sm">テキストでダウンロード</button>
+    </div>
+
+    <div class="vk-table-wrap">
+      <table class="vk-table">
+        <thead>
+          <tr><th>開始</th><th>終了</th><th>キー</th><th>周波数</th></tr>
+        </thead>
+        <tbody id="vk-table-body"></tbody>
+      </table>
+    </div>
+
+    <div class="vk-legend">
+      表記について: <code>Low2</code> &lt; <code>Low1</code> &lt; <code>Mid1</code> &lt; <code>Mid2</code> &lt; <code>Hi</code> &lt; <code>Hihi</code> &lt; <code>Hihihi</code> の順に音域が高くなります（基準: <code>Mid2C</code> = 中央ド 約261.6Hz、<code>Mid2A</code> = 約440Hz、<code>HiC</code> = 約523.3Hz）。行またはグラフをクリックするとその位置から再生できます。
+    </div>
+  </section>
+
+</div>
+
+<script src="assets/js/vocalkey.js"></script>
+</body>
+</html>
