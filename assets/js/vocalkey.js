@@ -41,6 +41,8 @@
     'vk-dropzone', 'vk-file-input', 'vk-file-info', 'vk-file-name', 'vk-file-duration',
     'vk-adv-toggle', 'vk-adv-panel', 'vk-clarity', 'vk-clarity-val', 'vk-rms', 'vk-rms-val',
     'vk-mindur', 'vk-mindur-val', 'vk-minfreq', 'vk-maxfreq',
+    'vk-center-enable', 'vk-center-strength', 'vk-center-strength-val', 'vk-center-hint',
+    'vk-eq-enable', 'vk-eq-low', 'vk-eq-high',
     'vk-analyze-btn', 'vk-reset-btn', 'vk-progress-wrap', 'vk-progress-fill', 'vk-progress-label',
     'vk-error', 'vk-player-card', 'vk-video', 'vk-now-value', 'vk-now-freq',
     'vk-result-card', 'vk-graph', 'vk-table-body', 'vk-copy-btn', 'vk-download-btn',
@@ -88,6 +90,7 @@
 
     el['vk-player-card'].classList.remove('hidden');
     el['vk-result-card'].classList.add('hidden');
+    el['vk-center-hint'].classList.add('hidden');
   }
 
   // ===================== 詳細設定 =====================
@@ -100,6 +103,7 @@
   el['vk-clarity'].addEventListener('input', () => { el['vk-clarity-val'].textContent = Number(el['vk-clarity'].value).toFixed(2); });
   el['vk-rms'].addEventListener('input', () => { el['vk-rms-val'].textContent = Number(el['vk-rms'].value).toFixed(3); });
   el['vk-mindur'].addEventListener('input', () => { el['vk-mindur-val'].textContent = el['vk-mindur'].value; });
+  el['vk-center-strength'].addEventListener('input', () => { el['vk-center-strength-val'].textContent = Number(el['vk-center-strength'].value).toFixed(2); });
 
   // ===================== 解析 =====================
   el['vk-analyze-btn'].addEventListener('click', runAnalysis);
@@ -126,7 +130,53 @@
     el['vk-progress-label'].textContent = label;
   }
 
-  async function decodeAndResample(file, targetRate) {
+  // ステレオ音源から「センター（中央定位）」を強調したモノラル信号を作る。
+  // 歌声は左右均等にミックスされていることが多い一方、伴奏は左右に広げて
+  // ミックスされがちなので、短いブロックごとに「左右の差(side)」が
+  // 「左右の和(mid)」に対して大きい区間ほど減衰させることで、完全ではないが
+  // ボーカルを相対的に強調できる。AIによる音源分離ではなく簡易的な処理。
+  function buildCenterEmphasisMono(decoded, strength) {
+    const n = decoded.length;
+    const L = decoded.getChannelData(0);
+    const R = decoded.getChannelData(1);
+    const out = new Float32Array(n);
+    const blockSize = 1024;
+    for (let start = 0; start < n; start += blockSize) {
+      const end = Math.min(n, start + blockSize);
+      let midSq = 0, sideSq = 0;
+      for (let i = start; i < end; i++) {
+        const mid = (L[i] + R[i]) * 0.5;
+        const side = (L[i] - R[i]) * 0.5;
+        midSq += mid * mid;
+        sideSq += side * side;
+      }
+      const count = end - start;
+      const midRms = Math.sqrt(midSq / count);
+      const sideRms = Math.sqrt(sideSq / count);
+      const ratio = sideRms / (midRms + 1e-6);
+      const gain = Math.max(0, Math.min(1, 1 - strength * ratio));
+      for (let i = start; i < end; i++) {
+        out[i] = (L[i] + R[i]) * 0.5 * gain;
+      }
+    }
+    return out;
+  }
+
+  function buildAverageMono(decoded) {
+    const n = decoded.length;
+    const numCh = decoded.numberOfChannels;
+    const out = new Float32Array(n);
+    const chans = [];
+    for (let c = 0; c < numCh; c++) chans.push(decoded.getChannelData(c));
+    for (let i = 0; i < n; i++) {
+      let sum = 0;
+      for (let c = 0; c < numCh; c++) sum += chans[c][i];
+      out[i] = sum / numCh;
+    }
+    return out;
+  }
+
+  async function decodeAndResample(file, targetRate, isolation) {
     const arrayBuffer = await file.arrayBuffer();
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     const audioCtx = new AudioCtx();
@@ -137,15 +187,51 @@
       audioCtx.close();
     }
 
+    const canCenterExtract = isolation.centerEnable && decoded.numberOfChannels >= 2 && isolation.centerStrength > 0;
+    const monoAtSourceRate = canCenterExtract
+      ? buildCenterEmphasisMono(decoded, isolation.centerStrength)
+      : buildAverageMono(decoded);
+
+    const monoBuffer = new AudioBuffer({ numberOfChannels: 1, length: monoAtSourceRate.length, sampleRate: decoded.sampleRate });
+    monoBuffer.copyToChannel(monoAtSourceRate, 0);
+
     const offlineLength = Math.max(1, Math.ceil(decoded.duration * targetRate));
     const offline = new OfflineAudioContext(1, offlineLength, targetRate);
     const src = offline.createBufferSource();
-    src.buffer = decoded;
-    src.connect(offline.destination);
+    src.buffer = monoBuffer;
+
+    if (isolation.eqEnable) {
+      const highpass = offline.createBiquadFilter();
+      highpass.type = 'highpass';
+      highpass.frequency.value = isolation.eqLow;
+      highpass.Q.value = 0.7;
+      const lowpass = offline.createBiquadFilter();
+      lowpass.type = 'lowpass';
+      lowpass.frequency.value = isolation.eqHigh;
+      lowpass.Q.value = 0.7;
+      const presence = offline.createBiquadFilter();
+      presence.type = 'peaking';
+      presence.frequency.value = 2500;
+      presence.Q.value = 1;
+      presence.gain.value = 6;
+      src.connect(highpass);
+      highpass.connect(lowpass);
+      lowpass.connect(presence);
+      presence.connect(offline.destination);
+    } else {
+      src.connect(offline.destination);
+    }
+
     src.start(0);
     const rendered = await offline.startRendering();
 
-    return { samples: rendered.getChannelData(0), sampleRate: targetRate, duration: decoded.duration };
+    return {
+      samples: rendered.getChannelData(0),
+      sampleRate: targetRate,
+      duration: decoded.duration,
+      numberOfChannels: decoded.numberOfChannels,
+      centerExtractApplied: canCenterExtract,
+    };
   }
 
   async function runAnalysis() {
@@ -157,9 +243,17 @@
 
     const TARGET_RATE = 16000;
 
+    const isolation = {
+      centerEnable: el['vk-center-enable'].checked,
+      centerStrength: Number(el['vk-center-strength'].value),
+      eqEnable: el['vk-eq-enable'].checked,
+      eqLow: Number(el['vk-eq-low'].value) || 120,
+      eqHigh: Number(el['vk-eq-high'].value) || 5000,
+    };
+
     let decodedResult;
     try {
-      decodedResult = await decodeAndResample(state.file, TARGET_RATE);
+      decodedResult = await decodeAndResample(state.file, TARGET_RATE, isolation);
     } catch (err) {
       console.error(err);
       showError('この動画/音声ファイルを解析できませんでした。ブラウザがコーデックに対応していない可能性があります。Google ChromeやMicrosoft Edgeなどの最新ブラウザでお試しいただくか、MP3/WAV形式に変換してから再度アップロードしてください。');
@@ -167,6 +261,15 @@
       el['vk-analyze-btn'].textContent = '解析を開始';
       el['vk-progress-wrap'].classList.add('hidden');
       return;
+    }
+
+    if (isolation.centerEnable) {
+      el['vk-center-hint'].classList.remove('hidden');
+      el['vk-center-hint'].textContent = decodedResult.centerExtractApplied
+        ? '✓ ステレオ音源を検出したため、センター抽出を適用しました。'
+        : '※ モノラル音源（または強さ0）のため、センター抽出は適用されませんでした。';
+    } else {
+      el['vk-center-hint'].classList.add('hidden');
     }
 
     setProgress(0.05, 'ピッチを検出中... 0%');

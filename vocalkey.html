@@ -36,6 +36,27 @@
 
     <button id="vk-adv-toggle" class="vk-adv-toggle" type="button" aria-expanded="false">▶ 詳細設定（検出感度・音域など）</button>
     <div id="vk-adv-panel" class="vk-adv-panel hidden">
+      <div class="vk-field vk-field-full">
+        <label class="vk-checkbox-label">
+          <input id="vk-center-enable" type="checkbox" checked>
+          ボーカル抽出：センター定位を強調（ステレオ音源向け）
+        </label>
+        <p class="vk-field-hint">歌声が左右中央にミックスされている前提で、左右に広がった伴奏を減衰させる簡易処理です（完全なAI分離ではありません）。モノラル音源では効果がありません。</p>
+        <label for="vk-center-strength">抽出の強さ <span class="vk-field-val" id="vk-center-strength-val">0.60</span></label>
+        <input id="vk-center-strength" type="range" min="0" max="1" step="0.05" value="0.6">
+        <p id="vk-center-hint" class="vk-field-hint hidden"></p>
+      </div>
+      <div class="vk-field vk-field-full">
+        <label class="vk-checkbox-label">
+          <input id="vk-eq-enable" type="checkbox" checked>
+          ボーカル抽出：帯域を強調（EQ）
+        </label>
+        <p class="vk-field-hint">歌声が乗りやすい帯域を残し、低音（ベース・キック）や高音（シンバルなど）を減衰させてから解析します。</p>
+        <div class="vk-field-row">
+          <input id="vk-eq-low" type="number" value="120" min="50" max="1000">
+          <input id="vk-eq-high" type="number" value="5000" min="1000" max="12000">
+        </div>
+      </div>
       <div class="vk-field">
         <label for="vk-clarity">検出感度（高いほど厳密） <span class="vk-field-val" id="vk-clarity-val">0.50</span></label>
         <input id="vk-clarity" type="range" min="0.2" max="0.9" step="0.05" value="0.5">
@@ -69,7 +90,7 @@
 
     <div id="vk-error" class="vk-error hidden"></div>
 
-    <p class="vk-note">※ 曲全体の中で最も大きく鳴っているメロディーの音程を検出します（AIによるボーカル単独抽出は行っていないため、伴奏が大きい曲では検出がずれる場合があります）。うまく検出できない場合は「詳細設定」で感度や音量ゲートを調整してください。</p>
+    <p class="vk-note">※ 「詳細設定」の初期状態でボーカル抽出処理（センター定位の強調＋帯域EQ）が有効になっており、可能な範囲で歌声を強調してから音程を検出します。AIによる完全な音源分離ではないため、伴奏が非常に大きい曲や歌声が中央にミックスされていない曲では検出がずれる場合があります。その場合は抽出の強さや感度・音量ゲートを調整してください。</p>
   </section>
 
   <!-- ===================== プレイヤー & 現在の音 ===================== -->
