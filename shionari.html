@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>潮鳴り -SHIONARI- | オープンフィールド・アクションRPG 公式サイト</title>
+<meta name="description" content="「潮鳴り -SHIONARI-」公式サイト。忘れられた大陸を自由に駆け巡るオープンフィールド・アクションRPG。ブラウザだけで今すぐ無料プレイ。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌊</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;900&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@500;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/shionari.css">
+</head>
+<body>
+
+<!-- カスタムカーソル -->
+<div id="cursor-dot" class="cursor-dot" aria-hidden="true"></div>
+<div id="cursor-ring" class="cursor-ring" aria-hidden="true"></div>
+
+<!-- 進捗バー -->
+<div id="scroll-progress" class="scroll-progress" aria-hidden="true"></div>
+
+<!-- ===================== ナビゲーション ===================== -->
+<header id="site-nav" class="site-nav">
+  <a href="#top" class="nav-brand">
+    <span class="nav-brand-mark">潮</span>
+    <span class="nav-brand-text">SHIONARI</span>
+  </a>
+  <nav class="nav-links" id="nav-links">
+    <a href="#world" data-nav>世界観</a>
+    <a href="#features" data-nav>特徴</a>
+    <a href="#characters" data-nav>キャラクター</a>
+    <a href="#gallery" data-nav>ギャラリー</a>
+    <a href="#news" data-nav>ニュース</a>
+  </nav>
+  <a href="game.html" class="nav-cta">今すぐプレイ</a>
+  <button id="nav-burger" class="nav-burger" aria-label="メニューを開く" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<!-- モバイルメニュー -->
+<div id="mobile-menu" class="mobile-menu">
+  <a href="#world" data-nav>世界観</a>
+  <a href="#features" data-nav>特徴</a>
+  <a href="#characters" data-nav>キャラクター</a>
+  <a href="#gallery" data-nav>ギャラリー</a>
+  <a href="#news" data-nav>ニュース</a>
+  <a href="game.html" class="mobile-cta">今すぐプレイ</a>
+</div>
+
+<main id="top">
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero" id="hero">
+    <canvas id="hero-canvas" class="hero-canvas"></canvas>
+
+    <div class="hero-scene" id="hero-scene" aria-hidden="true">
+      <div class="hero-glow"></div>
+      <svg class="hero-mountains hero-mountains-far" viewBox="0 0 1600 400" preserveAspectRatio="none">
+        <polygon points="0,400 0,220 180,150 340,240 520,120 700,230 900,140 1080,250 1260,160 1440,260 1600,190 1600,400" />
+      </svg>
+      <svg class="hero-mountains hero-mountains-near" viewBox="0 0 1600 320" preserveAspectRatio="none">
+        <polygon points="0,320 0,260 150,180 300,270 480,190 660,280 860,200 1040,290 1240,210 1440,280 1600,230 1600,320" />
+      </svg>
+      <svg class="hero-ruins" viewBox="0 0 1600 260" preserveAspectRatio="none" aria-hidden="true">
+        <g class="ruin-pillar" style="--x:12%"><rect x="0" y="90" width="14" height="170"/><rect x="-10" y="80" width="34" height="14"/></g>
+        <g class="ruin-pillar" style="--x:22%"><rect x="0" y="130" width="12" height="130"/></g>
+        <g class="ruin-pillar" style="--x:78%"><rect x="0" y="60" width="16" height="200"/><rect x="-12" y="50" width="40" height="14"/></g>
+        <g class="ruin-pillar" style="--x:88%"><rect x="0" y="150" width="10" height="110"/></g>
+      </svg>
+      <div class="hero-water"></div>
+    </div>
+
+    <div class="hero-content">
+      <p class="hero-eyebrow reveal-up">オープンフィールド・アクションRPG</p>
+      <h1 class="hero-title">
+        <span class="hero-title-jp reveal-title">潮鳴り</span>
+        <span class="hero-title-en reveal-title" style="--d:0.12s">SHIONARI</span>
+      </h1>
+      <p class="hero-tagline reveal-up" style="--d:0.3s">終わりなき波濤の彼方へ、記憶を失った旅人が大陸を駆ける。</p>
+      <div class="hero-actions reveal-up" style="--d:0.45s">
+        <a href="game.html" class="btn btn-gold">
+          <span>今すぐ無料でプレイ</span>
+        </a>
+        <button type="button" class="btn btn-ghost" id="btn-trailer">
+          <span class="btn-play-icon" aria-hidden="true">▶</span>
+          <span>トレーラーを見る</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="hero-scroll-cue" aria-hidden="true">
+      <span class="scroll-mouse"><span class="scroll-wheel"></span></span>
+      <span class="scroll-label">SCROLL</span>
+    </div>
+  </section>
+
+  <!-- ===================== ティッカー ===================== -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>オープンフィールド探索</span><span>&#9670;</span>
+      <span>完全無料プレイ</span><span>&#9670;</span>
+      <span>ダウンロード不要</span><span>&#9670;</span>
+      <span>ブラウザで即起動</span><span>&#9670;</span>
+      <span>スタイリッシュ・アクション</span><span>&#9670;</span>
+      <span>オープンフィールド探索</span><span>&#9670;</span>
+      <span>完全無料プレイ</span><span>&#9670;</span>
+      <span>ダウンロード不要</span><span>&#9670;</span>
+      <span>ブラウザで即起動</span><span>&#9670;</span>
+      <span>スタイリッシュ・アクション</span><span>&#9670;</span>
+    </div>
+  </div>
+
+  <!-- ===================== 世界観 ===================== -->
+  <section class="section world-section" id="world">
+    <div class="section-inner world-grid">
+      <div class="world-art reveal-scale">
+        <div class="world-art-frame">
+          <div class="world-art-glow"></div>
+          <div class="world-art-rings" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <span class="world-art-kanji">潮</span>
+        </div>
+      </div>
+      <div class="world-copy">
+        <p class="section-eyebrow reveal-up">WORLD</p>
+        <h2 class="section-title reveal-up" style="--d:0.08s">忘れられた大陸に、<br>ふたたび満ちる潮</h2>
+        <p class="reveal-up" style="--d:0.16s">
+          大陸を覆う「潮」と呼ばれる力は、土地の形も、人々の記憶さえも作り替えていく。
+          プレイヤーは名も記憶も失った旅人となり、荒廃した拠点、忘れられた神殿、誰もいない平原を
+          自由に駆け抜けながら、大陸に眠る真実へと近づいていく。
+        </p>
+        <p class="reveal-up" style="--d:0.24s">
+          道を選ぶのはあなた自身。崖をよじ登り、峡谷を滑空し、夜の海岸で潮騒に耳を澄ませる——
+          そのすべてがこの世界の物語になる。
+        </p>
+        <div class="world-stats reveal-up" style="--d:0.32s">
+          <div class="world-stat">
+            <span class="world-stat-num" data-count="12">0</span>
+            <span class="world-stat-label">探索エリア</span>
+          </div>
+          <div class="world-stat">
+            <span class="world-stat-num" data-count="30" data-suffix="+">0</span>
+            <span class="world-stat-label">エネミー種類</span>
+          </div>
+          <div class="world-stat">
+            <span class="world-stat-num" data-count="8">0</span>
+            <span class="world-stat-label">プレイアブルキャラ</span>
+          </div>
+          <div class="world-stat">
+            <span class="world-stat-num" data-count="0">0</span>
+            <span class="world-stat-label">円・完全無料</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 特徴 ===================== -->
+  <section class="section features-section" id="features">
+    <div class="section-inner">
+      <p class="section-eyebrow reveal-up center">FEATURES</p>
+      <h2 class="section-title reveal-up center" style="--d:0.08s">大陸を駆ける、5つの理由</h2>
+
+      <div class="feature-grid">
+        <article class="feature-card tilt-card reveal-up" style="--d:0.05s">
+          <div class="feature-icon">
+            <svg viewBox="0 0 48 48"><path d="M6 40 18 14l6 10 6-16 12 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>境界のないフィールド探索</h3>
+          <p>山、廃墟、渓谷をシームレスに移動。よじ登り・滑空を駆使して、大陸のどこまでも自由に駆け抜けよう。</p>
+        </article>
+
+        <article class="feature-card tilt-card reveal-up" style="--d:0.1s">
+          <div class="feature-icon">
+            <svg viewBox="0 0 48 48"><path d="M24 4v16l14 8-14 8v8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".4"/></svg>
+          </div>
+          <h3>スタイリッシュな戦闘</h3>
+          <p>武器を切り替えてコンボを繋ぎ、押し寄せる敵の「波」を迎え撃つ、テンポの速いアクション戦闘。</p>
+        </article>
+
+        <article class="feature-card tilt-card reveal-up" style="--d:0.15s">
+          <div class="feature-icon">
+            <svg viewBox="0 0 48 48"><path d="M4 30c8-10 12 10 20 0s12 10 20 0" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M4 20c8-10 12 10 20 0s12 10 20 0" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".5" stroke-linecap="round"/></svg>
+          </div>
+          <h3>動的な「潮」システム</h3>
+          <p>時間帯と潮位によって戦況が変化。フィールドの敵配置や地形までもが刻一刻と表情を変える。</p>
+        </article>
+
+        <article class="feature-card tilt-card reveal-up" style="--d:0.2s">
+          <div class="feature-icon">
+            <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M24 4v6M24 38v6M4 24h6M38 24h6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+          </div>
+          <h3>記憶の欠片を集める探索</h3>
+          <p>隠された祠や遺物を見つけ出し、大陸に眠る物語の断片を解き明かしていこう。</p>
+        </article>
+
+        <article class="feature-card tilt-card reveal-up" style="--d:0.25s">
+          <div class="feature-icon">
+            <svg viewBox="0 0 48 48"><circle cx="16" cy="18" r="7" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="32" cy="18" r="7" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M4 40c2-9 8-13 12-13s10 4 12 13M24 40c2-9 8-13 12-13s10 4 12 13" fill="none" stroke="currentColor" stroke-width="2" opacity=".7"/></svg>
+          </div>
+          <h3>仲間との連携アクション</h3>
+          <p>複数のキャラクターを瞬時に切り替え、連携コンボやチームプレイで強敵を打ち崩せ。</p>
+        </article>
+
+        <article class="feature-card tilt-card reveal-up" style="--d:0.3s">
+          <div class="feature-icon">
+            <svg viewBox="0 0 48 48"><path d="M6 24a18 18 0 1 1 36 0 18 18 0 0 1-36 0Z" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M24 12v12l8 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+          </div>
+          <h3>ブラウザで、いつでも即プレイ</h3>
+          <p>インストール不要、サーバー費用ゼロ。リンクを開くだけで、いつでもどこでも冒険が始まる。</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== キャラクター ===================== -->
+  <section class="section characters-section" id="characters">
+    <div class="section-inner">
+      <p class="section-eyebrow reveal-up center">CHARACTERS</p>
+      <h2 class="section-title reveal-up center" style="--d:0.08s">旅を共にする者たち</h2>
+      <p class="section-sub reveal-up center" style="--d:0.14s">個性豊かな仲間を切り替えながら、自分だけの戦い方を見つけよう。</p>
+
+      <div class="char-scroller">
+        <div class="char-track">
+          <article class="char-card tilt-card" data-element="氷">
+            <div class="char-card-visual"><span class="char-initial">澪</span></div>
+            <div class="char-card-body">
+              <span class="char-tag">氷属性 / 聖剣</span>
+              <h3>澪 <em>Mio</em></h3>
+              <p>静かな一撃で敵の勢いを断つ、寡黙な剣士。</p>
+            </div>
+          </article>
+          <article class="char-card tilt-card" data-element="雷">
+            <div class="char-card-visual"><span class="char-initial">燈</span></div>
+            <div class="char-card-body">
+              <span class="char-tag">雷属性 / 双銃</span>
+              <h3>燈也 <em>Toya</em></h3>
+              <p>速射と機動力で戦場を駆け回るガンナー。</p>
+            </div>
+          </article>
+          <article class="char-card tilt-card" data-element="光">
+            <div class="char-card-visual"><span class="char-initial">舞</span></div>
+            <div class="char-card-body">
+              <span class="char-tag">光属性 / 双剣</span>
+              <h3>舞 <em>Mai</em></h3>
+              <p>連携時に真価を発揮する、旅の道先案内人。</p>
+            </div>
+          </article>
+          <article class="char-card tilt-card" data-element="地">
+            <div class="char-card-visual"><span class="char-initial">迅</span></div>
+            <div class="char-card-body">
+              <span class="char-tag">地属性 / 大剣</span>
+              <h3>迅 <em>Jin</em></h3>
+              <p>圧倒的な一撃で戦線を支える重戦士。</p>
+            </div>
+          </article>
+          <article class="char-card tilt-card" data-element="風">
+            <div class="char-card-visual"><span class="char-initial">凪</span></div>
+            <div class="char-card-body">
+              <span class="char-tag">風属性 / 弓</span>
+              <h3>凪 <em>Nagi</em></h3>
+              <p>遠距離から的確に急所を射抜く狙撃手。</p>
+            </div>
+          </article>
+        </div>
+      </div>
+      <p class="char-scroller-hint">← ドラッグ / スワイプで他のキャラクターを見る →</p>
+    </div>
+  </section>
+
+  <!-- ===================== ギャラリー ===================== -->
+  <section class="section gallery-section" id="gallery">
+    <div class="section-inner">
+      <p class="section-eyebrow reveal-up center">GALLERY</p>
+      <h2 class="section-title reveal-up center" style="--d:0.08s">大陸の風景</h2>
+
+      <div class="gallery-grid">
+        <button class="gallery-item reveal-up" data-tone="1" style="--d:0.02s"><span class="gallery-caption">霧の海岸</span></button>
+        <button class="gallery-item reveal-up" data-tone="2" style="--d:0.06s"><span class="gallery-caption">忘却の神殿</span></button>
+        <button class="gallery-item reveal-up" data-tone="3" style="--d:0.1s"><span class="gallery-caption">黄昏の峡谷</span></button>
+        <button class="gallery-item reveal-up" data-tone="4" style="--d:0.14s"><span class="gallery-caption">波濤の砦</span></button>
+        <button class="gallery-item reveal-up" data-tone="5" style="--d:0.18s"><span class="gallery-caption">静寂の平原</span></button>
+        <button class="gallery-item reveal-up" data-tone="6" style="--d:0.22s"><span class="gallery-caption">深夜の潮騒</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ニュース ===================== -->
+  <section class="section news-section" id="news">
+    <div class="section-inner">
+      <p class="section-eyebrow reveal-up center">NEWS</p>
+      <h2 class="section-title reveal-up center" style="--d:0.08s">最新情報</h2>
+
+      <div class="news-list">
+        <a href="game.html" class="news-item reveal-up" style="--d:0.04s">
+          <span class="news-date">2026.09.10</span>
+          <span class="news-tag">お知らせ</span>
+          <span class="news-title">「潮鳴り -SHIONARI-」公式サイトを公開しました</span>
+        </a>
+        <a href="game.html" class="news-item reveal-up" style="--d:0.08s">
+          <span class="news-date">2026.09.10</span>
+          <span class="news-tag">体験版</span>
+          <span class="news-title">ブラウザ体験版「WAVEβ」がプレイ可能に</span>
+        </a>
+        <span class="news-item news-item-static reveal-up" style="--d:0.12s">
+          <span class="news-date">Coming soon</span>
+          <span class="news-tag">情報</span>
+          <span class="news-title">新エリア「無人の霧海岸」情報を公開予定</span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 最終CTA ===================== -->
+  <section class="cta-band">
+    <div class="cta-band-glow" aria-hidden="true"></div>
+    <div class="section-inner cta-inner">
+      <h2 class="reveal-up center">今すぐ、大陸へ踏み出そう</h2>
+      <p class="reveal-up center" style="--d:0.08s">インストール不要。このブラウザのまま、無料で冒険が始まります。</p>
+      <a href="game.html" class="btn btn-gold btn-lg reveal-up" style="--d:0.16s">今すぐ無料でプレイ</a>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===================== フッター ===================== -->
+<footer class="site-footer">
+  <div class="section-inner footer-grid">
+    <div class="footer-brand">
+      <span class="nav-brand-mark">潮</span>
+      <span class="nav-brand-text">SHIONARI</span>
+      <p>終わりなき波濤の彼方へ。</p>
+    </div>
+    <div class="footer-links">
+      <h4>プレイ</h4>
+      <a href="game.html">ブラウザ体験版をプレイ</a>
+      <a href="#world">世界観</a>
+      <a href="#characters">キャラクター</a>
+    </div>
+    <div class="footer-links">
+      <h4>制作者の他の作品</h4>
+      <a href="index.html">学習ナビ</a>
+      <a href="ink.html">インクバトル</a>
+      <a href="vocalkey.html">ボーカルキー分析</a>
+    </div>
+  </div>
+  <div class="section-inner footer-bottom">
+    <p>&copy; 2026 SHIONARI Project. 本サイトは個人制作によるファンメイドのデモ企画です。実在する企業・作品とは関係ありません。</p>
+  </div>
+</footer>
+
+<!-- ===================== トレーラーモーダル ===================== -->
+<div id="trailer-modal" class="trailer-modal">
+  <div class="trailer-backdrop" data-close></div>
+  <div class="trailer-box">
+    <button class="trailer-close" data-close aria-label="閉じる">✕</button>
+    <div class="trailer-placeholder">
+      <span class="trailer-play">▶</span>
+      <p>トレーラー映像は準備中です。<br>先に「今すぐプレイ」からブラウザ体験版をお試しください。</p>
+      <a href="game.html" class="btn btn-gold">体験版をプレイする</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ギャラリー・ライトボックス ===================== -->
+<div id="lightbox" class="lightbox">
+  <div class="lightbox-backdrop" data-close></div>
+  <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="前へ">‹</button>
+  <div class="lightbox-box">
+    <button class="lightbox-close" data-close aria-label="閉じる">✕</button>
+    <div class="lightbox-visual" id="lightbox-visual"></div>
+    <p class="lightbox-caption" id="lightbox-caption"></p>
+  </div>
+  <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="次へ">›</button>
+</div>
+
+<script src="assets/js/shionari.js"></script>
+</body>
+</html>
