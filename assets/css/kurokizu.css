@@ -175,8 +175,6 @@ a{ color: inherit; text-decoration: none; }
   opacity: 0; visibility: hidden; pointer-events: none;
   transition: opacity 1.5s var(--ease), visibility 0s linear 1.5s;
 }
-/* ホーム画面のタイトル位置と揃えるための不可視スペーサー */
-.interlude-spacer{ visibility: hidden; }
 #interlude.is-visible{
   opacity: 1; visibility: visible; pointer-events: auto;
   transition: opacity 1.5s var(--ease);
@@ -275,47 +273,87 @@ a{ color: inherit; text-decoration: none; }
   opacity: 1; transition: opacity 1.5s var(--ease);
 }
 
-.site-nav{
+/* 散らばった付箋のようなナビ */
+.site-nav-scatter{
   position: fixed; inset: 0 0 auto 0; z-index: 50;
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; flex-wrap: wrap; align-items: flex-start;
+  gap: 14px clamp(10px, 3vw, 26px);
   padding: 20px clamp(20px, 5vw, 56px);
+  pointer-events: none;
 }
-.nav-brand{ font-family: "Shippori Mincho B1", serif; font-weight: 800; letter-spacing: .22em; color: var(--ink-0); }
-.nav-links{ display: flex; gap: 28px; font-size: .82rem; letter-spacing: .08em; color: var(--ink-2); }
-.nav-links a:hover{ color: var(--red-1); }
+.nav-chip{
+  pointer-events: auto;
+  display: inline-block;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 9px 18px;
+  font-size: .8rem; letter-spacing: .1em; color: var(--ink-1);
+  box-shadow: 0 8px 18px rgba(0,0,0,.5);
+  transition: transform .25s var(--ease), color .2s ease, border-color .2s ease;
+}
+.nav-chip:hover{
+  transform: rotate(0deg) translateY(-2px) !important;
+  color: var(--ink-0); border-color: var(--red-1);
+}
+.nav-chip-home{
+  font-family: "Shippori Mincho B1", serif; font-weight: 800; letter-spacing: .22em;
+  color: var(--ink-0); transform: rotate(0deg); margin-right: 12px;
+}
+.nav-chip-2{ transform: rotate(-9deg) translateY(2px); }
+.nav-chip-3{ transform: rotate(-2deg) translateY(-6px); }
+.nav-chip-menu{ transform: rotate(-13deg) translateY(6px); }
+.nav-chip-5{ transform: rotate(7deg) translateY(10px); }
 
-.hero{
-  min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  text-align: center; padding: 0 20px; position: relative;
+/* 重なり合う画像プレースホルダー */
+.gallery{
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 160px 20px 80px; position: relative;
   background:
-    radial-gradient(circle at 50% 30%, rgba(224,38,63,.12), transparent 55%),
+    radial-gradient(circle at 50% 30%, rgba(224,38,63,.1), transparent 55%),
     var(--bg-0);
 }
-.hero-title{
-  margin: 0; font-family: "Shippori Mincho B1", "Noto Serif JP", serif;
-  font-weight: 800; letter-spacing: .14em;
-  font-size: clamp(3.2rem, 14vw, 8rem);
-  color: var(--ink-0);
-  text-shadow: 0 0 50px rgba(224,38,63,.35);
+.gallery-stage{
+  position: relative; width: min(820px, 100%);
+  height: clamp(360px, 52vw, 520px);
 }
-.hero-copy{
-  margin: 20px 0 0; max-width: 40em; color: var(--ink-1);
-  font-size: .95rem; line-height: 1.9; letter-spacing: .04em;
+.gallery-frame{
+  position: absolute;
+  border-radius: 28px;
+  background: var(--bg-1);
+  border: 1px solid rgba(245, 242, 239, .16);
+  box-shadow: 0 30px 60px rgba(0,0,0,.55);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-2); font-size: .95rem; letter-spacing: .08em;
+  transition: transform .3s var(--ease), border-color .3s ease;
 }
-.scroll-cue{
-  position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
-  font-size: .7rem; letter-spacing: .3em; color: var(--ink-2);
+.gallery-frame:hover{ border-color: rgba(224,38,63,.5); }
+.gallery-frame-2{
+  left: 0; top: 6%;
+  width: 54%; aspect-ratio: 4 / 3;
+  z-index: 1;
 }
-.scroll-cue::after{
-  content: ""; display: block; width: 1px; height: 34px; margin: 10px auto 0;
-  background: linear-gradient(var(--red-1), transparent);
-  animation: cue-drop 1.8s ease-in-out infinite;
+.gallery-frame-3{
+  right: 0; top: 0;
+  width: 54%; aspect-ratio: 4 / 3;
+  z-index: 1;
 }
-@keyframes cue-drop{
-  0%{ transform: scaleY(0); transform-origin: top; opacity: 0; }
-  40%{ transform: scaleY(1); transform-origin: top; opacity: 1; }
-  60%{ transform: scaleY(1); transform-origin: bottom; opacity: 1; }
-  100%{ transform: scaleY(0); transform-origin: bottom; opacity: 0; }
+.gallery-frame-1{
+  left: 50%; top: 46%; transform: translateX(-50%);
+  width: 58%; aspect-ratio: 4 / 3;
+  z-index: 2;
+  background: var(--bg-2);
+  box-shadow: 0 40px 80px rgba(0,0,0,.65);
+}
+.gallery-frame-1:hover{ transform: translateX(-50%) translateY(-4px); }
+
+@media (max-width: 640px){
+  .gallery{ padding-top: 220px; }
+  .gallery-stage{ height: auto; display: flex; flex-direction: column; gap: 16px; }
+  .gallery-frame, .gallery-frame-1{
+    position: static; left: auto; right: auto; top: auto; width: 100%;
+    transform: none !important;
+  }
 }
 
 .about-section{
