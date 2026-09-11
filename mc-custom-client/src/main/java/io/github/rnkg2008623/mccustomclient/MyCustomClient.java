@@ -4,6 +4,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import io.github.rnkg2008623.mccustomclient.gui.SpeedMenuScreen;
 import io.github.rnkg2008623.mccustomclient.hud.MinimapRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
@@ -13,7 +14,8 @@ import org.lwjgl.glfw.GLFW;
 
 /**
  * クライアント専用MODのエントリーポイント。
- * 「自分の移動速度を変更する」機能と、右上のミニマップ表示機能を持つ。
+ * 「自分の移動速度／Velocityを変更する」機能(Mキーで設定メニュー)と、
+ * 右上のミニマップ表示機能を持つ。
  */
 public class MyCustomClient implements ClientModInitializer {
 
@@ -21,12 +23,21 @@ public class MyCustomClient implements ClientModInitializer {
 
     private final MinimapRenderer minimap = new MinimapRenderer();
 
+    private KeyBinding openMenuKey;
     private KeyBinding increaseSpeedKey;
     private KeyBinding decreaseSpeedKey;
     private KeyBinding resetSpeedKey;
 
     @Override
     public void onInitializeClient() {
+        openMenuKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.mc_custom_client.open_menu",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_M,
+                "category.mc_custom_client.general"
+        ));
+
+        // テンキーが無い環境(MacBook等)向けの互換キー。設定画面からも同じ操作ができる。
         increaseSpeedKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.mc_custom_client.increase_speed",
                 InputUtil.Type.KEYSYM,
@@ -56,6 +67,12 @@ public class MyCustomClient implements ClientModInitializer {
     private void onClientTick(MinecraftClient client) {
         if (client.player == null) {
             return;
+        }
+
+        while (openMenuKey.wasPressed()) {
+            if (client.currentScreen == null) {
+                client.setScreen(new SpeedMenuScreen());
+            }
         }
 
         boolean changed = false;

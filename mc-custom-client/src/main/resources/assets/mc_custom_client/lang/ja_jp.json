@@ -1,4 +1,5 @@
 {
+  "key.mc_custom_client.open_menu": "設定メニューを開く",
   "key.mc_custom_client.increase_speed": "移動速度を上げる",
   "key.mc_custom_client.decrease_speed": "移動速度を下げる",
   "key.mc_custom_client.reset_speed": "移動速度をリセット",

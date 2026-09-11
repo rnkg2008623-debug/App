@@ -2,12 +2,12 @@ package io.github.rnkg2008623.mccustomclient;
 
 /**
  * 自分のプレイヤーの移動速度倍率を保持するだけの単純な状態クラス。
- * キーバインドから増減・リセットされ、Mixin側から読み取られる。
+ * キーバインド／設定メニューのスライダーから変更され、Mixin側から読み取られる。
  */
 public final class SpeedController {
 
-    private static final float MIN_MULTIPLIER = 0.25f;
-    private static final float MAX_MULTIPLIER = 3.0f;
+    public static final float MIN_MULTIPLIER = 0.25f;
+    public static final float MAX_MULTIPLIER = 3.0f;
     private static final float STEP = 0.25f;
     private static final float DEFAULT_MULTIPLIER = 1.0f;
 
@@ -18,6 +18,10 @@ public final class SpeedController {
 
     public static float getMultiplier() {
         return multiplier;
+    }
+
+    public static void set(float value) {
+        multiplier = clamp(value);
     }
 
     public static void increase() {
