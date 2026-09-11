@@ -118,17 +118,23 @@ struct ImportView: View {
     }
 
     private func applyImport(_ rows: [[String]], targetFolderID: UUID) {
-        let (quizzes, skipped) = Self.buildQuizzes(from: rows, folderID: targetFolderID)
+        let (quizzes, skipped, note) = Self.buildQuizzes(from: rows, folderID: targetFolderID)
 
         guard !quizzes.isEmpty else {
             resultIsError = true
-            resultMessage = "インポートできる内容がありませんでした（\(skipped)行をスキップ）。"
+            resultMessage = note ?? "インポートできる内容がありませんでした（\(skipped)行をスキップ）。"
             return
         }
 
         store.addQuizzes(quizzes)
         resultIsError = false
-        resultMessage = "\(quizzes.count)件のクイズをインポートしました" + (skipped > 0 ? "（\(skipped)行をスキップ）。" : "。")
+        var message = "\(quizzes.count)件のクイズをインポートしました。"
+        if let note {
+            message += "\n" + note
+        } else if skipped > 0 {
+            message = "\(quizzes.count)件のクイズをインポートしました（\(skipped)行をスキップ）。"
+        }
+        resultMessage = message
     }
 
     /// Rows with 6+ columns are treated as a fully-specified quiz
@@ -138,7 +144,7 @@ struct ImportView: View {
     /// random as distractors, so a plain vocabulary list turns into 4-choice
     /// quizzes automatically (at least 4 pairs are needed to have 3 distinct
     /// wrong answers to pick from).
-    private static func buildQuizzes(from rows: [[String]], folderID: UUID) -> (quizzes: [Quiz], skipped: Int) {
+    private static func buildQuizzes(from rows: [[String]], folderID: UUID) -> (quizzes: [Quiz], skipped: Int, note: String?) {
         var fullRows: [[String]] = []
         var wordDefPairs: [(word: String, definition: String)] = []
         var skipped = 0
@@ -166,30 +172,37 @@ struct ImportView: View {
             quizzes.append(Quiz(folderID: folderID, question: question, choices: choices, correctIndex: answerNumber - 1))
         }
 
-        if wordDefPairs.count >= 4 {
-            for (index, entry) in wordDefPairs.enumerated() {
-                let otherDefinitions = wordDefPairs.enumerated()
-                    .filter { $0.offset != index && $0.element.definition != entry.definition }
-                    .map { $0.element.definition }
-                let distractors = Array(Set(otherDefinitions)).shuffled().prefix(3)
-                guard distractors.count == 3 else {
-                    skipped += 1
-                    continue
+        var note: String?
+
+        if !wordDefPairs.isEmpty {
+            if wordDefPairs.count < 4 {
+                // Each word needs 3 *other* definitions to use as wrong answers,
+                // so fewer than 4 pairs can never produce a 4-choice quiz.
+                note = "単語帳形式（単語, 意味）は4択の選択肢を作るために最低4語必要です（現在\(wordDefPairs.count)語のみ貼り付けられています）。"
+                skipped += wordDefPairs.count
+            } else {
+                for (index, entry) in wordDefPairs.enumerated() {
+                    let otherDefinitions = wordDefPairs.enumerated()
+                        .filter { $0.offset != index && $0.element.definition != entry.definition }
+                        .map { $0.element.definition }
+                    let distractors = Array(Set(otherDefinitions)).shuffled().prefix(3)
+                    guard distractors.count == 3 else {
+                        skipped += 1
+                        continue
+                    }
+                    var choices = Array(distractors) + [entry.definition]
+                    choices.shuffle()
+                    guard let correctIndex = choices.firstIndex(of: entry.definition) else { continue }
+                    quizzes.append(Quiz(
+                        folderID: folderID,
+                        question: "「\(entry.word)」の意味は？",
+                        choices: choices,
+                        correctIndex: correctIndex
+                    ))
                 }
-                var choices = Array(distractors) + [entry.definition]
-                choices.shuffle()
-                guard let correctIndex = choices.firstIndex(of: entry.definition) else { continue }
-                quizzes.append(Quiz(
-                    folderID: folderID,
-                    question: "「\(entry.word)」の意味は？",
-                    choices: choices,
-                    correctIndex: correctIndex
-                ))
             }
-        } else {
-            skipped += wordDefPairs.count
         }
 
-        return (quizzes, skipped)
+        return (quizzes, skipped, note)
     }
 }
