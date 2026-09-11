@@ -10,7 +10,7 @@
 
   // ---- タイムライン -----------------------------------------------------
   // 0.0s: 真っ暗 / 1.5s: 白ノイズ+グリッチで文字がいきなり出現
-  // 2.0s: 再び文字に白ノイズ+グリッチをかけつつ明転開始 / 2.5s: ゆっくり明るくなりホーム表示
+  // 2.0s: 再び文字に白ノイズ+グリッチ / 2.5秒後、1.5秒かけてゆっくり明るくなりホーム表示
   const timers = [];
   function schedule(fn, delay) {
     timers.push(setTimeout(fn, delay));
@@ -46,10 +46,11 @@
     schedule(() => {
       opening.classList.remove('is-glitch-2');
       title.classList.remove('is-noisy-2');
-      opening.classList.add('is-bright');
-    }, 2450);
+    }, 2350);
 
+    // 2.5秒後、1.5秒かけてゆっくり明るくなりながらホーム画面を表示する
     schedule(() => {
+      opening.classList.add('is-bright');
       finishOpening();
     }, 2500);
 
