@@ -1,0 +1,6 @@
+{
+  "key.mc_custom_client.increase_speed": "Increase Movement Speed",
+  "key.mc_custom_client.decrease_speed": "Decrease Movement Speed",
+  "key.mc_custom_client.reset_speed": "Reset Movement Speed",
+  "category.mc_custom_client.general": "MC Custom Client"
+}

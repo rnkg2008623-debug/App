@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "mc_custom_client",
+  "version": "${version}",
+  "name": "MC Custom Client",
+  "description": "自分用のMinecraftカスタムクライアント。プレイ支援機能（移動速度の変更など）を追加するFabric MODです。",
+  "authors": [
+    "rnkg2008623"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "io.github.rnkg2008623.mccustomclient.MyCustomClient"
+    ]
+  },
+  "mixins": [
+    "mc_custom_client.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.9",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
