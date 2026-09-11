@@ -1,12 +1,12 @@
 package io.github.rnkg2008623.mccustomclient.hud;
 
-import com.mojang.blaze3d.platform.NativeImage;
 import io.github.rnkg2008623.mccustomclient.MyCustomClient;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.MapColor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.Identifier;
