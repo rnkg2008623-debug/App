@@ -13,6 +13,14 @@
 </head>
 <body>
 
+<!-- ブート演出 -->
+<div id="boot-intro" class="boot-intro" aria-hidden="true">
+  <div class="boot-mark">潮</div>
+  <div class="boot-status" id="boot-status">INITIALIZING WORLD...</div>
+  <div class="boot-bar"><div class="boot-bar-fill" id="boot-bar-fill"></div></div>
+  <div class="boot-pct" id="boot-pct">0%</div>
+</div>
+
 <!-- カスタムカーソル -->
 <div id="cursor-dot" class="cursor-dot" aria-hidden="true"></div>
 <div id="cursor-ring" class="cursor-ring" aria-hidden="true"></div>
@@ -69,7 +77,8 @@
         <g class="ruin-pillar" style="--x:78%"><rect x="0" y="60" width="16" height="200"/><rect x="-12" y="50" width="40" height="14"/></g>
         <g class="ruin-pillar" style="--x:88%"><rect x="0" y="150" width="10" height="110"/></g>
       </svg>
-      <div class="hero-water"></div>
+      <div class="hero-foam"></div>
+      <div class="hero-vignette"></div>
     </div>
 
     <div class="hero-content">
@@ -116,12 +125,13 @@
   <section class="section world-section" id="world">
     <div class="section-inner world-grid">
       <div class="world-art reveal-scale">
-        <div class="world-art-frame">
+        <div class="world-art-frame" id="world-art-frame">
           <div class="world-art-glow"></div>
           <div class="world-art-rings" aria-hidden="true">
             <span></span><span></span><span></span>
           </div>
-          <span class="world-art-kanji">潮</span>
+          <span class="world-art-kanji" id="world-art-kanji">潮</span>
+          <canvas id="world-emblem-canvas" class="world-emblem-canvas" aria-hidden="true"></canvas>
         </div>
       </div>
       <div class="world-copy">
@@ -377,6 +387,7 @@
   <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="次へ">›</button>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="assets/js/shionari.js"></script>
 </body>
 </html>
