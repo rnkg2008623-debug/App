@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ブレインボード</title>
+<meta name="description" content="ブロック（カード）を置いて線でつなぎ、考えを整理するブレインストーミング用ボード。サーバー不要・ブラウザだけで動作し、データは端末内に保存されます。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect x=%2214%22 y=%2214%22 width=%2272%22 height=%2272%22 rx=%2214%22 fill=%22%23e3a13a%22/></svg>">
+<link rel="stylesheet" href="assets/css/brainstorm.css">
+</head>
+<body>
+<div id="board-app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">BOARD</span>
+    </div>
+    <input id="board-title" class="board-title" value="無題のボード" maxlength="60" spellcheck="false">
+
+    <div class="tb-sep"></div>
+
+    <div class="tb-group">
+      <button id="btn-add-node" class="tb-btn primary" title="ブロックを追加 (A / ダブルクリック)">＋ <span class="label">ブロック</span></button>
+      <button id="btn-fit" class="tb-btn icon" title="全体を表示 (F)">⤢</button>
+    </div>
+
+    <div class="tb-sep"></div>
+
+    <div class="zoom-group">
+      <button id="btn-zoom-out" class="tb-btn icon" title="縮小">－</button>
+      <span id="zoom-value" class="zoom-value">100%</span>
+      <button id="btn-zoom-in" class="tb-btn icon" title="拡大">＋</button>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="tb-group">
+      <button id="btn-export" class="tb-btn" title="JSONとして書き出す">書き出し</button>
+      <button id="btn-import" class="tb-btn" title="JSONを読み込む">読み込み</button>
+      <button id="btn-clear" class="tb-btn" title="ボードを空にする">クリア</button>
+      <button id="btn-help" class="tb-btn icon" title="使い方">？</button>
+    </div>
+    <input id="import-input" type="file" accept="application/json" class="hidden" style="display:none">
+  </header>
+
+  <div id="viewport" class="viewport">
+    <div id="world" class="world">
+      <svg id="edges-layer">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="arrow-head"></path>
+          </marker>
+          <marker id="arrow-selected" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="arrow-head is-selected"></path>
+          </marker>
+        </defs>
+        <g id="edges-g"></g>
+      </svg>
+      <div id="nodes-layer"></div>
+    </div>
+    <div id="empty-hint" class="empty-hint">ダブルクリック、または「＋ ブロック」でカードを追加<br>カード端の点をドラッグして線をつなげます</div>
+  </div>
+
+  <div id="node-toolbar" class="node-toolbar hidden"></div>
+
+  <div id="help-pop" class="help-pop hidden">
+    <h3>操作方法</h3>
+    <dl>
+      <dt>ダブルクリック</dt><dd>空いた場所にカードを追加</dd>
+      <dt>ドラッグ</dt><dd>カードを移動 / 選んだカードをまとめて移動</dd>
+      <dt>端の点</dt><dd>ドラッグして他のカードへ線を接続</dd>
+      <dt>何もない所へ</dt><dd>線をドラッグして離すと新しいカードを作って接続</dd>
+      <dt>ダブルクリック(カード内)</dt><dd>テキストを編集</dd>
+      <dt>Delete / Backspace</dt><dd>選択中のカード・線を削除</dd>
+      <dt>⌘/Ctrl + D</dt><dd>選択中のカードを複製</dd>
+      <dt>ドラッグ(空所)</dt><dd>矩形選択</dd>
+      <dt>スペース + ドラッグ</dt><dd>ボードをパン</dd>
+      <dt>トラックパッド</dt><dd>2本指でパン・ピンチでズーム</dd>
+      <dt>Esc</dt><dd>選択解除 / 接続をキャンセル</dd>
+    </dl>
+  </div>
+
+</div>
+
+<script src="assets/js/brainstorm.js"></script>
+</body>
+</html>
