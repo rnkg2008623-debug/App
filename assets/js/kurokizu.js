@@ -26,6 +26,8 @@
   }
 
   function revealHome() {
+    // 文字だけを一気に消して真っ黒にしてから、背景ごとゆっくり明るくしてホームを見せる
+    interludeTitle.classList.add('is-blackout');
     interlude.classList.add('is-done');
     home.classList.add('is-visible');
     document.body.classList.remove('is-locked');
