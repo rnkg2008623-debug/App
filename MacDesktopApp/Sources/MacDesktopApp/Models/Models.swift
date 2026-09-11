@@ -1,0 +1,192 @@
+import Foundation
+
+// MARK: - ホーム画面 / ファイル保存（機能: メイン画面, 機能2）
+
+struct StoredFile: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var path: String
+    var displayName: String
+    var addedAt: Date = Date()
+    var positionX: Double = 60
+    var positionY: Double = 60
+
+    var url: URL { URL(fileURLWithPath: path) }
+}
+
+// MARK: - 動画（機能1）
+
+struct VideoLink: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var title: String
+    var urlString: String
+    var folderID: UUID? = nil
+    var addedAt: Date = Date()
+}
+
+struct VideoFolder: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var name: String
+}
+
+// MARK: - タイムテーブル（機能3）
+
+enum WeekType: String, Codable, CaseIterable, Identifiable, Hashable {
+    case weekA = "週A"
+    case weekB = "週B"
+    case everyWeek = "毎週"
+
+    var id: String { rawValue }
+}
+
+enum Weekday: Int, Codable, CaseIterable, Identifiable, Hashable {
+    case monday = 0
+    case tuesday
+    case wednesday
+    case thursday
+    case friday
+    case saturday
+    case sunday
+
+    var id: Int { rawValue }
+
+    var shortLabel: String {
+        switch self {
+        case .monday: return "月"
+        case .tuesday: return "火"
+        case .wednesday: return "水"
+        case .thursday: return "木"
+        case .friday: return "金"
+        case .saturday: return "土"
+        case .sunday: return "日"
+        }
+    }
+
+    var fullLabel: String { shortLabel + "曜日" }
+}
+
+struct TimetableEvent: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var title: String
+    var weekType: WeekType = .everyWeek
+    var weekday: Weekday = .monday
+    var startMinutes: Int = 9 * 60
+    var endMinutes: Int = 10 * 60
+    var colorHex: String = "4A90D9"
+    var note: String = ""
+}
+
+// MARK: - SNSアカウント一覧（機能4）
+
+struct SNSLink: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var platform: String
+    var urlString: String
+    var emoji: String = "🔗"
+}
+
+// MARK: - Todoリスト（機能6）
+
+struct TodoItem: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var title: String
+    var details: String = ""
+    var durationMinutes: Int = 0
+    var isDone: Bool = false
+    var createdAt: Date = Date()
+}
+
+// MARK: - 学習（クイズ）
+
+struct QuizFolder: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var name: String
+}
+
+struct Quiz: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var folderID: UUID? = nil
+    var question: String
+    var choices: [String]
+    var correctIndex: Int
+    var attemptCount: Int = 0
+    var correctCount: Int = 0
+
+    var accuracy: Double? {
+        guard attemptCount > 0 else { return nil }
+        return Double(correctCount) / Double(attemptCount)
+    }
+}
+
+extension Array where Element == Quiz {
+    /// Average of each attempted quiz's own accuracy (quizzes never
+    /// attempted are excluded rather than counted as 0%).
+    var averageAccuracy: Double? {
+        let attempted = compactMap(\.accuracy)
+        guard !attempted.isEmpty else { return nil }
+        return attempted.reduce(0, +) / Double(attempted.count)
+    }
+}
+
+// MARK: - ノート（機能8）
+
+struct Note: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var category: String
+    var title: String
+    var content: String = ""
+    var updatedAt: Date = Date()
+}
+
+// MARK: - PDFライブラリ
+
+struct PDFFolder: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var name: String
+}
+
+struct PDFItem: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var title: String
+    var path: String
+    var folderID: UUID? = nil
+    var addedAt: Date = Date()
+}
+
+// MARK: - タイマー / 統計
+
+struct TimeEntry: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var label: String
+    var startedAt: Date
+    var durationSeconds: Double
+}
+
+struct ActiveTimerSession: Codable, Hashable {
+    var label: String
+    var startedAt: Date
+}
+
+// MARK: - テーマ（機能7）
+
+enum AppThemeMode: String, Codable, CaseIterable, Identifiable, Hashable {
+    case system
+    case light
+    case dark
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .system: return "システムに合わせる"
+        case .light: return "ライト"
+        case .dark: return "ダーク"
+        }
+    }
+}
+
+struct ThemeSettings: Codable, Hashable {
+    var mode: AppThemeMode = .dark
+    var backgroundColorHex: String = "0C1720"
+    /// Path to a static image, animated GIF, or video file used as the home screen background.
+    var backgroundMediaPath: String? = nil
+}
