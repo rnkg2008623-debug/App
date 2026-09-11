@@ -7,6 +7,7 @@ struct ImportView: View {
     @State private var targetFolderID: UUID?
     @State private var showNewFolderAlert = false
     @State private var newFolderName = ""
+    @State private var pasteText = ""
     @State private var resultMessage: String?
     @State private var resultIsError = false
 
@@ -15,7 +16,7 @@ struct ImportView: View {
             SectionHeading(title: "インポート")
 
             VStack(alignment: .leading, spacing: 14) {
-                Text("クイズをCSV形式でインポートできます。各行は「質問,選択肢1,選択肢2,選択肢3,選択肢4,正解の番号(1〜4)」の6列で入力してください。1行目に見出しがあっても自動でスキップされます。")
+                Text("2つの形式に対応しています。①4択クイズ形式：「質問,選択肢1,選択肢2,選択肢3,選択肢4,正解の番号(1〜4)」の6列。②単語帳形式：「単語, 意味」の2列（例: Apple, りんご）— 他の単語の意味が自動でダミーの選択肢になり4択クイズになります（最低4語必要）。1行目に見出しがあっても自動でスキップされます。")
                     .font(.caption)
                     .foregroundStyle(Theme.textSecondary)
 
@@ -37,7 +38,7 @@ struct ImportView: View {
                 }
 
                 Button {
-                    importCSV()
+                    importFromFile()
                 } label: {
                     Label("CSVファイルを選択してインポート", systemImage: "square.and.arrow.down")
                 }
@@ -49,6 +50,29 @@ struct ImportView: View {
                         .font(.subheadline)
                         .foregroundStyle(resultIsError ? Color(hex: "E2685C") : Theme.accent)
                 }
+            }
+            .panelStyle()
+
+            SectionHeading(title: "コピー＆ペーストでインポート")
+            VStack(alignment: .leading, spacing: 10) {
+                Text("上と同じ形式のテキストを直接貼り付けられます。例:\nApple, りんご\nBanana, バナナ\nCherry, さくらんぼ\nGrape, ぶどう")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textSecondary)
+
+                TextEditor(text: $pasteText)
+                    .font(.system(.body, design: .monospaced))
+                    .foregroundStyle(Theme.textPrimary)
+                    .scrollContentBackground(.hidden)
+                    .frame(minHeight: 140)
+                    .panelStyle(padding: 8)
+
+                Button {
+                    importFromPaste()
+                } label: {
+                    Label("貼り付けた内容をインポート", systemImage: "doc.on.clipboard")
+                }
+                .buttonStyle(GlowButtonStyle(prominent: true))
+                .disabled(targetFolderID == nil || pasteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             .panelStyle()
 
@@ -69,7 +93,7 @@ struct ImportView: View {
         }
     }
 
-    private func importCSV() {
+    private func importFromFile() {
         guard let targetFolderID else { return }
 
         let panel = NSOpenPanel()
@@ -84,37 +108,88 @@ struct ImportView: View {
             return
         }
 
-        var imported: [Quiz] = []
-        var skipped = 0
+        applyImport(CSVParser.parse(text), targetFolderID: targetFolderID)
+    }
 
-        for row in CSVParser.parse(text) {
-            guard row.count >= 6 else { skipped += 1; continue }
-            let question = row[0]
-            let choices = Array(row[1...4])
-            guard let answerNumber = Int(row[5]), (1...4).contains(answerNumber) else {
-                skipped += 1
-                continue
-            }
-            guard !question.isEmpty, choices.allSatisfy({ !$0.isEmpty }) else {
-                skipped += 1
-                continue
-            }
-            imported.append(Quiz(
-                folderID: targetFolderID,
-                question: question,
-                choices: choices,
-                correctIndex: answerNumber - 1
-            ))
-        }
+    private func importFromPaste() {
+        guard let targetFolderID else { return }
+        applyImport(CSVParser.parse(pasteText), targetFolderID: targetFolderID)
+        pasteText = ""
+    }
 
-        guard !imported.isEmpty else {
+    private func applyImport(_ rows: [[String]], targetFolderID: UUID) {
+        let (quizzes, skipped) = Self.buildQuizzes(from: rows, folderID: targetFolderID)
+
+        guard !quizzes.isEmpty else {
             resultIsError = true
-            resultMessage = "インポートできる行がありませんでした（\(skipped)行をスキップ）。"
+            resultMessage = "インポートできる内容がありませんでした（\(skipped)行をスキップ）。"
             return
         }
 
-        store.addQuizzes(imported)
+        store.addQuizzes(quizzes)
         resultIsError = false
-        resultMessage = "\(imported.count)件のクイズをインポートしました" + (skipped > 0 ? "（\(skipped)行をスキップ）。" : "。")
+        resultMessage = "\(quizzes.count)件のクイズをインポートしました" + (skipped > 0 ? "（\(skipped)行をスキップ）。" : "。")
+    }
+
+    /// Rows with 6+ columns are treated as a fully-specified quiz
+    /// (question,choice1..4,answerNumber). Rows with exactly 2 columns are
+    /// treated as word/definition pairs: each word's own definition becomes
+    /// the correct answer, and 3 other pasted definitions are drawn at
+    /// random as distractors, so a plain vocabulary list turns into 4-choice
+    /// quizzes automatically (at least 4 pairs are needed to have 3 distinct
+    /// wrong answers to pick from).
+    private static func buildQuizzes(from rows: [[String]], folderID: UUID) -> (quizzes: [Quiz], skipped: Int) {
+        var fullRows: [[String]] = []
+        var wordDefPairs: [(word: String, definition: String)] = []
+        var skipped = 0
+
+        for row in rows {
+            if row.count >= 6 {
+                fullRows.append(row)
+            } else if row.count >= 2, !row[0].isEmpty, !row[1].isEmpty {
+                wordDefPairs.append((row[0], row[1]))
+            } else {
+                skipped += 1
+            }
+        }
+
+        var quizzes: [Quiz] = []
+
+        for row in fullRows {
+            let question = row[0]
+            let choices = Array(row[1...4])
+            guard let answerNumber = Int(row[5]), (1...4).contains(answerNumber),
+                  !question.isEmpty, choices.allSatisfy({ !$0.isEmpty }) else {
+                skipped += 1
+                continue
+            }
+            quizzes.append(Quiz(folderID: folderID, question: question, choices: choices, correctIndex: answerNumber - 1))
+        }
+
+        if wordDefPairs.count >= 4 {
+            for (index, entry) in wordDefPairs.enumerated() {
+                let otherDefinitions = wordDefPairs.enumerated()
+                    .filter { $0.offset != index && $0.element.definition != entry.definition }
+                    .map { $0.element.definition }
+                let distractors = Array(Set(otherDefinitions)).shuffled().prefix(3)
+                guard distractors.count == 3 else {
+                    skipped += 1
+                    continue
+                }
+                var choices = Array(distractors) + [entry.definition]
+                choices.shuffle()
+                guard let correctIndex = choices.firstIndex(of: entry.definition) else { continue }
+                quizzes.append(Quiz(
+                    folderID: folderID,
+                    question: "「\(entry.word)」の意味は？",
+                    choices: choices,
+                    correctIndex: correctIndex
+                ))
+            }
+        } else {
+            skipped += wordDefPairs.count
+        }
+
+        return (quizzes, skipped)
     }
 }
