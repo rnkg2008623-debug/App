@@ -16,9 +16,15 @@ import java.util.UUID;
 
 /**
  * LivingEntity#travel をフックし、自分のプレイヤーに限り
- * ・入力の強さ(SpeedController) … HEADで movementInput をスケール
- * ・実際の速度ベクトル(VelocityController) … TAILで getVelocity() をスケール
+ * ・入力の強さ(SpeedController) … HEADで movementInput をスケール（水平方向の操作性はバニラのまま）
+ * ・上下方向の速度(VelocityController) … TAILで getVelocity() のY成分のみスケール
  * の2つを適用する。
+ *
+ * VelocityController はあえて水平方向(X/Z)には触れていない。水平速度ベクトル全体に
+ * 毎tick倍率を掛けると、方向転換した直後もまだ残っている「元の進行方向の勢い」まで
+ * 増幅されてしまい、旋回中にどんどん直進方向へ流される（曲がれない）体感になるため。
+ * ジャンプ・落下の速さだけを変えたい場合はY成分だけを操作すれば、左右の操作性は
+ * SpeedController・バニラの摩擦計算にそのまま委ねられ、旋回性能は損なわれない。
  *
  * UUID で「自分自身か」を判定しているのは、シングルプレイでは統合サーバー側の
  * ServerPlayerEntity とクライアント側の ClientPlayerEntity が別オブジェクトに
@@ -28,8 +34,8 @@ import java.util.UUID;
 @Mixin(LivingEntity.class)
 public abstract class PlayerSpeedMixin {
 
-    /** velocity倍率を毎tick掛け続けても暴走しないよう、速度の大きさをここで頭打ちにする。 */
-    private static final double MAX_VELOCITY_LENGTH = 10.0;
+    /** velocity倍率を毎tick掛け続けても暴走しないよう、垂直速度の大きさをここで頭打ちにする。 */
+    private static final double MAX_VERTICAL_VELOCITY = 5.0;
 
     @ModifyVariable(method = "travel", at = @At("HEAD"), argsOnly = true)
     private Vec3d mc_custom_client$applySpeedMultiplier(Vec3d movementInput) {
@@ -48,14 +54,12 @@ public abstract class PlayerSpeedMixin {
         }
 
         LivingEntity self = (LivingEntity) (Object) this;
-        Vec3d scaled = self.getVelocity().multiply(multiplier);
+        Vec3d velocity = self.getVelocity();
 
-        double length = scaled.length();
-        if (length > MAX_VELOCITY_LENGTH) {
-            scaled = scaled.multiply(MAX_VELOCITY_LENGTH / length);
-        }
+        double newY = velocity.y * multiplier;
+        newY = Math.max(-MAX_VERTICAL_VELOCITY, Math.min(MAX_VERTICAL_VELOCITY, newY));
 
-        self.setVelocity(scaled);
+        self.setVelocity(velocity.x, newY, velocity.z);
     }
 
     private boolean mc_custom_client$isLocalPlayer() {

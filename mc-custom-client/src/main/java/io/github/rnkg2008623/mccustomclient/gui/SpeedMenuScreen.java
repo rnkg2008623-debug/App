@@ -98,7 +98,7 @@ public class SpeedMenuScreen extends Screen {
 
         @Override
         protected void updateMessage() {
-            this.setMessage(Text.literal(String.format("Velocity: x%.2f", VelocityController.getMultiplier())));
+            this.setMessage(Text.literal(String.format("Velocity(上下): x%.2f", VelocityController.getMultiplier())));
         }
 
         @Override
