@@ -95,6 +95,28 @@ struct TodoItem: Identifiable, Codable, Hashable {
     var createdAt: Date = Date()
 }
 
+// MARK: - 学習（クイズ）
+
+struct QuizFolder: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var name: String
+}
+
+struct Quiz: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var folderID: UUID? = nil
+    var question: String
+    var choices: [String]
+    var correctIndex: Int
+    var attemptCount: Int = 0
+    var correctCount: Int = 0
+
+    var accuracy: Double? {
+        guard attemptCount > 0 else { return nil }
+        return Double(correctCount) / Double(attemptCount)
+    }
+}
+
 // MARK: - ノート（機能8）
 
 struct Note: Identifiable, Codable, Hashable {

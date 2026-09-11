@@ -8,6 +8,8 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
     case sns = "SNS"
     case calculator = "電卓"
     case todo = "Todo"
+    case study = "学習"
+    case importQuizzes = "インポート"
     case notes = "ノート"
     case pdf = "PDF"
     case timer = "タイマー"
@@ -25,6 +27,8 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
         case .sns: return "link"
         case .calculator: return "function"
         case .todo: return "checklist"
+        case .study: return "graduationcap"
+        case .importQuizzes: return "square.and.arrow.down"
         case .notes: return "note.text"
         case .pdf: return "doc.richtext"
         case .timer: return "timer"
@@ -159,6 +163,8 @@ struct RootView: View {
                     case .sns: SNSLinksView()
                     case .calculator: CalculatorView()
                     case .todo: TodoListView()
+                    case .study: StudyView()
+                    case .importQuizzes: ImportView()
                     case .notes: NotesView()
                     case .pdf: PDFLibraryView()
                     case .timer: TimerView()

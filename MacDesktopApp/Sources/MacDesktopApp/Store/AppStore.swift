@@ -8,6 +8,8 @@ final class AppStore: ObservableObject {
     @Published var snsLinks: [SNSLink] = []
     @Published var todos: [TodoItem] = []
     @Published var notes: [Note] = []
+    @Published var quizFolders: [QuizFolder] = []
+    @Published var quizzes: [Quiz] = []
     @Published var pdfItems: [PDFItem] = []
     @Published var pdfFolders: [PDFFolder] = []
     @Published var timeEntries: [TimeEntry] = []
@@ -27,6 +29,8 @@ final class AppStore: ObservableObject {
         var snsLinks: [SNSLink] = []
         var todos: [TodoItem] = []
         var notes: [Note] = []
+        var quizFolders: [QuizFolder] = []
+        var quizzes: [Quiz] = []
         var pdfItems: [PDFItem] = []
         var pdfFolders: [PDFFolder] = []
         var timeEntries: [TimeEntry] = []
@@ -42,6 +46,8 @@ final class AppStore: ObservableObject {
             snsLinks: [SNSLink] = [],
             todos: [TodoItem] = [],
             notes: [Note] = [],
+            quizFolders: [QuizFolder] = [],
+            quizzes: [Quiz] = [],
             pdfItems: [PDFItem] = [],
             pdfFolders: [PDFFolder] = [],
             timeEntries: [TimeEntry] = [],
@@ -56,6 +62,8 @@ final class AppStore: ObservableObject {
             self.snsLinks = snsLinks
             self.todos = todos
             self.notes = notes
+            self.quizFolders = quizFolders
+            self.quizzes = quizzes
             self.pdfItems = pdfItems
             self.pdfFolders = pdfFolders
             self.timeEntries = timeEntries
@@ -69,7 +77,7 @@ final class AppStore: ObservableObject {
         // older version of the app (a missing key falls back to its default
         // instead of failing the entire decode).
         enum CodingKeys: String, CodingKey {
-            case files, videos, videoFolders, events, snsLinks, todos, notes, pdfItems, pdfFolders, timeEntries, activeTimer, theme, backgroundMediaHistory
+            case files, videos, videoFolders, events, snsLinks, todos, notes, quizFolders, quizzes, pdfItems, pdfFolders, timeEntries, activeTimer, theme, backgroundMediaHistory
         }
 
         init(from decoder: Decoder) throws {
@@ -81,6 +89,8 @@ final class AppStore: ObservableObject {
             snsLinks = try container.decodeIfPresent([SNSLink].self, forKey: .snsLinks) ?? []
             todos = try container.decodeIfPresent([TodoItem].self, forKey: .todos) ?? []
             notes = try container.decodeIfPresent([Note].self, forKey: .notes) ?? []
+            quizFolders = try container.decodeIfPresent([QuizFolder].self, forKey: .quizFolders) ?? []
+            quizzes = try container.decodeIfPresent([Quiz].self, forKey: .quizzes) ?? []
             pdfItems = try container.decodeIfPresent([PDFItem].self, forKey: .pdfItems) ?? []
             pdfFolders = try container.decodeIfPresent([PDFFolder].self, forKey: .pdfFolders) ?? []
             timeEntries = try container.decodeIfPresent([TimeEntry].self, forKey: .timeEntries) ?? []
@@ -114,6 +124,8 @@ final class AppStore: ObservableObject {
         snsLinks = decoded.snsLinks
         todos = decoded.todos
         notes = decoded.notes
+        quizFolders = decoded.quizFolders
+        quizzes = decoded.quizzes
         pdfItems = decoded.pdfItems
         pdfFolders = decoded.pdfFolders
         timeEntries = decoded.timeEntries
@@ -131,6 +143,8 @@ final class AppStore: ObservableObject {
             snsLinks: snsLinks,
             todos: todos,
             notes: notes,
+            quizFolders: quizFolders,
+            quizzes: quizzes,
             pdfItems: pdfItems,
             pdfFolders: pdfFolders,
             timeEntries: timeEntries,
@@ -260,6 +274,44 @@ final class AppStore: ObservableObject {
 
     func removeNote(_ id: UUID) {
         notes.removeAll { $0.id == id }
+        save()
+    }
+
+    // MARK: - 学習（クイズ）
+
+    func addQuizFolder(_ folder: QuizFolder) {
+        quizFolders.append(folder)
+        save()
+    }
+
+    func renameQuizFolder(_ id: UUID, name: String) {
+        guard let idx = quizFolders.firstIndex(where: { $0.id == id }) else { return }
+        quizFolders[idx].name = name
+        save()
+    }
+
+    func removeQuizFolder(_ id: UUID) {
+        quizFolders.removeAll { $0.id == id }
+        for idx in quizzes.indices where quizzes[idx].folderID == id {
+            quizzes[idx].folderID = nil
+        }
+        save()
+    }
+
+    func addQuizzes(_ newQuizzes: [Quiz]) {
+        quizzes.append(contentsOf: newQuizzes)
+        save()
+    }
+
+    func removeQuiz(_ id: UUID) {
+        quizzes.removeAll { $0.id == id }
+        save()
+    }
+
+    func recordQuizAttempt(_ id: UUID, correct: Bool) {
+        guard let idx = quizzes.firstIndex(where: { $0.id == id }) else { return }
+        quizzes[idx].attemptCount += 1
+        if correct { quizzes[idx].correctCount += 1 }
         save()
     }
 
