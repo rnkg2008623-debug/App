@@ -107,10 +107,7 @@ struct StudyView: View {
     }
 
     private func averageAccuracy(for folderID: UUID) -> Double? {
-        let attempted = store.quizzes.filter { $0.folderID == folderID && $0.accuracy != nil }
-        guard !attempted.isEmpty else { return nil }
-        let total = attempted.reduce(0.0) { $0 + ($1.accuracy ?? 0) }
-        return total / Double(attempted.count)
+        store.quizzes.filter { $0.folderID == folderID }.averageAccuracy
     }
 
     private func accuracyLabel(_ accuracy: Double?) -> String {

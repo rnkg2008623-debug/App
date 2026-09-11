@@ -32,9 +32,23 @@ private struct DailyTotal: Identifiable {
 struct StatisticsView: View {
     @EnvironmentObject var store: AppStore
     @State private var range: StatsRange = .oneWeek
+    @State private var expandedFolderID: UUID?
 
     private var totalSeconds: Double {
         store.timeEntries.reduce(0) { $0 + $1.durationSeconds }
+    }
+
+    private var totalQuizAttempts: Int {
+        store.quizzes.reduce(0) { $0 + $1.attemptCount }
+    }
+
+    private var totalQuizCorrect: Int {
+        store.quizzes.reduce(0) { $0 + $1.correctCount }
+    }
+
+    private var overallQuizAccuracy: Double? {
+        guard totalQuizAttempts > 0 else { return nil }
+        return Double(totalQuizCorrect) / Double(totalQuizAttempts)
     }
 
     private var dailyTotals: [DailyTotal] {
@@ -68,6 +82,11 @@ struct StatisticsView: View {
                     statTile(title: "合計（秒）", value: String(format: "%.0f 秒", totalSeconds))
                     statTile(title: "合計（時間）", value: String(format: "%.2f 時間", totalSeconds / 3600))
                     statTile(title: "合計（日）", value: String(format: "%.2f 日", totalSeconds / 86400))
+                }
+
+                HStack(spacing: 16) {
+                    statTile(title: "クイズ回答回数", value: "\(totalQuizAttempts) 回")
+                    statTile(title: "全体正答率", value: overallQuizAccuracy.map { String(format: "%.0f%%", $0 * 100) } ?? "—")
                 }
 
                 VStack(alignment: .leading, spacing: 14) {
@@ -115,9 +134,91 @@ struct StatisticsView: View {
                 }
                 .panelStyle()
 
+                VStack(alignment: .leading, spacing: 10) {
+                    SectionHeading(title: "フォルダー")
+
+                    if store.quizFolders.isEmpty {
+                        Text("学習フォルダがまだありません")
+                            .font(.caption)
+                            .foregroundStyle(Theme.textSecondary)
+                    } else {
+                        VStack(spacing: 4) {
+                            ForEach(store.quizFolders) { folder in
+                                folderStatRow(folder)
+                            }
+                        }
+                    }
+                }
+                .panelStyle()
+
                 Spacer()
             }
             .padding()
+        }
+    }
+
+    @ViewBuilder
+    private func folderStatRow(_ folder: QuizFolder) -> some View {
+        let isExpanded = expandedFolderID == folder.id
+        let quizzes = store.quizzes.filter { $0.folderID == folder.id }
+        let accuracy = quizzes.averageAccuracy
+
+        VStack(alignment: .leading, spacing: 4) {
+            Button {
+                expandedFolderID = isExpanded ? nil : folder.id
+            } label: {
+                HStack {
+                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.textSecondary)
+                    Text(folder.name)
+                        .font(.system(size: 13, weight: isExpanded ? .semibold : .regular))
+                        .foregroundStyle(isExpanded ? Theme.accent : Theme.textPrimary)
+                    Spacer()
+                    Text(accuracy.map { String(format: "%.0f%%", $0 * 100) } ?? "—")
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(isExpanded ? Theme.accent.opacity(0.12) : Color.clear)
+                )
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                if quizzes.isEmpty {
+                    Text("このフォルダにはまだクイズがありません")
+                        .font(.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                        .padding(.leading, 24)
+                        .padding(.vertical, 4)
+                } else {
+                    VStack(spacing: 3) {
+                        ForEach(quizzes) { quiz in
+                            HStack {
+                                Text(quiz.question)
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Theme.textPrimary)
+                                    .lineLimit(1)
+                                Spacer()
+                                Text(quiz.accuracy.map { String(format: "%.0f%%", $0 * 100) } ?? "未挑戦")
+                                    .font(.system(size: 11, design: .monospaced))
+                                    .foregroundStyle(Theme.textSecondary)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(Color.white.opacity(0.04))
+                            )
+                        }
+                    }
+                    .padding(.leading, 16)
+                }
+            }
         }
     }
 

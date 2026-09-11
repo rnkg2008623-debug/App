@@ -117,6 +117,16 @@ struct Quiz: Identifiable, Codable, Hashable {
     }
 }
 
+extension Array where Element == Quiz {
+    /// Average of each attempted quiz's own accuracy (quizzes never
+    /// attempted are excluded rather than counted as 0%).
+    var averageAccuracy: Double? {
+        let attempted = compactMap(\.accuracy)
+        guard !attempted.isEmpty else { return nil }
+        return attempted.reduce(0, +) / Double(attempted.count)
+    }
+}
+
 // MARK: - ノート（機能8）
 
 struct Note: Identifiable, Codable, Hashable {
