@@ -1,0 +1,39 @@
+name: Build Minecraft Mod
+
+on:
+  push:
+    paths:
+      - "mc-custom-client/**"
+      - ".github/workflows/build-mc-mod.yml"
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mc-custom-client
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build mod jar
+        run: ./gradlew build --no-daemon
+
+      - name: Upload mod jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: mc-custom-client-jar
+          path: |
+            mc-custom-client/build/libs/*.jar
+            !mc-custom-client/build/libs/*-sources.jar
+          if-no-files-found: error

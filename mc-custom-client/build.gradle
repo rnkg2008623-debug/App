@@ -22,7 +22,10 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Fabric API
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    // "include" で自分のMODのjarに同梱(Jar-in-Jar)する。
+    // これにより利用者はFabric APIを別途インストールしなくても
+    // このjarをmodsフォルダに入れるだけで動くようになる。
+    include modImplementation("net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
 }
 
 processResources {

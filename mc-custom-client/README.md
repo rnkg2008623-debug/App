@@ -21,9 +21,20 @@
 - 対象バージョン: Minecraft `1.21.1` / Fabric Loader `0.16.9` / Fabric API `0.102.0+1.21.1`
   - `gradle.properties` で管理しています。時間が経つと最新版とズレるので、ビルドが通らない場合は [Fabric公式の対応表](https://fabricmc.net/develop/) を見てバージョンを更新してください。
 
-> **Note**: この開発環境（サンドボックス）はネットワークポリシーにより `maven.fabricmc.net` へアクセスできないため、Gradleビルドの実行確認はできていません。お手持ちのPC（通常のインターネット環境）でビルドしてください。
+> **Note**: この開発環境（サンドボックス）はネットワークポリシーにより `maven.fabricmc.net` へアクセスできないため、Gradleビルドの実行確認はできていません。ビルドは下記のGitHub Actions、またはお手持ちのPC（通常のインターネット環境）で行ってください。
 
-## ビルド方法
+## ビルド済みjarの入手（推奨・ビルド作業不要）
+
+このリポジトリには [GitHub Actions のワークフロー](../.github/workflows/build-mc-mod.yml) が設定されており、`mc-custom-client/` に変更をpushするたびに自動でビルドされます。
+
+1. GitHubのリポジトリページで **Actions** タブを開く
+2. 一番上の **Build Minecraft Mod** の実行(緑のチェックが付いているもの)をクリック
+3. 一番下の **Artifacts** 欄にある `mc-custom-client-jar` をクリックしてダウンロード（zip形式）
+4. zipを展開すると中に `mc-custom-client-0.1.0.jar` が入っています
+
+このjarは Fabric API を同梱済み（Jar-in-Jar）なので、**このjar1つだけ**を `.minecraft/mods` フォルダに入れれば動きます（Fabric API を別途ダウンロードする必要はありません）。
+
+## 自分でビルドする場合
 
 ```bash
 cd mc-custom-client
@@ -36,10 +47,9 @@ cd mc-custom-client
 
 ## 導入方法
 
-1. [Fabric Installer](https://fabricmc.net/use/installer/) で Minecraft 1.21.1 用の Fabric Loader をインストール
-2. [Fabric API](https://modrinth.com/mod/fabric-api) の 1.21.1 対応版を `.minecraft/mods` に入れる
-3. 上記でビルドした `mc-custom-client-0.1.0.jar` も同じ `.minecraft/mods` に入れる
-4. Minecraft Launcher で "fabric-loader-1.21.1" のプロファイルを起動
+1. [Fabric Installer](https://fabricmc.net/use/installer/) で Minecraft 1.21.1 用の Fabric Loader をインストール（これだけは自動化できない一度きりの作業です）
+2. 上記で入手した `mc-custom-client-0.1.0.jar` を `.minecraft/mods` に入れる
+3. Minecraft Launcher で "fabric-loader-1.21.1" のプロファイルを起動
 
 ## 開発を続ける場合
 
