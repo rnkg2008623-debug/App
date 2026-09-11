@@ -120,6 +120,20 @@ struct PDFItem: Identifiable, Codable, Hashable {
     var addedAt: Date = Date()
 }
 
+// MARK: - タイマー / 統計
+
+struct TimeEntry: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var label: String
+    var startedAt: Date
+    var durationSeconds: Double
+}
+
+struct ActiveTimerSession: Codable, Hashable {
+    var label: String
+    var startedAt: Date
+}
+
 // MARK: - テーマ（機能7）
 
 enum AppThemeMode: String, Codable, CaseIterable, Identifiable, Hashable {

@@ -10,6 +10,8 @@ final class AppStore: ObservableObject {
     @Published var notes: [Note] = []
     @Published var pdfItems: [PDFItem] = []
     @Published var pdfFolders: [PDFFolder] = []
+    @Published var timeEntries: [TimeEntry] = []
+    @Published var activeTimer: ActiveTimerSession? = nil
     @Published var theme: ThemeSettings = ThemeSettings()
     @Published var backgroundMediaHistory: [String] = []
     @Published var selectedWeek: WeekType = .weekA
@@ -27,6 +29,8 @@ final class AppStore: ObservableObject {
         var notes: [Note] = []
         var pdfItems: [PDFItem] = []
         var pdfFolders: [PDFFolder] = []
+        var timeEntries: [TimeEntry] = []
+        var activeTimer: ActiveTimerSession? = nil
         var theme: ThemeSettings = ThemeSettings()
         var backgroundMediaHistory: [String] = []
 
@@ -40,6 +44,8 @@ final class AppStore: ObservableObject {
             notes: [Note] = [],
             pdfItems: [PDFItem] = [],
             pdfFolders: [PDFFolder] = [],
+            timeEntries: [TimeEntry] = [],
+            activeTimer: ActiveTimerSession? = nil,
             theme: ThemeSettings = ThemeSettings(),
             backgroundMediaHistory: [String] = []
         ) {
@@ -52,6 +58,8 @@ final class AppStore: ObservableObject {
             self.notes = notes
             self.pdfItems = pdfItems
             self.pdfFolders = pdfFolders
+            self.timeEntries = timeEntries
+            self.activeTimer = activeTimer
             self.theme = theme
             self.backgroundMediaHistory = backgroundMediaHistory
         }
@@ -61,7 +69,7 @@ final class AppStore: ObservableObject {
         // older version of the app (a missing key falls back to its default
         // instead of failing the entire decode).
         enum CodingKeys: String, CodingKey {
-            case files, videos, videoFolders, events, snsLinks, todos, notes, pdfItems, pdfFolders, theme, backgroundMediaHistory
+            case files, videos, videoFolders, events, snsLinks, todos, notes, pdfItems, pdfFolders, timeEntries, activeTimer, theme, backgroundMediaHistory
         }
 
         init(from decoder: Decoder) throws {
@@ -75,6 +83,8 @@ final class AppStore: ObservableObject {
             notes = try container.decodeIfPresent([Note].self, forKey: .notes) ?? []
             pdfItems = try container.decodeIfPresent([PDFItem].self, forKey: .pdfItems) ?? []
             pdfFolders = try container.decodeIfPresent([PDFFolder].self, forKey: .pdfFolders) ?? []
+            timeEntries = try container.decodeIfPresent([TimeEntry].self, forKey: .timeEntries) ?? []
+            activeTimer = try container.decodeIfPresent(ActiveTimerSession.self, forKey: .activeTimer)
             theme = try container.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? ThemeSettings()
             backgroundMediaHistory = try container.decodeIfPresent([String].self, forKey: .backgroundMediaHistory) ?? []
         }
@@ -106,6 +116,8 @@ final class AppStore: ObservableObject {
         notes = decoded.notes
         pdfItems = decoded.pdfItems
         pdfFolders = decoded.pdfFolders
+        timeEntries = decoded.timeEntries
+        activeTimer = decoded.activeTimer
         theme = decoded.theme
         backgroundMediaHistory = decoded.backgroundMediaHistory
     }
@@ -121,6 +133,8 @@ final class AppStore: ObservableObject {
             notes: notes,
             pdfItems: pdfItems,
             pdfFolders: pdfFolders,
+            timeEntries: timeEntries,
+            activeTimer: activeTimer,
             theme: theme,
             backgroundMediaHistory: backgroundMediaHistory
         )
@@ -277,6 +291,44 @@ final class AppStore: ObservableObject {
         for idx in pdfItems.indices where pdfItems[idx].folderID == id {
             pdfItems[idx].folderID = nil
         }
+        save()
+    }
+
+    // MARK: - タイマー
+
+    /// Anchors the running session to a fixed start `Date` rather than an
+    /// incrementing counter, so elapsed time stays correct — computed as
+    /// `Date().timeIntervalSince(startedAt)` — no matter whether this view is
+    /// mounted, another tab is active, or the app is simply in the
+    /// background; only quitting the app stops the clock.
+    func startTimer(label: String) {
+        guard activeTimer == nil else { return }
+        activeTimer = ActiveTimerSession(label: label, startedAt: Date())
+        save()
+    }
+
+    func stopTimer() {
+        guard let active = activeTimer else { return }
+        let duration = max(0, Date().timeIntervalSince(active.startedAt))
+        timeEntries.append(TimeEntry(label: active.label, startedAt: active.startedAt, durationSeconds: duration))
+        activeTimer = nil
+        save()
+    }
+
+    func updateActiveTimerLabel(_ label: String) {
+        guard activeTimer != nil else { return }
+        activeTimer?.label = label
+        save()
+    }
+
+    func updateTimeEntryLabel(_ id: UUID, label: String) {
+        guard let idx = timeEntries.firstIndex(where: { $0.id == id }) else { return }
+        timeEntries[idx].label = label
+        save()
+    }
+
+    func removeTimeEntry(_ id: UUID) {
+        timeEntries.removeAll { $0.id == id }
         save()
     }
 
