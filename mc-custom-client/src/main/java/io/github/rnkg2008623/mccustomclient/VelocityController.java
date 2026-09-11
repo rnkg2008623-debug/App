@@ -1,18 +1,17 @@
 package io.github.rnkg2008623.mccustomclient;
 
 /**
- * 自分の水平方向の「加速度」の倍率を保持する状態クラス。
+ * 自分の水平速度(velocity)倍率を保持する状態クラス。
  *
- * SpeedController が目標の速さ（入力の強さ）を変えるのに対し、こちらは
- * 「その速さに到達するまでの速度の変化のしやすさ」を変える。
- * 1.0がバニラ標準、大きいほど加速・方向転換ともに素早く(キビキビ)なり、
- * 小さいほど氷の上のように滑って曲がりにくくなる。
- * ジャンプ・落下（上下方向）には一切影響しない。
+ * 実際の速度ベクトルのX/Z成分に毎tick掛かる倍率で、移動を続けるほど速度が
+ * 積み上がっていく（走るほど加速していく）感覚になる。上下方向(Y)には
+ * 一切影響しないため、ジャンプ・落下は常にバニラ（またはJumpController）の
+ * ままになる。
  */
 public final class VelocityController {
 
-    public static final float MIN_MULTIPLIER = 0.1f;
-    public static final float MAX_MULTIPLIER = 3.0f;
+    public static final float MIN_MULTIPLIER = 0.5f;
+    public static final float MAX_MULTIPLIER = 2.5f;
     private static final float DEFAULT_MULTIPLIER = 1.0f;
 
     private static float multiplier = DEFAULT_MULTIPLIER;

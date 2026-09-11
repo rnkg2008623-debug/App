@@ -44,7 +44,7 @@ public class SpeedMenuScreen extends Screen {
                 centerX - WIDGET_WIDTH / 2, y, WIDGET_WIDTH, WIDGET_HEIGHT,
                 VelocityController.MIN_MULTIPLIER, VelocityController.MAX_MULTIPLIER,
                 VelocityController::getMultiplier, VelocityController::set,
-                "Velocity(加速度): x%.2f"
+                "Velocity: x%.2f"
         ));
         y += WIDGET_HEIGHT + SPACING;
 

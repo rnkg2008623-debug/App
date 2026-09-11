@@ -12,7 +12,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -26,11 +25,9 @@ import java.util.UUID;
  *
  * ・移動速度(SpeedController)     … travel()のHEADで movementInput をスケール
  *   （「目標の速さ」そのものを変える）
- * ・加速度(VelocityController)    … travel()のHEADで変更前の速度を記録しておき、
- *   TAILで「バニラ物理がそのtickで計算した速度の変化量(delta)」に倍率を掛ける。
- *   速度そのものを直接スケールするのではなく変化量をスケールするので、方向転換の
- *   しやすさ自体も一緒に速くなる（≒加速度を上げるほど曲がりやすくなる）。水平方向
- *   (X/Z)のみが対象で、上下方向(Y)には一切触れない。
+ * ・Velocity(VelocityController)  … travel()のTAILで、実際の水平速度(X/Z)そのもの
+ *   に毎tick倍率を掛ける。移動を続けるほど速度が積み上がっていく（走るほど加速して
+ *   いく）感覚になる。上下方向(Y)には一切触れないので、ジャンプ・落下には影響しない。
  * ・ジャンプの高さ(JumpController) … getJumpVelocity()の戻り値をスケール
  * ・水上歩行(WaterWalkController) … travel()のTAILで、水中にいる間だけ
  *   鉛直速度を止めて水面に浮かせる
@@ -47,40 +44,30 @@ import java.util.UUID;
 @Mixin(LivingEntity.class)
 public abstract class PlayerSpeedMixin {
 
-    /** 加速度倍率を掛けても暴走しないよう、水平速度の大きさをここで頭打ちにする。 */
+    /** Velocity倍率を毎tick掛け続けても暴走しないよう、水平速度の大きさをここで頭打ちにする。 */
     private static final double MAX_HORIZONTAL_VELOCITY = 10.0;
-
-    /** travel()のHEAD時点の速度。同じtick内でHEAD→TAILの間だけ使う一時的な値。 */
-    @Unique
-    private Vec3d mc_custom_client$velocityBeforeTravel;
 
     @ModifyVariable(method = "travel", at = @At("HEAD"), argsOnly = true)
     private Vec3d mc_custom_client$applySpeedMultiplier(Vec3d movementInput) {
-        boolean isLocal = mc_custom_client$isLocalPlayer();
-        if (isLocal) {
-            mc_custom_client$velocityBeforeTravel = ((LivingEntity) (Object) this).getVelocity();
-        }
-
         float multiplier = SpeedController.getMultiplier();
-        if (multiplier == 1.0f || !isLocal) {
+        if (multiplier == 1.0f || !mc_custom_client$isLocalPlayer()) {
             return movementInput;
         }
         return movementInput.multiply(multiplier);
     }
 
     @Inject(method = "travel", at = @At("TAIL"))
-    private void mc_custom_client$applyAccelerationMultiplier(Vec3d movementInput, CallbackInfo ci) {
+    private void mc_custom_client$applyVelocityMultiplier(Vec3d movementInput, CallbackInfo ci) {
         float multiplier = VelocityController.getMultiplier();
-        Vec3d before = mc_custom_client$velocityBeforeTravel;
-        if (multiplier == 1.0f || before == null || !mc_custom_client$isLocalPlayer()) {
+        if (multiplier == 1.0f || !mc_custom_client$isLocalPlayer()) {
             return;
         }
 
         LivingEntity self = (LivingEntity) (Object) this;
-        Vec3d after = self.getVelocity();
+        Vec3d velocity = self.getVelocity();
 
-        double newX = before.x + (after.x - before.x) * multiplier;
-        double newZ = before.z + (after.z - before.z) * multiplier;
+        double newX = velocity.x * multiplier;
+        double newZ = velocity.z * multiplier;
 
         double horizontalLength = Math.sqrt(newX * newX + newZ * newZ);
         if (horizontalLength > MAX_HORIZONTAL_VELOCITY) {
@@ -89,7 +76,8 @@ public abstract class PlayerSpeedMixin {
             newZ *= scale;
         }
 
-        self.setVelocity(newX, after.y, newZ);
+        // Y(上下)には一切触れない。ジャンプ・落下はJumpController／バニラのまま。
+        self.setVelocity(newX, velocity.y, newZ);
     }
 
     @Inject(method = "travel", at = @At("TAIL"))
