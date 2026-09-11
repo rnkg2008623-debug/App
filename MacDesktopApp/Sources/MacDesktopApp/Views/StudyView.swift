@@ -18,6 +18,11 @@ struct StudyView: View {
             folderPane
             detailPane
         }
+        .onAppear {
+            if selectedFolderID == nil {
+                selectedFolderID = store.quizFolders.first?.id
+            }
+        }
         .alert("新しいフォルダ", isPresented: $showNewFolderAlert) {
             TextField("フォルダ名", text: $newFolderName)
             Button("作成") {
