@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 
 /**
  * Mキーで開く、MCカスタムクライアントの設定メニュー。
- * 移動速度・ジャンプ高さ・受けるノックバックをスライダーで、水上歩行をボタンで切り替えられる。
+ * 移動速度・加速度・ジャンプ高さをスライダーで、水上歩行をボタンで切り替えられる。
  */
 public class SpeedMenuScreen extends Screen {
 
@@ -42,17 +42,17 @@ public class SpeedMenuScreen extends Screen {
 
         this.addDrawableChild(new MultiplierSlider(
                 centerX - WIDGET_WIDTH / 2, y, WIDGET_WIDTH, WIDGET_HEIGHT,
-                JumpController.MIN_MULTIPLIER, JumpController.MAX_MULTIPLIER,
-                JumpController::getMultiplier, JumpController::set,
-                "ジャンプの高さ: x%.2f"
+                VelocityController.MIN_MULTIPLIER, VelocityController.MAX_MULTIPLIER,
+                VelocityController::getMultiplier, VelocityController::set,
+                "Velocity(加速度): x%.2f"
         ));
         y += WIDGET_HEIGHT + SPACING;
 
         this.addDrawableChild(new MultiplierSlider(
                 centerX - WIDGET_WIDTH / 2, y, WIDGET_WIDTH, WIDGET_HEIGHT,
-                VelocityController.MIN_MULTIPLIER, VelocityController.MAX_MULTIPLIER,
-                VelocityController::getMultiplier, VelocityController::set,
-                "受けるノックバック: x%.2f"
+                JumpController.MIN_MULTIPLIER, JumpController.MAX_MULTIPLIER,
+                JumpController::getMultiplier, JumpController::set,
+                "ジャンプの高さ: x%.2f"
         ));
         y += WIDGET_HEIGHT + SPACING;
 
