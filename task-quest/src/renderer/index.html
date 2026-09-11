@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+<title>TaskQuest</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+
+  <header class="topbar">
+    <div class="brand">⚔️ TaskQuest</div>
+    <nav class="tabs" role="tablist">
+      <button class="tab-btn is-active" data-tab="todo">Todo</button>
+      <button class="tab-btn" data-tab="timetable">Timetable</button>
+      <button class="tab-btn" data-tab="stats">統計</button>
+      <button class="tab-btn" data-tab="battle">バトル</button>
+      <button class="tab-btn" data-tab="formation">編成</button>
+      <button class="tab-btn" data-tab="enhance">強化</button>
+      <button class="tab-btn" data-tab="collection">図鑑</button>
+    </nav>
+  </header>
+
+  <div id="session-bar" class="session-bar"></div>
+
+  <main class="content">
+
+    <section id="tab-todo" class="tab-panel is-active">
+      <div class="panel-head">
+        <h1>Todo</h1>
+        <button id="btn-new-todo" class="btn btn-primary">＋ Todoを追加</button>
+      </div>
+      <div id="todo-list" class="todo-list"></div>
+    </section>
+
+    <section id="tab-timetable" class="tab-panel">
+      <div class="panel-head">
+        <h1>Timetable</h1>
+        <button id="btn-new-timetable" class="btn btn-primary">＋ 予定を追加</button>
+      </div>
+      <div id="timetable-grid" class="timetable-grid"></div>
+    </section>
+
+    <section id="tab-stats" class="tab-panel">
+      <h1>統計</h1>
+      <div id="stats-body" class="stats-body"></div>
+    </section>
+
+    <section id="tab-battle" class="tab-panel">
+      <div class="panel-head">
+        <h1>バトル（深層探検）</h1>
+      </div>
+      <div id="battle-body" class="battle-body"></div>
+    </section>
+
+    <section id="tab-formation" class="tab-panel">
+      <h1>編成</h1>
+      <p class="panel-sub">戦闘に連れていくモンスターを3体選択してください。</p>
+      <div id="formation-body" class="formation-body"></div>
+    </section>
+
+    <section id="tab-enhance" class="tab-panel">
+      <h1>強化</h1>
+      <p class="panel-sub">同じ種族のモンスターや強化アイテムを合成して、モンスターを強くします。</p>
+      <div id="enhance-body" class="enhance-body"></div>
+    </section>
+
+    <section id="tab-collection" class="tab-panel">
+      <h1>図鑑・所持品</h1>
+      <div id="collection-body" class="collection-body"></div>
+    </section>
+
+  </main>
+</div>
+
+<div id="modal-root"></div>
+
+<script src="renderer.js"></script>
+</body>
+</html>
