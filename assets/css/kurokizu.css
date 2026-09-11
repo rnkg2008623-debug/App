@@ -1,0 +1,232 @@
+/* ==========================================================================
+   黒傷 -KUROKIZU-
+   ========================================================================== */
+:root{
+  --bg-0: #020202;
+  --bg-1: #0a0808;
+  --bg-2: #120d0d;
+  --ink-0: #f5f2ef;
+  --ink-1: #cfc7c2;
+  --ink-2: #8a807b;
+  --red-1: #e0263f;
+  --red-2: #8f0f22;
+  --red-glow: rgba(224, 38, 63, .45);
+  --line: rgba(245, 242, 239, .1);
+  --ease: cubic-bezier(.16, .84, .44, 1);
+}
+
+*{ box-sizing: border-box; }
+html{ scroll-behavior: smooth; }
+body{
+  margin:0; min-height:100vh; background: var(--bg-0); color: var(--ink-0);
+  font-family: "Noto Sans JP", sans-serif; overflow-x: hidden;
+}
+body.is-locked{ overflow: hidden; height: 100vh; }
+a{ color: inherit; text-decoration: none; }
+::selection{ background: var(--red-2); color: var(--ink-0); }
+
+/* ==========================================================================
+   オープニング演出
+   ========================================================================== */
+#opening{
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  background: #000;
+  overflow: hidden;
+  transition: opacity 1s var(--ease), visibility 0s linear 1s;
+}
+#opening.is-done{
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+
+/* 走査線・粒子の雰囲気 */
+#opening .scanlines{
+  position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay;
+  background: repeating-linear-gradient(
+    to bottom, rgba(255,255,255,.05) 0px, rgba(255,255,255,.05) 1px,
+    transparent 1px, transparent 3px
+  );
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+#opening.is-flashing .scanlines,
+#opening.is-bright .scanlines{ opacity: .5; }
+
+/* エラーノイズ（TVスタティック） */
+#noise-canvas{
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; image-rendering: pixelated;
+  transition: opacity .08s linear;
+}
+#opening.is-flashing #noise-canvas{ opacity: .85; }
+#opening.is-glitch-2 #noise-canvas{ opacity: .55; }
+
+/* 明転用の光暈 */
+.light-wash{
+  position: absolute; inset: -20%; pointer-events: none;
+  background: radial-gradient(circle at 50% 55%, rgba(255,255,255,.9), rgba(224,38,63,.25) 45%, transparent 72%);
+  opacity: 0; transform: scale(.6);
+  transition: opacity 1.3s var(--ease), transform 1.3s var(--ease);
+}
+#opening.is-bright .light-wash{ opacity: .9; transform: scale(1.4); }
+#opening.is-done .light-wash{ opacity: 0; }
+
+/* タイトル */
+.glitch-stage{ position: relative; z-index: 2; }
+.glitch-title{
+  margin: 0; position: relative;
+  font-family: "Shippori Mincho B1", "Noto Serif JP", serif;
+  font-weight: 800;
+  font-size: clamp(3.2rem, 14vw, 8rem);
+  letter-spacing: .14em;
+  color: var(--ink-0);
+  opacity: 0;
+  filter: drop-shadow(0 0 0 rgba(224,38,63,0));
+}
+.glitch-title::before,
+.glitch-title::after{
+  content: attr(data-text);
+  position: absolute; inset: 0; opacity: 0;
+}
+.glitch-title::before{ color: var(--red-1); mix-blend-mode: screen; }
+.glitch-title::after{ color: #4ee0e8; mix-blend-mode: screen; }
+
+/* 1回目：ノイズと共に突然現れる */
+#opening.is-flashing .glitch-title{
+  opacity: 1;
+  animation: title-shake .28s steps(3, end) both;
+}
+#opening.is-flashing .glitch-title::before{
+  opacity: .8;
+  animation: glitch-shift-1 .3s steps(4, end) both;
+}
+#opening.is-flashing .glitch-title::after{
+  opacity: .8;
+  animation: glitch-shift-2 .3s steps(4, end) both;
+}
+
+/* 2回目：再びグリッチしてから明るく安定する */
+#opening.is-glitch-2 .glitch-title{
+  opacity: 1;
+  animation: title-shake .4s steps(4, end) both;
+  filter: drop-shadow(0 0 22px rgba(245,242,239,.6));
+}
+#opening.is-glitch-2 .glitch-title::before{
+  opacity: .6;
+  animation: glitch-shift-1 .4s steps(5, end) both;
+}
+#opening.is-glitch-2 .glitch-title::after{
+  opacity: .6;
+  animation: glitch-shift-2 .4s steps(5, end) both;
+}
+
+#opening.is-bright .glitch-title,
+#opening.is-done .glitch-title{
+  opacity: 1;
+  filter: drop-shadow(0 0 40px rgba(245,242,239,.85));
+  transition: filter 1.1s var(--ease);
+}
+#opening.is-bright .glitch-title::before,
+#opening.is-bright .glitch-title::after{
+  opacity: 0; transition: opacity .5s ease;
+}
+
+@keyframes title-shake{
+  0%{ transform: translate(0,0); }
+  20%{ transform: translate(-3px, 1px); }
+  40%{ transform: translate(2px, -2px); }
+  60%{ transform: translate(-2px, 2px) skewX(-2deg); }
+  80%{ transform: translate(3px, 0); }
+  100%{ transform: translate(0,0); }
+}
+@keyframes glitch-shift-1{
+  0%{ clip-path: inset(10% 0 70% 0); transform: translate(0,0); }
+  25%{ clip-path: inset(55% 0 10% 0); transform: translate(-6px, 1px); }
+  50%{ clip-path: inset(20% 0 60% 0); transform: translate(5px, -1px); }
+  75%{ clip-path: inset(70% 0 5% 0); transform: translate(-4px, 2px); }
+  100%{ clip-path: inset(30% 0 40% 0); transform: translate(0,0); }
+}
+@keyframes glitch-shift-2{
+  0%{ clip-path: inset(60% 0 15% 0); transform: translate(0,0); }
+  25%{ clip-path: inset(15% 0 65% 0); transform: translate(6px, -1px); }
+  50%{ clip-path: inset(45% 0 30% 0); transform: translate(-5px, 1px); }
+  75%{ clip-path: inset(5% 0 80% 0); transform: translate(4px, -2px); }
+  100%{ clip-path: inset(35% 0 35% 0); transform: translate(0,0); }
+}
+
+/* スキップ操作 */
+#opening-skip{
+  position: absolute; right: 22px; bottom: 22px; z-index: 3;
+  font-size: .72rem; letter-spacing: .2em; color: var(--ink-2);
+  background: transparent; border: 1px solid var(--line); border-radius: 999px;
+  padding: 8px 16px; opacity: 0; cursor: pointer;
+  transition: opacity .6s ease .8s, color .2s ease, border-color .2s ease;
+}
+#opening.is-skippable #opening-skip{ opacity: .7; }
+#opening-skip:hover{ color: var(--ink-0); border-color: var(--ink-1); opacity: 1; }
+
+@media (prefers-reduced-motion: reduce){
+  .glitch-title, .glitch-title::before, .glitch-title::after,
+  #opening .scanlines, #noise-canvas, .light-wash{ animation: none !important; }
+  #opening{ transition: opacity .4s ease, visibility 0s linear .4s; }
+}
+
+/* ==========================================================================
+   ホーム画面
+   ========================================================================== */
+.home-screen{
+  min-height: 100vh; background: var(--bg-0);
+  opacity: 0;
+}
+.home-screen.is-visible{
+  opacity: 1; transition: opacity 1.4s var(--ease) .1s;
+}
+
+.site-nav{
+  position: fixed; inset: 0 0 auto 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px clamp(20px, 5vw, 56px);
+}
+.nav-brand{ font-family: "Shippori Mincho B1", serif; font-weight: 800; letter-spacing: .22em; color: var(--ink-0); }
+.nav-links{ display: flex; gap: 28px; font-size: .82rem; letter-spacing: .08em; color: var(--ink-2); }
+.nav-links a:hover{ color: var(--red-1); }
+
+.hero{
+  min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 0 20px; position: relative;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(224,38,63,.12), transparent 55%),
+    var(--bg-0);
+}
+.hero-title{
+  margin: 0; font-family: "Shippori Mincho B1", "Noto Serif JP", serif;
+  font-weight: 800; letter-spacing: .16em;
+  font-size: clamp(3rem, 12vw, 7rem);
+  color: var(--ink-0);
+  text-shadow: 0 0 50px rgba(224,38,63,.35);
+}
+.hero-copy{
+  margin: 20px 0 0; max-width: 40em; color: var(--ink-1);
+  font-size: .95rem; line-height: 1.9; letter-spacing: .04em;
+}
+.scroll-cue{
+  position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+  font-size: .7rem; letter-spacing: .3em; color: var(--ink-2);
+}
+.scroll-cue::after{
+  content: ""; display: block; width: 1px; height: 34px; margin: 10px auto 0;
+  background: linear-gradient(var(--red-1), transparent);
+  animation: cue-drop 1.8s ease-in-out infinite;
+}
+@keyframes cue-drop{
+  0%{ transform: scaleY(0); transform-origin: top; opacity: 0; }
+  40%{ transform: scaleY(1); transform-origin: top; opacity: 1; }
+  60%{ transform: scaleY(1); transform-origin: bottom; opacity: 1; }
+  100%{ transform: scaleY(0); transform-origin: bottom; opacity: 0; }
+}
+
+.about-section{
+  min-height: 60vh; display: flex; align-items: center; justify-content: center;
+  border-top: 1px solid var(--line); padding: 80px 20px; text-align: center;
+}
+.about-section p{ color: var(--ink-2); letter-spacing: .06em; }

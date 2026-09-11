@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>黒傷 -KUROKIZU-</title>
+<meta name="description" content="「黒傷 -KUROKIZU-」公式サイト。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;800&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/kurokizu.css">
+</head>
+<body>
+
+<!-- ===================== オープニング演出 ===================== -->
+<div id="opening" aria-hidden="true">
+  <canvas id="noise-canvas"></canvas>
+  <div class="scanlines"></div>
+  <div class="light-wash"></div>
+  <div class="glitch-stage">
+    <h1 id="glitch-title" class="glitch-title" data-text="黒傷">黒傷</h1>
+  </div>
+  <button id="opening-skip" type="button">SKIP ▸</button>
+</div>
+
+<!-- ===================== ホーム画面 ===================== -->
+<div id="home" class="home-screen">
+  <header class="site-nav">
+    <a href="#top" class="nav-brand">黒傷</a>
+    <nav class="nav-links">
+      <a href="#about">ABOUT</a>
+      <a href="#top">TOP</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="top" class="hero">
+      <h2 class="hero-title">黒傷</h2>
+      <p class="hero-copy">消せない傷が、物語を動かす。</p>
+      <span class="scroll-cue">SCROLL</span>
+    </section>
+
+    <section id="about" class="about-section">
+      <p>準備中。</p>
+    </section>
+  </main>
+</div>
+
+<script src="assets/js/kurokizu.js"></script>
+</body>
+</html>
