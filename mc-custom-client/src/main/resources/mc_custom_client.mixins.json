@@ -6,7 +6,8 @@
   "client": [
     "PlayerSpeedMixin",
     "FreecamLookMixin",
-    "FreecamCameraMixin"
+    "FreecamCameraMixin",
+    "CameraAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
