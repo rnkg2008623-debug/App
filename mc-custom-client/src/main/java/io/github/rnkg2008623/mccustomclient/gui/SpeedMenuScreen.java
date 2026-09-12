@@ -1,6 +1,8 @@
 package io.github.rnkg2008623.mccustomclient.gui;
 
+import io.github.rnkg2008623.mccustomclient.FreecamController;
 import io.github.rnkg2008623.mccustomclient.JumpController;
+import io.github.rnkg2008623.mccustomclient.MyCustomClient;
 import io.github.rnkg2008623.mccustomclient.SpeedController;
 import io.github.rnkg2008623.mccustomclient.VelocityController;
 import io.github.rnkg2008623.mccustomclient.WaterWalkController;
@@ -39,7 +41,7 @@ public class SpeedMenuScreen extends Screen {
     @Override
     protected void init() {
         int centerX = this.width / 2;
-        int y = this.height / 2 - 115;
+        int y = this.height / 2 - 130;
 
         this.addDrawableChild(new MultiplierSlider(
                 centerX - WIDGET_WIDTH / 2, y, WIDGET_WIDTH, WIDGET_HEIGHT,
@@ -71,6 +73,14 @@ public class SpeedMenuScreen extends Screen {
                 })
                 .dimensions(centerX - WIDGET_WIDTH / 2, y, WIDGET_WIDTH, WIDGET_HEIGHT)
                 .build());
+        y += WIDGET_HEIGHT + SPACING;
+
+        this.addDrawableChild(ButtonWidget.builder(freecamLabel(), button -> {
+                    MyCustomClient.toggleFreecam(this.client);
+                    button.setMessage(freecamLabel());
+                })
+                .dimensions(centerX - WIDGET_WIDTH / 2, y, WIDGET_WIDTH, WIDGET_HEIGHT)
+                .build());
         y += WIDGET_HEIGHT + GAP_BETWEEN_SECTIONS;
 
         // テレポート: 名前入力欄(左) + 実行ボタン(右)
@@ -98,6 +108,7 @@ public class SpeedMenuScreen extends Screen {
                     JumpController.reset();
                     VelocityController.reset();
                     WaterWalkController.reset();
+                    FreecamController.setEnabled(false);
                     this.clearAndInit();
                 })
                 .dimensions(centerX - WIDGET_WIDTH / 2, y, WIDGET_WIDTH, WIDGET_HEIGHT)
@@ -157,12 +168,17 @@ public class SpeedMenuScreen extends Screen {
         return Text.literal("水上歩行: " + state);
     }
 
+    private static Text freecamLabel() {
+        String state = FreecamController.isEnabled() ? "ON" : "OFF";
+        return Text.literal("フリーカム: " + state);
+    }
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         this.renderBackground(context, mouseX, mouseY, delta);
         super.render(context, mouseX, mouseY, delta);
         context.drawCenteredTextWithShadow(
-                this.textRenderer, this.title, this.width / 2, this.height / 2 - 140, 0xFFFFFF
+                this.textRenderer, this.title, this.width / 2, this.height / 2 - 155, 0xFFFFFF
         );
         context.drawTextWithShadow(
                 this.textRenderer,

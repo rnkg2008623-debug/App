@@ -1,12 +1,11 @@
 package io.github.rnkg2008623.mccustomclient.mixin;
 
+import io.github.rnkg2008623.mccustomclient.FreecamController;
 import io.github.rnkg2008623.mccustomclient.JumpController;
 import io.github.rnkg2008623.mccustomclient.SpeedController;
 import io.github.rnkg2008623.mccustomclient.VelocityController;
 import io.github.rnkg2008623.mccustomclient.WaterWalkController;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -17,8 +16,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.UUID;
 
 /**
  * LivingEntity をフックして、自分のプレイヤーに限り以下を適用する。
@@ -31,15 +28,14 @@ import java.util.UUID;
  * ・ジャンプの高さ(JumpController) … getJumpVelocity()の戻り値をスケール
  * ・水上歩行(WaterWalkController) … travel()のTAILで、水中にいる間だけ
  *   鉛直速度を止めて水面に浮かせる
+ * ・フリーカム(FreecamController)  … 有効な間は移動入力(movementInput)をゼロにし、
+ *   毎tick速度を強制的にゼロへ戻し、ジャンプもキャンセルすることで、実際の
+ *   キャラクターが一切動かないようにする(カメラ側の移動はFreecamCameraMixin、
+ *   視点回転はFreecamLookMixinが別途担当)。
  *
  * ジャンプの高さはバニラの内部メソッド名に依存しフックが壊れやすいため、
  * require = 0 にし、万一ターゲットが見つからなくても他の機能ごと起動失敗
  * しないようにしている。
- *
- * UUID で「自分自身か」を判定しているのは、シングルプレイでは統合サーバー側の
- * ServerPlayerEntity とクライアント側の ClientPlayerEntity が別オブジェクトに
- * なるため、参照(==)比較ではどちらか一方にしか効かず、サーバー側の補正で
- * 押し戻される(rubber-banding)のを避けるため。
  */
 @Mixin(LivingEntity.class)
 public abstract class PlayerSpeedMixin {
@@ -49,8 +45,17 @@ public abstract class PlayerSpeedMixin {
 
     @ModifyVariable(method = "travel", at = @At("HEAD"), argsOnly = true)
     private Vec3d mc_custom_client$applySpeedMultiplier(Vec3d movementInput) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (!LocalPlayerCheck.isLocalPlayer(self)) {
+            return movementInput;
+        }
+
+        if (FreecamController.isEnabled()) {
+            return Vec3d.ZERO;
+        }
+
         float multiplier = SpeedController.getMultiplier();
-        if (multiplier == 1.0f || !mc_custom_client$isLocalPlayer()) {
+        if (multiplier == 1.0f) {
             return movementInput;
         }
         return movementInput.multiply(multiplier);
@@ -58,8 +63,12 @@ public abstract class PlayerSpeedMixin {
 
     @Inject(method = "travel", at = @At("TAIL"))
     private void mc_custom_client$applyVelocityMultiplier(Vec3d movementInput, CallbackInfo ci) {
+        if (!LocalPlayerCheck.isLocalPlayer((LivingEntity) (Object) this) || FreecamController.isEnabled()) {
+            return;
+        }
+
         float multiplier = VelocityController.getMultiplier();
-        if (multiplier == 1.0f || !mc_custom_client$isLocalPlayer()) {
+        if (multiplier == 1.0f) {
             return;
         }
 
@@ -82,7 +91,8 @@ public abstract class PlayerSpeedMixin {
 
     @Inject(method = "travel", at = @At("TAIL"))
     private void mc_custom_client$applyWaterWalk(Vec3d movementInput, CallbackInfo ci) {
-        if (!WaterWalkController.isEnabled() || !mc_custom_client$isLocalPlayer()) {
+        if (!WaterWalkController.isEnabled() || FreecamController.isEnabled()
+                || !LocalPlayerCheck.isLocalPlayer((LivingEntity) (Object) this)) {
             return;
         }
 
@@ -98,10 +108,33 @@ public abstract class PlayerSpeedMixin {
         self.setVelocity(velocity.x, newY, velocity.z);
     }
 
+    @Inject(method = "travel", at = @At("TAIL"))
+    private void mc_custom_client$freezeWhileFreecam(Vec3d movementInput, CallbackInfo ci) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (!FreecamController.isEnabled() || !LocalPlayerCheck.isLocalPlayer(self)) {
+            return;
+        }
+        // フリーカム中は重力・慣性などバニラが計算した分もすべて打ち消し、その場に固定する。
+        self.setVelocity(Vec3d.ZERO);
+        self.fallDistance = 0f;
+    }
+
+    @Inject(method = "jump", at = @At("HEAD"), cancellable = true, require = 0)
+    private void mc_custom_client$cancelJumpWhileFreecam(CallbackInfo ci) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (FreecamController.isEnabled() && LocalPlayerCheck.isLocalPlayer(self)) {
+            ci.cancel();
+        }
+    }
+
     @Inject(method = "getJumpVelocity", at = @At("RETURN"), cancellable = true, require = 0)
     private void mc_custom_client$applyJumpMultiplier(CallbackInfoReturnable<Float> cir) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (!LocalPlayerCheck.isLocalPlayer(self)) {
+            return;
+        }
         float multiplier = JumpController.getMultiplier();
-        if (multiplier == 1.0f || !mc_custom_client$isLocalPlayer()) {
+        if (multiplier == 1.0f) {
             return;
         }
         cir.setReturnValue(cir.getReturnValue() * multiplier);
@@ -120,17 +153,5 @@ public abstract class PlayerSpeedMixin {
             y++;
         }
         return y;
-    }
-
-    private boolean mc_custom_client$isLocalPlayer() {
-        LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof PlayerEntity player)) {
-            return false;
-        }
-
-        UUID localPlayerUuid = MinecraftClient.getInstance().getSession() == null
-                ? null
-                : MinecraftClient.getInstance().getSession().getUuidOrNull();
-        return localPlayerUuid != null && localPlayerUuid.equals(player.getUuid());
     }
 }
