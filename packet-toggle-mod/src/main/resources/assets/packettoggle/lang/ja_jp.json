@@ -1,0 +1,8 @@
+{
+  "key.categories.packettoggle": "パケットトグルMOD",
+  "key.packettoggle.toggle_stop": "パケット送信 停止トグル",
+  "key.packettoggle.toggle_delay": "パケット送信 遅延トグル",
+  "key.packettoggle.increase_delay": "遅延時間を増やす (+100ms)",
+  "key.packettoggle.decrease_delay": "遅延時間を減らす (-100ms)",
+  "key.packettoggle.flush_queue": "キュー内のパケットを即時送信"
+}

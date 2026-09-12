@@ -1,0 +1,8 @@
+{
+  "key.categories.packettoggle": "Packet Toggle Mod",
+  "key.packettoggle.toggle_stop": "Toggle packet send STOP",
+  "key.packettoggle.toggle_delay": "Toggle packet send DELAY",
+  "key.packettoggle.increase_delay": "Increase delay (+100ms)",
+  "key.packettoggle.decrease_delay": "Decrease delay (-100ms)",
+  "key.packettoggle.flush_queue": "Send all queued delayed packets now"
+}

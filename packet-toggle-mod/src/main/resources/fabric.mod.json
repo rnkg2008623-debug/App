@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "packettoggle",
+  "version": "${version}",
+  "name": "Packet Toggle Mod",
+  "description": "自作サーバーとの通信テスト用に、クライアント→サーバーのパケット送信を任意のタイミングで停止・遅延できるトグルMOD。",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "main": [
+      "dev.packettoggle.PacketToggleMod"
+    ],
+    "client": [
+      "dev.packettoggle.PacketToggleModClient"
+    ]
+  },
+  "mixins": [
+    "packettoggle.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
