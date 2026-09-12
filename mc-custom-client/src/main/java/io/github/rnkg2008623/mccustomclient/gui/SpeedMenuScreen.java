@@ -9,6 +9,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.server.integrated.IntegratedServer;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 
@@ -112,7 +114,32 @@ public class SpeedMenuScreen extends Screen {
         if (name.isEmpty() || this.client == null || this.client.player == null) {
             return;
         }
-        this.client.player.networkHandler.sendChatCommand("tp " + name);
+
+        IntegratedServer integratedServer = this.client.getServer();
+        if (integratedServer != null) {
+            // シングルプレイ: 統合サーバー(同じプロセス内)に直接アクセスして動かすので、
+            // コマンドの権限チェック(チート許可)を経由せずテレポートできる。
+            mc_custom_client$teleportViaIntegratedServer(integratedServer, name);
+        } else {
+            // マルチプレイ: サーバー側が位置を管理しているため、クライアント側だけで
+            // 権限チェックを回避することはできない。バニラのコマンドに委ねる(OP権限が必要)。
+            this.client.player.networkHandler.sendChatCommand("tp " + name);
+        }
+    }
+
+    private void mc_custom_client$teleportViaIntegratedServer(IntegratedServer integratedServer, String targetName) {
+        ServerPlayerEntity target = integratedServer.getPlayerManager().getPlayer(targetName);
+        if (target == null) {
+            this.client.player.sendMessage(Text.literal("プレイヤーが見つかりません: " + targetName), true);
+            return;
+        }
+
+        ServerPlayerEntity self = integratedServer.getPlayerManager().getPlayer(this.client.player.getUuid());
+        if (self == null) {
+            return;
+        }
+
+        self.networkHandler.requestTeleport(target.getX(), target.getY(), target.getZ(), target.getYaw(), target.getPitch());
     }
 
     @Override
@@ -139,7 +166,7 @@ public class SpeedMenuScreen extends Screen {
         );
         context.drawTextWithShadow(
                 this.textRenderer,
-                Text.literal("テレポート（チート有効/OP権限が必要）:"),
+                Text.literal("テレポート（シングルプレイは権限不要／マルチはOP権限が必要）:"),
                 this.width / 2 - WIDGET_WIDTH / 2, this.teleportCaptionY, 0xAAAAAA
         );
     }
