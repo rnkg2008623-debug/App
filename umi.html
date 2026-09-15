@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>海の放置水族館</title>
+<meta name="description" content="ブラウザだけで遊べる放置系ゲーム。海に行って泳ぐ魚をクリックで捕まえ、水族館の水槽に展示しよう。サーバー不要、無料でプレイできます。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐟</text></svg>">
+<link rel="stylesheet" href="assets/css/umi.css">
+</head>
+<body>
+
+<div id="app">
+
+  <header class="topbar">
+    <a href="index.html" class="back-link" title="学習ナビに戻る">←</a>
+    <h1 class="title">🌊 海の放置水族館</h1>
+    <nav class="tabs" role="tablist">
+      <button type="button" class="tab-btn active" data-view="sea" role="tab" aria-selected="true">🎣 海へ行く</button>
+      <button type="button" class="tab-btn" data-view="aquarium" role="tab" aria-selected="false">🐠 水族館</button>
+    </nav>
+    <button type="button" id="btn-mute" class="mute-btn" title="サウンド切り替え">🔊</button>
+  </header>
+
+  <div class="stats-bar">
+    <div class="stat"><span class="stat-label">倉庫（未展示）</span><span id="stat-pool">0</span>匹</div>
+    <div class="stat"><span class="stat-label">水族館展示中</span><span id="stat-tank">0</span>匹</div>
+    <div class="stat"><span class="stat-label">累計捕獲</span><span id="stat-total">0</span>匹</div>
+    <div class="stat"><span class="stat-label">図鑑</span><span id="stat-dex">0</span>/10</div>
+  </div>
+
+  <!-- ===================== 海 ===================== -->
+  <section id="view-sea" class="view active">
+    <p class="hint">魚をクリック（タップ）して捕まえよう。ページを閉じて放置しておいても、戻ってきた時にまとめて魚が獲れています。</p>
+    <div class="sea-stage">
+      <canvas id="sea-canvas"></canvas>
+    </div>
+    <div id="dex-strip" class="dex-strip"></div>
+  </section>
+
+  <!-- ===================== 水族館 ===================== -->
+  <section id="view-aquarium" class="view">
+    <p class="hint">水槽ごとに入れたい魚の種類と数を選んで「決定」を押すと、倉庫の魚が水槽に移動します。</p>
+    <div id="tank-grid" class="tank-grid"></div>
+  </section>
+
+</div>
+
+<!-- おかえりモーダル -->
+<div id="modal-offline" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h2>🌅 おかえりなさい！</h2>
+    <p id="offline-summary-text"></p>
+    <div id="offline-breakdown" class="offline-breakdown"></div>
+    <button type="button" id="btn-offline-close" class="btn-primary">やったね！</button>
+  </div>
+</div>
+
+<script src="assets/js/umi.js"></script>
+</body>
+</html>
