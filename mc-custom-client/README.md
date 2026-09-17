@@ -31,9 +31,11 @@
 
 ## 前提環境
 
-- JDK 21
-- 対象バージョン: Minecraft `1.21.1` / Fabric Loader `0.16.9` / Fabric API `0.102.0+1.21.1`
+- JDK 25(Minecraft 26.3自体がJava 25を要求します)
+- Gradle 9.7.1 以降(Fabric Loom 1.17系がGradleの新しいプラグインAPIを要求するため。`gradlew`が自動的にこのバージョンを取得します)
+- 対象バージョン: Minecraft `26.3` / Fabric Loader `0.19.5` / Fabric API `0.160.6+26.3`
   - `gradle.properties` で管理しています。時間が経つと最新版とズレるので、ビルドが通らない場合は [Fabric公式の対応表](https://fabricmc.net/develop/) を見てバージョンを更新してください。
+  - このバージョンからFabric公式の推奨構成にYarnマッピングの指定が無くなったため、`mappings` は Fabric Loom 標準の `loom.officialMojangMappings()`（公式Mojangマッピング）を使っています。
 
 > **Note**: この開発環境（サンドボックス）はネットワークポリシーにより `maven.fabricmc.net` へアクセスできないため、Gradleビルドの実行確認はできていません。ビルドは下記のGitHub Actions、またはお手持ちのPC（通常のインターネット環境）で行ってください。
 
