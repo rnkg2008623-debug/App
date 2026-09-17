@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version "${loom_version}"
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
     id 'maven-publish'
 }
 
@@ -17,17 +17,19 @@ repositories {
 
 dependencies {
     // バージョンは gradle.properties で管理しています
+    //
+    // Minecraft 26.1以降は難読化(obfuscation)自体が廃止され、配布される
+    // ゲーム本体が最初からMojang公式の人間可読な名前(クラス名・メソッド名)を
+    // 持つようになったため、Yarn/Mojangマッピングの指定は一切不要になった
+    // (公式のfabric-example-modのbuild.gradleで実際に確認済み)。
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    // loom.officialMojangMappings()は「26.3向けの公式マッピングが見つからない」
-    // エラーになったため、暫定的にYarnマッピングへ戻して試す(build番号は推測)。
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Fabric API
     // "include" で自分のMODのjarに同梱(Jar-in-Jar)する。
     // これにより利用者はFabric APIを別途インストールしなくても
     // このjarをmodsフォルダに入れるだけで動くようになる。
-    include modImplementation("net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
+    include implementation("net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
 }
 
 processResources {
