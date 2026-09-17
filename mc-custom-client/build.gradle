@@ -18,9 +18,9 @@ repositories {
 dependencies {
     // バージョンは gradle.properties で管理しています
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    // このバージョンからFabric公式の推奨構成にYarnマッピングの指定が無くなったため、
-    // Mojang公式マッピングをそのまま使う(Loomの標準機能)。
-    mappings loom.officialMojangMappings()
+    // loom.officialMojangMappings()は「26.3向けの公式マッピングが見つからない」
+    // エラーになったため、暫定的にYarnマッピングへ戻して試す(build番号は推測)。
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Fabric API
