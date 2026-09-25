@@ -1,5 +1,6 @@
 package io.github.rnkg2008623.mccustomclient.mixin;
 
+import io.github.rnkg2008623.mccustomclient.AirWalkController;
 import io.github.rnkg2008623.mccustomclient.FreecamController;
 import io.github.rnkg2008623.mccustomclient.JumpController;
 import io.github.rnkg2008623.mccustomclient.SpeedController;
@@ -29,6 +30,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * ・ジャンプの高さ(JumpController) … getJumpPower()の戻り値をスケール
  * ・水上歩行(WaterWalkController) … travel()のTAILで、水中にいる間だけ
  *   鉛直速度を止めて水面に浮かせる
+ * ・空中歩行(AirWalkController)   … travel()のTAILで、下向きの速度(落下)を
+ *   その場でゼロにすることで、何もない空中でも足場があるかのように立てる。
+ *   ジャンプによる上昇はそのまま。しゃがみ(Shift)を押している間だけ
+ *   通常通り落下でき、離せばまたその高さで止まる。
  * ・フリーカム(FreecamController)  … 有効な間は移動入力(movementInput)をゼロにし、
  *   毎tick速度を強制的にゼロへ戻し、ジャンプもキャンセルすることで、実際の
  *   キャラクターが一切動かないようにする(カメラ側の移動はFreecamCameraMixin、
@@ -107,6 +112,25 @@ public abstract class PlayerSpeedMixin {
         double newY = self.getY() < surfaceY - 0.05 ? Math.max(velocity.y, 0.3) : 0.0;
 
         self.setDeltaMovement(velocity.x, newY, velocity.z);
+    }
+
+    @Inject(method = "travel", at = @At("TAIL"))
+    private void mc_custom_client$applyAirWalk(Vec3 movementInput, CallbackInfo ci) {
+        if (!AirWalkController.isEnabled() || FreecamController.isEnabled()
+                || !LocalPlayerCheck.isLocalPlayer((LivingEntity) (Object) this)) {
+            return;
+        }
+
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (self.isInWater() || self.isInLava()) {
+            return;
+        }
+
+        Vec3 velocity = self.getDeltaMovement();
+        if (velocity.y < 0.0 && !self.isShiftKeyDown()) {
+            self.setDeltaMovement(velocity.x, 0.0, velocity.z);
+            self.fallDistance = 0f;
+        }
     }
 
     @Inject(method = "travel", at = @At("TAIL"))

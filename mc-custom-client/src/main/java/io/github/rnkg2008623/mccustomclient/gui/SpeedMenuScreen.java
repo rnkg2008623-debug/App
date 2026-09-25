@@ -1,6 +1,7 @@
 package io.github.rnkg2008623.mccustomclient.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import io.github.rnkg2008623.mccustomclient.AirWalkController;
 import io.github.rnkg2008623.mccustomclient.FreecamController;
 import io.github.rnkg2008623.mccustomclient.JumpController;
 import io.github.rnkg2008623.mccustomclient.MyCustomClient;
@@ -42,7 +43,7 @@ public class SpeedMenuScreen extends Screen {
     @Override
     protected void init() {
         int centerX = this.width / 2;
-        int y = this.height / 2 - 130;
+        int y = this.height / 2 - 144;
 
         this.addRenderableWidget(new MultiplierSlider(
                 centerX - WIDGET_WIDTH / 2, y, WIDGET_WIDTH, WIDGET_HEIGHT,
@@ -71,6 +72,15 @@ public class SpeedMenuScreen extends Screen {
         this.addRenderableWidget(Button.builder(waterWalkLabel(), button -> {
                     WaterWalkController.toggle();
                     button.setMessage(waterWalkLabel());
+                })
+                .pos(centerX - WIDGET_WIDTH / 2, y)
+                .size(WIDGET_WIDTH, WIDGET_HEIGHT)
+                .build());
+        y += WIDGET_HEIGHT + SPACING;
+
+        this.addRenderableWidget(Button.builder(airWalkLabel(), button -> {
+                    AirWalkController.toggle();
+                    button.setMessage(airWalkLabel());
                 })
                 .pos(centerX - WIDGET_WIDTH / 2, y)
                 .size(WIDGET_WIDTH, WIDGET_HEIGHT)
@@ -112,6 +122,7 @@ public class SpeedMenuScreen extends Screen {
                     JumpController.reset();
                     VelocityController.reset();
                     WaterWalkController.reset();
+                    AirWalkController.reset();
                     FreecamController.setEnabled(false);
                     this.clearWidgets();
                     this.init();
@@ -173,6 +184,11 @@ public class SpeedMenuScreen extends Screen {
     private static Component waterWalkLabel() {
         String state = WaterWalkController.isEnabled() ? "ON" : "OFF";
         return Component.literal("水上歩行: " + state);
+    }
+
+    private static Component airWalkLabel() {
+        String state = AirWalkController.isEnabled() ? "ON" : "OFF";
+        return Component.literal("空中歩行: " + state);
     }
 
     private static Component freecamLabel() {
