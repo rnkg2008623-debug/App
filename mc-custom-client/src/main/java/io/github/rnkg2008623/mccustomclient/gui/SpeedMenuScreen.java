@@ -22,7 +22,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.LevelResource;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -175,20 +174,35 @@ public class SpeedMenuScreen extends Screen {
      * を直接読む方が確実、という考え方。
      */
     private Long mc_custom_client$readSeedFromLevelDat(MinecraftServer integratedServer) {
+        Path levelDatPath = integratedServer.getWorldPath(LevelResource.LEVEL_DATA_FILE);
         try {
-            Path levelDatPath = integratedServer.getWorldPath(LevelResource.LEVEL_DATA_FILE);
             CompoundTag root = NbtIo.readCompressed(levelDatPath, NbtAccounter.unlimitedHeap());
             CompoundTag data = root.getCompound("Data").orElse(null);
             if (data == null) {
+                mc_custom_client$reportSeedFailureDetail(
+                        "level.datに'Data'タグが見つかりません (path=" + levelDatPath
+                                + ", root keys=" + root.keySet() + ")");
                 return null;
             }
             CompoundTag worldGenSettings = data.getCompound("WorldGenSettings").orElse(null);
             if (worldGenSettings == null) {
+                mc_custom_client$reportSeedFailureDetail(
+                        "'Data'内に'WorldGenSettings'タグが見つかりません (data keys=" + data.keySet() + ")");
                 return null;
             }
             return worldGenSettings.getLongOr("seed", 0L);
-        } catch (IOException e) {
+        } catch (Exception e) {
+            mc_custom_client$reportSeedFailureDetail(
+                    "level.dat読み込み中に例外(path=" + levelDatPath + "): "
+                            + e.getClass().getSimpleName() + ": " + e.getMessage());
             return null;
+        }
+    }
+
+    /** シード値取得の失敗理由を、原因調査のためチャットに詳細表示する(暫定的なデバッグ用)。 */
+    private void mc_custom_client$reportSeedFailureDetail(String detail) {
+        if (this.minecraft != null && this.minecraft.player != null) {
+            this.minecraft.player.sendSystemMessage(Component.literal(detail));
         }
     }
 
