@@ -43,7 +43,7 @@ public class SpeedMenuScreen extends Screen {
     @Override
     protected void init() {
         int centerX = this.width / 2;
-        int y = this.height / 2 - 144;
+        int y = this.height / 2 - 162;
 
         this.addRenderableWidget(new MultiplierSlider(
                 centerX - WIDGET_WIDTH / 2, y, WIDGET_WIDTH, WIDGET_HEIGHT,
@@ -91,6 +91,12 @@ public class SpeedMenuScreen extends Screen {
                     MyCustomClient.toggleFreecam(this.minecraft);
                     button.setMessage(freecamLabel());
                 })
+                .pos(centerX - WIDGET_WIDTH / 2, y)
+                .size(WIDGET_WIDTH, WIDGET_HEIGHT)
+                .build());
+        y += WIDGET_HEIGHT + GAP_BETWEEN_SECTIONS;
+
+        this.addRenderableWidget(Button.builder(Component.literal("シード値を取得"), button -> mc_custom_client$requestSeed())
                 .pos(centerX - WIDGET_WIDTH / 2, y)
                 .size(WIDGET_WIDTH, WIDGET_HEIGHT)
                 .build());
@@ -156,6 +162,17 @@ public class SpeedMenuScreen extends Screen {
         }
     }
 
+    private void mc_custom_client$requestSeed() {
+        if (this.minecraft == null || this.minecraft.player == null) {
+            return;
+        }
+
+        // /seedは権限レベル0(チート許可不要)のコマンドなので、シングルプレイ／
+        // マルチプレイどちらでもバニラのコマンドをそのまま送るだけでよい。
+        // 結果はサーバーからのチャットメッセージとして返ってくる。
+        this.minecraft.getConnection().sendCommand("seed");
+    }
+
     private void mc_custom_client$teleportViaIntegratedServer(MinecraftServer integratedServer, String targetName) {
         ServerPlayer target = integratedServer.getPlayerList().getPlayerByName(targetName);
         if (target == null) {
@@ -200,7 +217,7 @@ public class SpeedMenuScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         super.extractRenderState(graphics, mouseX, mouseY, partialTick);
         graphics.centeredText(
-                this.font, this.title, this.width / 2, this.height / 2 - 155, 0xFFFFFF
+                this.font, this.title, this.width / 2, this.height / 2 - 187, 0xFFFFFF
         );
         graphics.text(
                 this.font,
