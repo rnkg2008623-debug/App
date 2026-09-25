@@ -1,0 +1,8 @@
+{
+	"key.category.velocityjump.main": "Velocity & Jump",
+	"key.velocityjump.dash": "Dash (look direction)",
+	"key.velocityjump.launch": "Launch upward",
+	"key.velocityjump.toggle_jump": "Toggle custom jump height",
+	"key.velocityjump.jump_up": "Jump height +0.5",
+	"key.velocityjump.jump_down": "Jump height -0.5"
+}

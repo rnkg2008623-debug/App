@@ -1,0 +1,38 @@
+# Minecraft Mod (minecraft-mod/velocity-jump-mod) をビルドして jar を Artifacts に保存する
+name: velocity-jump-mod
+on:
+  push:
+    paths:
+      - 'minecraft-mod/velocity-jump-mod/**'
+      - '.github/workflows/velocity-jump-mod.yml'
+  pull_request:
+    paths:
+      - 'minecraft-mod/velocity-jump-mod/**'
+      - '.github/workflows/velocity-jump-mod.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: minecraft-mod/velocity-jump-mod
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+      - name: validate gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+      - name: setup jdk
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'microsoft'
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+      - name: build
+        run: ./gradlew build
+      - name: capture build artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: velocity-jump-mod
+          path: minecraft-mod/velocity-jump-mod/build/libs/

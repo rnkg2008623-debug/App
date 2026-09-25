@@ -1,0 +1,8 @@
+{
+	"key.category.velocityjump.main": "Velocity & Jump",
+	"key.velocityjump.dash": "ダッシュ (視線方向)",
+	"key.velocityjump.launch": "真上に打ち上げ",
+	"key.velocityjump.toggle_jump": "ジャンプ高さ変更 ON/OFF",
+	"key.velocityjump.jump_up": "ジャンプ高さ +0.5",
+	"key.velocityjump.jump_down": "ジャンプ高さ -0.5"
+}

@@ -1,0 +1,24 @@
+{
+	"schemaVersion": 1,
+	"id": "velocityjump",
+	"version": "${version}",
+	"name": "Velocity & Jump",
+	"description": "自分自身の velocity (速度ベクトル) とジャンプの高さを自由に変更できるクライアント Mod",
+	"authors": [
+		"rnkg2008623"
+	],
+	"license": "CC0-1.0",
+	"icon": "assets/velocityjump/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"com.rnkg.velocityjump.VelocityJumpClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
