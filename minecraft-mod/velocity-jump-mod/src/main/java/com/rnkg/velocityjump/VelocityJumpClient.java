@@ -35,6 +35,8 @@ public class VelocityJumpClient implements ClientModInitializer {
 	private static boolean jumpApplied = false;
 	/** 現在飛行を有効にしているか(OFF にしたとき元に戻すため)。 */
 	private static boolean flightApplied = false;
+	/** サーバー側 (シングルプレイ) で飛行を許可しているか。 */
+	private static boolean serverFlightApplied = false;
 
 	@Override
 	public void onInitializeClient() {
@@ -58,6 +60,7 @@ public class VelocityJumpClient implements ClientModInitializer {
 		if (player == null) {
 			jumpApplied = false;
 			flightApplied = false;
+			serverFlightApplied = false;
 			return;
 		}
 
@@ -76,7 +79,16 @@ public class VelocityJumpClient implements ClientModInitializer {
 		}
 
 		applyJumpStrength(player);
-		applyFlight(client, player);
+		applyFlight(player);
+		applyAirWalk(player);
+
+		// 飛行・空中歩行の間は、シングルプレイのサーバー側でも飛行を許可して落下ダメージを無くす
+		boolean wantServerFlight = VelocityJumpConfig.flightEnabled || VelocityJumpConfig.airWalkEnabled;
+
+		if (wantServerFlight || serverFlightApplied) {
+			syncServerFlight(client, player, wantServerFlight);
+			serverFlightApplied = wantServerFlight;
+		}
 	}
 
 	/**
@@ -109,9 +121,8 @@ public class VelocityJumpClient implements ClientModInitializer {
 
 	/**
 	 * クリエイティブのような飛行 (スペース 2 回で飛行開始) を有効にする。
-	 * シングルプレイではサーバー側のプレイヤーにも飛行を許可して、落下ダメージを無くす。
 	 */
-	private static void applyFlight(Minecraft client, LocalPlayer player) {
+	private static void applyFlight(LocalPlayer player) {
 		Abilities abilities = player.getAbilities();
 		boolean vanillaMayfly = player.isCreative() || player.isSpectator();
 
@@ -123,7 +134,6 @@ public class VelocityJumpClient implements ClientModInitializer {
 			}
 
 			flightApplied = true;
-			syncServerFlight(client, player, true);
 		} else if (flightApplied) {
 			abilities.mayfly = vanillaMayfly;
 
@@ -136,7 +146,34 @@ public class VelocityJumpClient implements ClientModInitializer {
 			}
 
 			flightApplied = false;
-			syncServerFlight(client, player, false);
+		}
+	}
+
+	/**
+	 * 空中歩行: 空中に見えない床があるように、今の高さのまま歩いたり走ったりできる。
+	 * <ul>
+	 *   <li>ジャンプすると、その高さに床ができる (空中で何回でもジャンプして上に登れる)</li>
+	 *   <li>スニーク (Shift) している間は床が消えて下に降りる</li>
+	 * </ul>
+	 */
+	private static void applyAirWalk(LocalPlayer player) {
+		if (!VelocityJumpConfig.airWalkEnabled
+				|| player.getAbilities().flying
+				|| player.isFallFlying()
+				|| player.isPassenger()
+				|| player.isInWater()
+				|| player.isShiftKeyDown()) {
+			return;
+		}
+
+		Vec3 v = player.getDeltaMovement();
+
+		// ジャンプで上昇中はそのまま。落ち始めたら、その高さで止めて「地面に立っている」扱いにする。
+		// (地面扱いにすると、地上と同じ速さで歩く・走る・ジャンプができる)
+		if (v.y <= 0.0) {
+			player.setDeltaMovement(v.x, 0.0, v.z);
+			player.setOnGround(true);
+			player.resetFallDistance();
 		}
 	}
 

@@ -33,6 +33,10 @@ public class VelocityJumpScreen extends Screen {
 		body.addChild(new ValueSlider(WIDGET_WIDTH, "飛行速度", 0.5, 10.0, 0.5, VelocityJumpConfig.flySpeed,
 				value -> "×" + formatShort(value), value -> VelocityJumpConfig.flySpeed = value));
 
+		// 空中歩行
+		body.addChild(toggleButton("空中歩行", () -> VelocityJumpConfig.airWalkEnabled,
+				value -> VelocityJumpConfig.airWalkEnabled = value));
+
 		// ジャンプ
 		body.addChild(toggleButton("ジャンプ高さ変更", () -> VelocityJumpConfig.jumpEnabled,
 				value -> VelocityJumpConfig.jumpEnabled = value));

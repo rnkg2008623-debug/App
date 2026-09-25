@@ -28,6 +28,8 @@ public final class VelocityJumpConfig {
 	public static boolean flightEnabled = false;
 	/** 飛行速度の倍率 (1.0 = クリエイティブと同じ)。 */
 	public static double flySpeed = DEFAULT_FLY_SPEED;
+	/** 空中歩行 (空中に見えない床があるように歩いたり走ったりできる) が有効か。 */
+	public static boolean airWalkEnabled = false;
 
 	private VelocityJumpConfig() {
 	}
@@ -58,6 +60,7 @@ public final class VelocityJumpConfig {
 		launchPower = parse(props, "launchPower", launchPower);
 		flightEnabled = Boolean.parseBoolean(props.getProperty("flightEnabled", Boolean.toString(flightEnabled)));
 		flySpeed = parse(props, "flySpeed", flySpeed);
+		airWalkEnabled = Boolean.parseBoolean(props.getProperty("airWalkEnabled", Boolean.toString(airWalkEnabled)));
 	}
 
 	public static void save() {
@@ -68,6 +71,7 @@ public final class VelocityJumpConfig {
 		props.setProperty("launchPower", Double.toString(launchPower));
 		props.setProperty("flightEnabled", Boolean.toString(flightEnabled));
 		props.setProperty("flySpeed", Double.toString(flySpeed));
+		props.setProperty("airWalkEnabled", Boolean.toString(airWalkEnabled));
 
 		try (Writer writer = Files.newBufferedWriter(path())) {
 			props.store(writer, "Velocity & Jump settings");
