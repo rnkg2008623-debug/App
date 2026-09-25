@@ -13,7 +13,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.MapColor;
 
@@ -75,20 +75,29 @@ public final class MinimapRenderer implements HudElement {
 
         graphics.fill(x - 2, y - 2, x + DISPLAY_SIZE + 2, y + DISPLAY_SIZE + 2, BACKGROUND_COLOR);
         graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE_ID, x, y, 0, 0, DISPLAY_SIZE, DISPLAY_SIZE, MAP_SIZE, MAP_SIZE);
-        graphics.renderOutline(x - 2, y - 2, DISPLAY_SIZE + 4, DISPLAY_SIZE + 4, BORDER_COLOR);
+
+        // renderOutline相当(枠線)を4本のfillで描画する
+        int outlineX = x - 2;
+        int outlineY = y - 2;
+        int outlineWidth = DISPLAY_SIZE + 4;
+        int outlineHeight = DISPLAY_SIZE + 4;
+        graphics.fill(outlineX, outlineY, outlineX + outlineWidth, outlineY + 1, BORDER_COLOR);
+        graphics.fill(outlineX, outlineY + outlineHeight - 1, outlineX + outlineWidth, outlineY + outlineHeight, BORDER_COLOR);
+        graphics.fill(outlineX, outlineY, outlineX + 1, outlineY + outlineHeight, BORDER_COLOR);
+        graphics.fill(outlineX + outlineWidth - 1, outlineY, outlineX + outlineWidth, outlineY + outlineHeight, BORDER_COLOR);
 
         // 中心＝自分の現在地
         int centerX = x + DISPLAY_SIZE / 2;
         int centerY = y + DISPLAY_SIZE / 2;
         graphics.fill(centerX - 2, centerY - 2, centerX + 2, centerY + 2, PLAYER_MARKER_COLOR);
 
-        graphics.drawString(client.font, "N", x + DISPLAY_SIZE / 2 - 3, y - 10, 0xFFFFFFFF, true);
+        graphics.text(client.font, "N", x + DISPLAY_SIZE / 2 - 3, y - 10, 0xFFFFFFFF, true);
     }
 
     private void ensureTexture() {
         if (texture == null) {
             NativeImage image = new NativeImage(MAP_SIZE, MAP_SIZE, false);
-            texture = new DynamicTexture(image);
+            texture = new DynamicTexture(() -> "mc_custom_client_minimap", image);
             Minecraft.getInstance().getTextureManager().register(TEXTURE_ID, texture);
         }
     }

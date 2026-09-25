@@ -12,8 +12,9 @@ import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.integrated.IntegratedServer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.function.Consumer;
@@ -132,7 +133,7 @@ public class SpeedMenuScreen extends Screen {
             return;
         }
 
-        IntegratedServer integratedServer = this.minecraft.getSingleplayerServer();
+        MinecraftServer integratedServer = this.minecraft.getSingleplayerServer();
         if (integratedServer != null) {
             // シングルプレイ: 統合サーバー(同じプロセス内)に直接アクセスして動かすので、
             // コマンドの権限チェック(チート許可)を経由せずテレポートできる。
@@ -144,10 +145,10 @@ public class SpeedMenuScreen extends Screen {
         }
     }
 
-    private void mc_custom_client$teleportViaIntegratedServer(IntegratedServer integratedServer, String targetName) {
+    private void mc_custom_client$teleportViaIntegratedServer(MinecraftServer integratedServer, String targetName) {
         ServerPlayer target = integratedServer.getPlayerList().getPlayerByName(targetName);
         if (target == null) {
-            this.minecraft.player.sendSystemMessage(Component.literal("プレイヤーが見つかりません: " + targetName), true);
+            this.minecraft.gui.hud.setOverlayMessage(Component.literal("プレイヤーが見つかりません: " + targetName), false);
             return;
         }
 
@@ -160,13 +161,13 @@ public class SpeedMenuScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        boolean enterPressed = keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER;
+    public boolean keyPressed(KeyEvent event) {
+        boolean enterPressed = event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_NUMPADENTER;
         if (enterPressed && this.teleportNameField != null && this.teleportNameField.isFocused()) {
             mc_custom_client$teleportToPlayer();
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     private static Component waterWalkLabel() {
@@ -180,15 +181,15 @@ public class SpeedMenuScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        super.render(graphics, mouseX, mouseY, partialTick);
-        graphics.drawCenteredString(
+    public void extractForeground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        super.extractForeground(graphics, mouseX, mouseY, partialTick);
+        graphics.centeredText(
                 this.font, this.title, this.width / 2, this.height / 2 - 155, 0xFFFFFF
         );
-        graphics.drawString(
+        graphics.text(
                 this.font,
                 Component.literal("テレポート（シングルプレイは権限不要／マルチはOP権限が必要）:"),
-                this.width / 2 - WIDGET_WIDTH / 2, this.teleportCaptionY, 0xAAAAAA
+                this.width / 2 - WIDGET_WIDTH / 2, this.teleportCaptionY, 0xAAAAAA, false
         );
     }
 

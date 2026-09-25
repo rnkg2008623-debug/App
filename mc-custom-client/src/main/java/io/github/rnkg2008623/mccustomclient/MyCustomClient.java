@@ -1,6 +1,7 @@
 package io.github.rnkg2008623.mccustomclient;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import org.lwjgl.glfw.GLFW;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
@@ -65,7 +66,7 @@ public class MyCustomClient implements ClientModInitializer {
         decreaseSpeedKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.mc_custom_client.decrease_speed",
                 InputConstants.Type.KEYBOARD,
-                InputConstants.KEY_SUBTRACT,
+                GLFW.GLFW_KEY_KP_SUBTRACT,
                 category
         ));
 
@@ -117,9 +118,9 @@ public class MyCustomClient implements ClientModInitializer {
         }
 
         if (changed) {
-            client.player.sendSystemMessage(
+            client.gui.hud.setOverlayMessage(
                     Component.literal(String.format("移動速度倍率: x%.2f", SpeedController.getMultiplier())),
-                    true
+                    false
             );
         }
     }
@@ -138,7 +139,7 @@ public class MyCustomClient implements ClientModInitializer {
             );
         }
         FreecamController.setEnabled(newState);
-        client.player.sendSystemMessage(Component.literal("フリーカム: " + (newState ? "ON" : "OFF")), true);
+        client.gui.hud.setOverlayMessage(Component.literal("フリーカム: " + (newState ? "ON" : "OFF")), false);
     }
 
     private void updateFreecamMovement(Minecraft client) {
