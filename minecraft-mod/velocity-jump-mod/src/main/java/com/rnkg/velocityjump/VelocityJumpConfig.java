@@ -14,6 +14,7 @@ public final class VelocityJumpConfig {
 	public static final double DEFAULT_JUMP_HEIGHT = 1.25;
 	public static final double DEFAULT_DASH_POWER = 1.5;
 	public static final double DEFAULT_LAUNCH_POWER = 1.5;
+	public static final double DEFAULT_FLY_SPEED = 1.0;
 
 	/** ジャンプ高さの変更が有効か。 */
 	public static boolean jumpEnabled = false;
@@ -23,6 +24,10 @@ public final class VelocityJumpConfig {
 	public static double dashPower = DEFAULT_DASH_POWER;
 	/** 打ち上げキーで真上に設定する速度。 */
 	public static double launchPower = DEFAULT_LAUNCH_POWER;
+	/** 飛行(クリエイティブのような飛行)が有効か。 */
+	public static boolean flightEnabled = false;
+	/** 飛行速度の倍率 (1.0 = クリエイティブと同じ)。 */
+	public static double flySpeed = DEFAULT_FLY_SPEED;
 
 	private VelocityJumpConfig() {
 	}
@@ -51,6 +56,8 @@ public final class VelocityJumpConfig {
 		jumpHeight = parse(props, "jumpHeight", jumpHeight);
 		dashPower = parse(props, "dashPower", dashPower);
 		launchPower = parse(props, "launchPower", launchPower);
+		flightEnabled = Boolean.parseBoolean(props.getProperty("flightEnabled", Boolean.toString(flightEnabled)));
+		flySpeed = parse(props, "flySpeed", flySpeed);
 	}
 
 	public static void save() {
@@ -59,6 +66,8 @@ public final class VelocityJumpConfig {
 		props.setProperty("jumpHeight", Double.toString(jumpHeight));
 		props.setProperty("dashPower", Double.toString(dashPower));
 		props.setProperty("launchPower", Double.toString(launchPower));
+		props.setProperty("flightEnabled", Boolean.toString(flightEnabled));
+		props.setProperty("flySpeed", Double.toString(flySpeed));
 
 		try (Writer writer = Files.newBufferedWriter(path())) {
 			props.store(writer, "Velocity & Jump settings");
