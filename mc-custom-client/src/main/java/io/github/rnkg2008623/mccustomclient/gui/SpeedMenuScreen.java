@@ -181,8 +181,8 @@ public class SpeedMenuScreen extends Screen {
     }
 
     @Override
-    public void extractForeground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        super.extractForeground(graphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
         graphics.centeredText(
                 this.font, this.title, this.width / 2, this.height / 2 - 155, 0xFFFFFF
         );

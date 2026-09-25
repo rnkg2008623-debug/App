@@ -1,7 +1,6 @@
 package io.github.rnkg2008623.mccustomclient;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import org.lwjgl.glfw.GLFW;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
@@ -66,7 +65,7 @@ public class MyCustomClient implements ClientModInitializer {
         decreaseSpeedKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.mc_custom_client.decrease_speed",
                 InputConstants.Type.KEYBOARD,
-                GLFW.GLFW_KEY_KP_SUBTRACT,
+                InputConstants.KEY_MINUS,
                 category
         ));
 
