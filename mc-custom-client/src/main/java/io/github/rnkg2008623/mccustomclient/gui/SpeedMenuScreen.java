@@ -14,10 +14,16 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtAccounter;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.storage.LevelResource;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -162,6 +168,30 @@ public class SpeedMenuScreen extends Screen {
         }
     }
 
+    /**
+     * ワールド保存フォルダのlevel.dat(NBT)を直接読み込んでシード値を取り出す。
+     * サーバー内部のWorldGenSettings関連クラスは頻繁に変わるため、代わりに
+     * 昔から変わっていないセーブデータ上のキー(Data.WorldGenSettings.seed)
+     * を直接読む方が確実、という考え方。
+     */
+    private Long mc_custom_client$readSeedFromLevelDat(MinecraftServer integratedServer) {
+        try {
+            Path levelDatPath = integratedServer.getWorldPath(LevelResource.LEVEL_DATA_FILE);
+            CompoundTag root = NbtIo.readCompressed(levelDatPath, NbtAccounter.unlimitedHeap());
+            CompoundTag data = root.getCompound("Data").orElse(null);
+            if (data == null) {
+                return null;
+            }
+            CompoundTag worldGenSettings = data.getCompound("WorldGenSettings").orElse(null);
+            if (worldGenSettings == null) {
+                return null;
+            }
+            return worldGenSettings.getLongOr("seed", 0L);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
     private void mc_custom_client$requestSeed() {
         if (this.minecraft == null || this.minecraft.player == null) {
             return;
@@ -171,7 +201,11 @@ public class SpeedMenuScreen extends Screen {
         if (integratedServer != null) {
             // シングルプレイ: 統合サーバー(同じプロセス内)から直接シード値を読み取る。
             // ワールドの「コマンドを許可」がOFFでもコマンドを経由しないので取得できる。
-            long seed = integratedServer.getWorldData().worldGenOptions().seed();
+            Long seed = mc_custom_client$readSeedFromLevelDat(integratedServer);
+            if (seed == null) {
+                this.minecraft.player.sendSystemMessage(Component.literal("シード値の取得に失敗しました"));
+                return;
+            }
             this.minecraft.player.sendSystemMessage(Component.literal("シード値: " + seed));
         } else {
             // マルチプレイ: サーバー側の情報はクライアントから直接読めないため、
