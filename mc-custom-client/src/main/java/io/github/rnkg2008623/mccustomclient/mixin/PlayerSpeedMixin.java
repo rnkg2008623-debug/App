@@ -5,6 +5,7 @@ import io.github.rnkg2008623.mccustomclient.JumpController;
 import io.github.rnkg2008623.mccustomclient.SpeedController;
 import io.github.rnkg2008623.mccustomclient.VelocityController;
 import io.github.rnkg2008623.mccustomclient.WaterWalkController;
+import io.github.rnkg2008623.mccustomclient.util.LocalPlayerCheck;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.LivingEntity;

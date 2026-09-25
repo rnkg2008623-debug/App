@@ -1,4 +1,4 @@
-package io.github.rnkg2008623.mccustomclient.mixin;
+package io.github.rnkg2008623.mccustomclient.util;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
@@ -12,13 +12,18 @@ import java.util.UUID;
  * UUIDで比較しているのは、シングルプレイでは統合サーバー側のServerPlayerと
  * クライアント側のLocalPlayerが別オブジェクトになるため、参照(==)比較では
  * どちらか一方にしか効かないため。
+ *
+ * Mixinが管理する専用パッケージ(mixins.jsonのpackage)の外に置く必要がある。
+ * mixinパッケージ内のクラスはMixin変換の対象としてのみ扱われ、変換後の
+ * ターゲットクラス(LivingEntity等)から通常のクラスとして参照すると
+ * IllegalClassLoadErrorになるため。
  */
-final class LocalPlayerCheck {
+public final class LocalPlayerCheck {
 
     private LocalPlayerCheck() {
     }
 
-    static boolean isLocalPlayer(Entity entity) {
+    public static boolean isLocalPlayer(Entity entity) {
         if (!(entity instanceof Player player)) {
             return false;
         }

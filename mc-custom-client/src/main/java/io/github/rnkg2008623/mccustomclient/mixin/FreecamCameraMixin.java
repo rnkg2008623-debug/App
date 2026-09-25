@@ -1,6 +1,7 @@
 package io.github.rnkg2008623.mccustomclient.mixin;
 
 import io.github.rnkg2008623.mccustomclient.FreecamController;
+import io.github.rnkg2008623.mccustomclient.util.LocalPlayerCheck;
 import net.minecraft.client.Camera;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
