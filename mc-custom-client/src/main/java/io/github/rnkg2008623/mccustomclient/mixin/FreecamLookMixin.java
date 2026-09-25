@@ -1,7 +1,7 @@
 package io.github.rnkg2008623.mccustomclient.mixin;
 
 import io.github.rnkg2008623.mccustomclient.FreecamController;
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,7 +23,7 @@ public abstract class FreecamLookMixin {
 
     private static final float TURN_FACTOR = 0.15f;
 
-    @Inject(method = "changeLookDirection", at = @At("HEAD"), cancellable = true, require = 0)
+    @Inject(method = "turn", at = @At("HEAD"), cancellable = true, require = 0)
     private void mc_custom_client$redirectLookToFreecam(double cursorDeltaX, double cursorDeltaY, CallbackInfo ci) {
         Entity self = (Entity) (Object) this;
         if (!FreecamController.isEnabled() || !LocalPlayerCheck.isLocalPlayer(self)) {

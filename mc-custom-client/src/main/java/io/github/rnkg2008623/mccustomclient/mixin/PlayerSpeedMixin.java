@@ -5,11 +5,11 @@ import io.github.rnkg2008623.mccustomclient.JumpController;
 import io.github.rnkg2008623.mccustomclient.SpeedController;
 import io.github.rnkg2008623.mccustomclient.VelocityController;
 import io.github.rnkg2008623.mccustomclient.WaterWalkController;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * ・Velocity(VelocityController)  … travel()のTAILで、実際の水平速度(X/Z)そのもの
  *   に毎tick倍率を掛ける。移動を続けるほど速度が積み上がっていく（走るほど加速して
  *   いく）感覚になる。上下方向(Y)には一切触れないので、ジャンプ・落下には影響しない。
- * ・ジャンプの高さ(JumpController) … getJumpVelocity()の戻り値をスケール
+ * ・ジャンプの高さ(JumpController) … getJumpPower()の戻り値をスケール
  * ・水上歩行(WaterWalkController) … travel()のTAILで、水中にいる間だけ
  *   鉛直速度を止めて水面に浮かせる
  * ・フリーカム(FreecamController)  … 有効な間は移動入力(movementInput)をゼロにし、
@@ -44,25 +44,25 @@ public abstract class PlayerSpeedMixin {
     private static final double MAX_HORIZONTAL_VELOCITY = 10.0;
 
     @ModifyVariable(method = "travel", at = @At("HEAD"), argsOnly = true)
-    private Vec3d mc_custom_client$applySpeedMultiplier(Vec3d movementInput) {
+    private Vec3 mc_custom_client$applySpeedMultiplier(Vec3 movementInput) {
         LivingEntity self = (LivingEntity) (Object) this;
         if (!LocalPlayerCheck.isLocalPlayer(self)) {
             return movementInput;
         }
 
         if (FreecamController.isEnabled()) {
-            return Vec3d.ZERO;
+            return Vec3.ZERO;
         }
 
         float multiplier = SpeedController.getMultiplier();
         if (multiplier == 1.0f) {
             return movementInput;
         }
-        return movementInput.multiply(multiplier);
+        return movementInput.scale(multiplier);
     }
 
     @Inject(method = "travel", at = @At("TAIL"))
-    private void mc_custom_client$applyVelocityMultiplier(Vec3d movementInput, CallbackInfo ci) {
+    private void mc_custom_client$applyVelocityMultiplier(Vec3 movementInput, CallbackInfo ci) {
         if (!LocalPlayerCheck.isLocalPlayer((LivingEntity) (Object) this) || FreecamController.isEnabled()) {
             return;
         }
@@ -73,7 +73,7 @@ public abstract class PlayerSpeedMixin {
         }
 
         LivingEntity self = (LivingEntity) (Object) this;
-        Vec3d velocity = self.getVelocity();
+        Vec3 velocity = self.getDeltaMovement();
 
         double newX = velocity.x * multiplier;
         double newZ = velocity.z * multiplier;
@@ -86,40 +86,40 @@ public abstract class PlayerSpeedMixin {
         }
 
         // Y(上下)には一切触れない。ジャンプ・落下はJumpController／バニラのまま。
-        self.setVelocity(newX, velocity.y, newZ);
+        self.setDeltaMovement(newX, velocity.y, newZ);
     }
 
     @Inject(method = "travel", at = @At("TAIL"))
-    private void mc_custom_client$applyWaterWalk(Vec3d movementInput, CallbackInfo ci) {
+    private void mc_custom_client$applyWaterWalk(Vec3 movementInput, CallbackInfo ci) {
         if (!WaterWalkController.isEnabled() || FreecamController.isEnabled()
                 || !LocalPlayerCheck.isLocalPlayer((LivingEntity) (Object) this)) {
             return;
         }
 
         LivingEntity self = (LivingEntity) (Object) this;
-        if (!self.isTouchingWater()) {
+        if (!self.isInWater()) {
             return;
         }
 
         double surfaceY = mc_custom_client$findWaterSurfaceY(self);
-        Vec3d velocity = self.getVelocity();
+        Vec3 velocity = self.getDeltaMovement();
         double newY = self.getY() < surfaceY - 0.05 ? Math.max(velocity.y, 0.3) : 0.0;
 
-        self.setVelocity(velocity.x, newY, velocity.z);
+        self.setDeltaMovement(velocity.x, newY, velocity.z);
     }
 
     @Inject(method = "travel", at = @At("TAIL"))
-    private void mc_custom_client$freezeWhileFreecam(Vec3d movementInput, CallbackInfo ci) {
+    private void mc_custom_client$freezeWhileFreecam(Vec3 movementInput, CallbackInfo ci) {
         LivingEntity self = (LivingEntity) (Object) this;
         if (!FreecamController.isEnabled() || !LocalPlayerCheck.isLocalPlayer(self)) {
             return;
         }
         // フリーカム中は重力・慣性などバニラが計算した分もすべて打ち消し、その場に固定する。
-        self.setVelocity(Vec3d.ZERO);
+        self.setDeltaMovement(Vec3.ZERO);
         self.fallDistance = 0f;
     }
 
-    @Inject(method = "jump", at = @At("HEAD"), cancellable = true, require = 0)
+    @Inject(method = "jumpFromGround", at = @At("HEAD"), cancellable = true, require = 0)
     private void mc_custom_client$cancelJumpWhileFreecam(CallbackInfo ci) {
         LivingEntity self = (LivingEntity) (Object) this;
         if (FreecamController.isEnabled() && LocalPlayerCheck.isLocalPlayer(self)) {
@@ -127,7 +127,7 @@ public abstract class PlayerSpeedMixin {
         }
     }
 
-    @Inject(method = "getJumpVelocity", at = @At("RETURN"), cancellable = true, require = 0)
+    @Inject(method = "getJumpPower", at = @At("RETURN"), cancellable = true, require = 0)
     private void mc_custom_client$applyJumpMultiplier(CallbackInfoReturnable<Float> cir) {
         LivingEntity self = (LivingEntity) (Object) this;
         if (!LocalPlayerCheck.isLocalPlayer(self)) {
@@ -142,12 +142,12 @@ public abstract class PlayerSpeedMixin {
 
     /** 現在地から上方向に水ブロックを数え、最初に水でなくなったYを「水面の高さ」として返す。 */
     private double mc_custom_client$findWaterSurfaceY(LivingEntity self) {
-        World world = self.getWorld();
-        BlockPos pos = BlockPos.ofFloored(self.getX(), self.getY(), self.getZ());
+        Level level = self.level();
+        BlockPos pos = BlockPos.containing(self.getX(), self.getY(), self.getZ());
         int y = pos.getY();
         for (int i = 0; i < 8; i++) {
             BlockPos check = new BlockPos(pos.getX(), y, pos.getZ());
-            if (!world.getFluidState(check).isIn(FluidTags.WATER)) {
+            if (!level.getFluidState(check).is(FluidTags.WATER)) {
                 return y;
             }
             y++;

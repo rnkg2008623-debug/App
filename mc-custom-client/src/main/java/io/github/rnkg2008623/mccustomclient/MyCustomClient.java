@@ -1,18 +1,18 @@
 package io.github.rnkg2008623.mccustomclient;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import io.github.rnkg2008623.mccustomclient.gui.SpeedMenuScreen;
 import io.github.rnkg2008623.mccustomclient.hud.MinimapRenderer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.GameOptions;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.Vec3d;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * クライアント専用MODのエントリーポイント。
@@ -28,95 +28,103 @@ public class MyCustomClient implements ClientModInitializer {
 
     private final MinimapRenderer minimap = new MinimapRenderer();
 
-    private KeyBinding openMenuKey;
-    private KeyBinding toggleFreecamKey;
-    private KeyBinding increaseSpeedKey;
-    private KeyBinding decreaseSpeedKey;
-    private KeyBinding resetSpeedKey;
+    private KeyMapping openMenuKey;
+    private KeyMapping toggleFreecamKey;
+    private KeyMapping increaseSpeedKey;
+    private KeyMapping decreaseSpeedKey;
+    private KeyMapping resetSpeedKey;
 
     @Override
     public void onInitializeClient() {
-        openMenuKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        KeyMapping.Category category = KeyMapping.Category.register(
+                Identifier.fromNamespaceAndPath(MOD_ID, "general")
+        );
+
+        openMenuKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.mc_custom_client.open_menu",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_M,
-                "category.mc_custom_client.general"
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_M,
+                category
         ));
 
-        toggleFreecamKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        toggleFreecamKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.mc_custom_client.toggle_freecam",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_V,
-                "category.mc_custom_client.general"
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_V,
+                category
         ));
 
         // テンキーが無い環境(MacBook等)向けの互換キー。設定画面からも同じ操作ができる。
-        increaseSpeedKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        increaseSpeedKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.mc_custom_client.increase_speed",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_KP_ADD,
-                "category.mc_custom_client.general"
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_ADD,
+                category
         ));
 
-        decreaseSpeedKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        decreaseSpeedKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.mc_custom_client.decrease_speed",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_KP_SUBTRACT,
-                "category.mc_custom_client.general"
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_SUBTRACT,
+                category
         ));
 
-        resetSpeedKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        resetSpeedKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.mc_custom_client.reset_speed",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_KP_0,
-                "category.mc_custom_client.general"
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_NUMPAD0,
+                category
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(this::onClientTick);
         ClientTickEvents.END_CLIENT_TICK.register(this::updateFreecamMovement);
         ClientTickEvents.END_CLIENT_TICK.register(minimap::onEndTick);
-        HudRenderCallback.EVENT.register(minimap::render);
+
+        HudElementRegistry.addLast(
+                Identifier.fromNamespaceAndPath(MOD_ID, "minimap"),
+                minimap
+        );
     }
 
-    private void onClientTick(MinecraftClient client) {
+    private void onClientTick(Minecraft client) {
         if (client.player == null) {
             return;
         }
 
-        while (openMenuKey.wasPressed()) {
-            if (client.currentScreen == null) {
-                client.setScreen(new SpeedMenuScreen());
+        while (openMenuKey.consumeClick()) {
+            if (client.gui.screen() == null) {
+                client.gui.setScreen(new SpeedMenuScreen());
             }
         }
 
-        while (toggleFreecamKey.wasPressed()) {
+        while (toggleFreecamKey.consumeClick()) {
             toggleFreecam(client);
         }
 
         boolean changed = false;
 
-        while (increaseSpeedKey.wasPressed()) {
+        while (increaseSpeedKey.consumeClick()) {
             SpeedController.increase();
             changed = true;
         }
-        while (decreaseSpeedKey.wasPressed()) {
+        while (decreaseSpeedKey.consumeClick()) {
             SpeedController.decrease();
             changed = true;
         }
-        while (resetSpeedKey.wasPressed()) {
+        while (resetSpeedKey.consumeClick()) {
             SpeedController.reset();
             changed = true;
         }
 
         if (changed) {
-            client.player.sendMessage(
-                    Text.literal(String.format("移動速度倍率: x%.2f", SpeedController.getMultiplier())),
+            client.player.sendSystemMessage(
+                    Component.literal(String.format("移動速度倍率: x%.2f", SpeedController.getMultiplier())),
                     true
             );
         }
     }
 
-    public static void toggleFreecam(MinecraftClient client) {
+    public static void toggleFreecam(Minecraft client) {
         if (client.player == null) {
             return;
         }
@@ -124,22 +132,22 @@ public class MyCustomClient implements ClientModInitializer {
         boolean newState = !FreecamController.isEnabled();
         if (newState) {
             FreecamController.resetTo(
-                    client.player.getCameraPosVec(1.0f),
-                    client.player.getYaw(),
-                    client.player.getPitch()
+                    client.player.getEyePosition(1.0f),
+                    client.player.getYRot(),
+                    client.player.getXRot()
             );
         }
         FreecamController.setEnabled(newState);
-        client.player.sendMessage(Text.literal("フリーカム: " + (newState ? "ON" : "OFF")), true);
+        client.player.sendSystemMessage(Component.literal("フリーカム: " + (newState ? "ON" : "OFF")), true);
     }
 
-    private void updateFreecamMovement(MinecraftClient client) {
+    private void updateFreecamMovement(Minecraft client) {
         if (!FreecamController.isEnabled() || client.player == null) {
             return;
         }
 
-        GameOptions options = client.options;
-        double speed = options.sprintKey.isPressed() ? FREECAM_SPEED_FAST : FREECAM_SPEED_NORMAL;
+        Options options = client.options;
+        double speed = options.keySprint.isDown() ? FREECAM_SPEED_FAST : FREECAM_SPEED_NORMAL;
 
         double yawRad = Math.toRadians(FreecamController.getYaw());
         double pitchRad = Math.toRadians(FreecamController.getPitch());
@@ -155,34 +163,34 @@ public class MyCustomClient implements ClientModInitializer {
         double dy = 0;
         double dz = 0;
 
-        if (options.forwardKey.isPressed()) {
+        if (options.keyUp.isDown()) {
             dx += forwardX;
             dy += forwardY;
             dz += forwardZ;
         }
-        if (options.backKey.isPressed()) {
+        if (options.keyDown.isDown()) {
             dx -= forwardX;
             dy -= forwardY;
             dz -= forwardZ;
         }
-        if (options.rightKey.isPressed()) {
+        if (options.keyRight.isDown()) {
             dx += rightX;
             dz += rightZ;
         }
-        if (options.leftKey.isPressed()) {
+        if (options.keyLeft.isDown()) {
             dx -= rightX;
             dz -= rightZ;
         }
-        if (options.jumpKey.isPressed()) {
+        if (options.keyJump.isDown()) {
             dy += 1;
         }
-        if (options.sneakKey.isPressed()) {
+        if (options.keyShift.isDown()) {
             dy -= 1;
         }
 
         double length = Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (length > 0.0001) {
-            Vec3d delta = new Vec3d(dx / length * speed, dy / length * speed, dz / length * speed);
+            Vec3 delta = new Vec3(dx / length * speed, dy / length * speed, dz / length * speed);
             FreecamController.setPosition(FreecamController.getPosition().add(delta));
         }
     }

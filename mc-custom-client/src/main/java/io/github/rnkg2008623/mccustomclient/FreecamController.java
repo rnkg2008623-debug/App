@@ -1,6 +1,6 @@
 package io.github.rnkg2008623.mccustomclient;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * フリーカム(自分のキャラクターは動かさず、カメラだけを自由に動かせる機能)の
@@ -12,7 +12,7 @@ import net.minecraft.util.math.Vec3d;
 public final class FreecamController {
 
     private static boolean enabled = false;
-    private static Vec3d position = Vec3d.ZERO;
+    private static Vec3 position = Vec3.ZERO;
     private static float yaw = 0f;
     private static float pitch = 0f;
 
@@ -27,11 +27,11 @@ public final class FreecamController {
         enabled = value;
     }
 
-    public static Vec3d getPosition() {
+    public static Vec3 getPosition() {
         return position;
     }
 
-    public static void setPosition(Vec3d value) {
+    public static void setPosition(Vec3 value) {
         position = value;
     }
 
@@ -49,7 +49,7 @@ public final class FreecamController {
     }
 
     /** フリーカムを有効にする瞬間、実際のプレイヤーの視点をカメラの初期値としてコピーする。 */
-    public static void resetTo(Vec3d pos, float initialYaw, float initialPitch) {
+    public static void resetTo(Vec3 pos, float initialYaw, float initialPitch) {
         position = pos;
         yaw = initialYaw;
         pitch = initialPitch;
