@@ -167,10 +167,18 @@ public class SpeedMenuScreen extends Screen {
             return;
         }
 
-        // /seedは権限レベル0(チート許可不要)のコマンドなので、シングルプレイ／
-        // マルチプレイどちらでもバニラのコマンドをそのまま送るだけでよい。
-        // 結果はサーバーからのチャットメッセージとして返ってくる。
-        this.minecraft.getConnection().sendCommand("seed");
+        MinecraftServer integratedServer = this.minecraft.getSingleplayerServer();
+        if (integratedServer != null) {
+            // シングルプレイ: 統合サーバー(同じプロセス内)から直接シード値を読み取る。
+            // ワールドの「コマンドを許可」がOFFでもコマンドを経由しないので取得できる。
+            long seed = integratedServer.getWorldData().worldGenOptions().seed();
+            this.minecraft.player.sendSystemMessage(Component.literal("シード値: " + seed));
+        } else {
+            // マルチプレイ: サーバー側の情報はクライアントから直接読めないため、
+            // バニラの/seedコマンドに委ねる(サーバー側でコマンドが無効化されて
+            // いる場合はここでは取得できない)。
+            this.minecraft.getConnection().sendCommand("seed");
+        }
     }
 
     private void mc_custom_client$teleportViaIntegratedServer(MinecraftServer integratedServer, String targetName) {
