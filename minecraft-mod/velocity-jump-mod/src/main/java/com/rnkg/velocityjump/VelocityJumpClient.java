@@ -43,7 +43,7 @@ public class VelocityJumpClient implements ClientModInitializer {
 		VelocityJumpConfig.load();
 
 		KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "main"));
-		menuKey = register("menu", SDLScancode.SDL_SCANCODE_O, category);
+		menuKey = register("menu", SDLScancode.SDL_SCANCODE_M, category);
 		dashKey = register("dash", SDLScancode.SDL_SCANCODE_V, category);
 		launchKey = register("launch", SDLScancode.SDL_SCANCODE_G, category);
 

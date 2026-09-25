@@ -10,7 +10,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
-/** O キーで開く設定メニュー。 */
+/** M キーで開く設定メニュー。 */
 public class VelocityJumpScreen extends Screen {
 	private static final int WIDGET_WIDTH = 240;
 

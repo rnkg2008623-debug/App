@@ -3,7 +3,7 @@
 	"id": "velocityjump",
 	"version": "${version}",
 	"name": "Velocity & Jump",
-	"description": "空を飛んだり、ジャンプの高さや速度 (velocity) を O キーのメニューで調整できるクライアント Mod",
+	"description": "空を飛んだり、空中を歩いたり、ジャンプの高さや速度 (velocity) を M キーのメニューで調整できるクライアント Mod",
 	"authors": [
 		"rnkg2008623"
 	],
