@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>フラッシュ単語</title>
+<meta name="description" content="フラッシュ暗算のように、貼り付けた文章の単語をひとつずつパッパッと表示するツール。スピードはバーで調整できます。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+<link rel="stylesheet" href="assets/css/flashword.css">
+</head>
+<body>
+
+<div id="app">
+  <aside class="side">
+    <header class="side-head">
+      <a href="index.html" class="back-link" title="学習ナビに戻る">←</a>
+      <h1>⚡ フラッシュ単語</h1>
+    </header>
+
+    <label for="source" class="label">文章を貼り付け（スペース区切りで単語に分割）</label>
+    <textarea id="source" spellcheck="false" placeholder="例: The quick brown fox jumps over the lazy dog"></textarea>
+    <div class="meta"><span id="word-count">0</span> 語</div>
+
+    <div class="control">
+      <div class="control-row">
+        <label for="speed">スピード</label>
+        <output id="speed-out"></output>
+      </div>
+      <input type="range" id="speed" min="0" max="100" step="1" value="50">
+      <div class="scale"><span>ゆっくり</span><span>はやい</span></div>
+    </div>
+
+    <div class="control">
+      <div class="control-row">
+        <label for="size">文字サイズ</label>
+        <output id="size-out"></output>
+      </div>
+      <input type="range" id="size" min="24" max="200" step="2" value="96">
+    </div>
+
+    <div class="checks">
+      <label><input type="checkbox" id="opt-gap" checked> 単語の間に一瞬ブランクを入れる</label>
+      <label><input type="checkbox" id="opt-countdown" checked> 開始前にカウントダウン</label>
+      <label><input type="checkbox" id="opt-shuffle"> 順番をシャッフル</label>
+      <label><input type="checkbox" id="opt-loop"> 最後まで行ったら繰り返す</label>
+    </div>
+  </aside>
+
+  <main class="stage-wrap">
+    <div id="stage" class="stage" tabindex="0" aria-live="off">
+      <div id="word" class="word">スタートを押してください</div>
+    </div>
+
+    <div class="progress"><div id="progress-bar" class="progress-bar"></div></div>
+
+    <div class="buttons">
+      <button type="button" id="btn-start" class="btn primary">▶ スタート</button>
+      <button type="button" id="btn-pause" class="btn" disabled>⏸ 一時停止</button>
+      <button type="button" id="btn-stop" class="btn" disabled>■ 停止</button>
+      <span id="position" class="position">0 / 0</span>
+    </div>
+    <p class="hint">ショートカット: Space = スタート / 一時停止、Esc = 停止、← → = スピード調整</p>
+  </main>
+</div>
+
+<script src="assets/js/flashword.js"></script>
+</body>
+</html>
