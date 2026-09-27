@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スピーチ並べ替え</title>
+<meta name="description" content="スピーチ原稿を改行ごとにブロックに分け、ドラッグでつなげて正しい順番に並べ替える暗記テスト。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎤</text></svg>">
+<link rel="stylesheet" href="assets/css/speech.css">
+</head>
+<body>
+
+<header class="top">
+  <a href="index.html" class="back-link" title="学習ナビに戻る">←</a>
+  <h1>🎤 スピーチ並べ替え</h1>
+  <nav class="tabs" role="tablist">
+    <button type="button" class="tab active" data-view="edit" role="tab">① 原稿を入力</button>
+    <button type="button" class="tab" data-view="test" role="tab">② 並べ替えテスト</button>
+  </nav>
+</header>
+
+<!-- 原稿入力 -->
+<section id="view-edit" class="view">
+  <div class="edit-grid">
+    <div class="edit-col">
+      <label for="source" class="label">スピーチ原稿を貼り付け（<strong>改行</strong>ごとに1ブロックになります。空行は無視）</label>
+      <textarea id="source" spellcheck="false" placeholder="例:&#10;皆さん、こんにちは。今日は〇〇についてお話しします。&#10;まず、私がこのテーマを選んだ理由は……&#10;次に、……&#10;最後に、……"></textarea>
+      <div class="edit-actions">
+        <span class="meta"><span id="block-count">0</span> ブロック</span>
+        <button type="button" id="btn-go-test" class="btn primary">並べ替えテストを始める →</button>
+      </div>
+    </div>
+    <div class="edit-col">
+      <div class="label">ブロックのプレビュー（この順番が正解になります）</div>
+      <ol id="preview" class="preview"></ol>
+    </div>
+  </div>
+</section>
+
+<!-- テスト -->
+<section id="view-test" class="view" hidden>
+  <div class="toolbar">
+    <label class="check"><input type="checkbox" id="opt-hint"> 最初のブロックをヒントとして置く</label>
+    <span class="spacer"></span>
+    <button type="button" id="btn-check" class="btn primary">✓ 答え合わせ</button>
+    <button type="button" id="btn-return-wrong" class="btn" disabled>✗ 間違いだけ戻す</button>
+    <button type="button" id="btn-answer" class="btn">答えを見る</button>
+    <button type="button" id="btn-reset" class="btn">↻ やり直す</button>
+  </div>
+
+  <div id="result" class="result" hidden></div>
+
+  <div class="test-grid">
+    <div class="col">
+      <div class="col-head">
+        <h2>スピーチの流れ</h2>
+        <span class="muted"><span id="chain-count">0</span> / <span id="total-count">0</span></span>
+      </div>
+      <div id="chain" class="zone chain" data-zone="chain">
+        <div class="chain-start">▶ スタート</div>
+        <div id="chain-list" class="list"></div>
+        <div id="chain-empty" class="empty">ここにブロックをドラッグして<br>上から順につなげていきましょう</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-head">
+        <h2>バラバラのブロック</h2>
+        <span class="muted">残り <span id="pool-count">0</span></span>
+      </div>
+      <div id="pool" class="zone pool" data-zone="pool">
+        <div id="pool-list" class="list"></div>
+        <div id="pool-empty" class="empty">すべて並べました！<br>「答え合わせ」を押してください</div>
+      </div>
+    </div>
+  </div>
+  <p class="hint">ブロックをドラッグして「スピーチの流れ」につなげます（間に差し込むことも、元に戻すこともできます）。クリック／タップでも移動できます。スマホでは左端の ⠿ をつかんでドラッグしてください。</p>
+</section>
+
+<script src="assets/js/speech.js"></script>
+</body>
+</html>
