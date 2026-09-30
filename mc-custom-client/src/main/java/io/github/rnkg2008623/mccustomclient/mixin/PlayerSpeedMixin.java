@@ -3,12 +3,15 @@ package io.github.rnkg2008623.mccustomclient.mixin;
 import io.github.rnkg2008623.mccustomclient.AirWalkController;
 import io.github.rnkg2008623.mccustomclient.FreecamController;
 import io.github.rnkg2008623.mccustomclient.JumpController;
+import io.github.rnkg2008623.mccustomclient.NoDamageController;
 import io.github.rnkg2008623.mccustomclient.SpeedController;
 import io.github.rnkg2008623.mccustomclient.VelocityController;
 import io.github.rnkg2008623.mccustomclient.WaterWalkController;
 import io.github.rnkg2008623.mccustomclient.util.LocalPlayerCheck;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -39,9 +42,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  *   キャラクターが一切動かないようにする(カメラ側の移動はFreecamCameraMixin、
  *   視点回転はFreecamLookMixinが別途担当)。
  *
- * ジャンプの高さはバニラの内部メソッド名に依存しフックが壊れやすいため、
- * require = 0 にし、万一ターゲットが見つからなくても他の機能ごと起動失敗
- * しないようにしている。
+ * ・ダメージ無効化(NoDamageController) … hurtServer()のHEADでキャンセルする。
+ *   hurtServerはサーバー側の権威あるダメージ計算そのものなので、統合サーバーと
+ *   同じプロセスで動くシングルプレイでのみ有効。マルチプレイは相手サーバーの
+ *   プロセスでダメージ計算が行われるため、このMODだけでは無効化できない。
+ *
+ * ジャンプの高さ・ダメージ無効化はバニラの内部メソッド名に依存しフックが
+ * 壊れやすいため、require = 0 にし、万一ターゲットが見つからなくても
+ * 他の機能ごと起動失敗しないようにしている。
  */
 @Mixin(LivingEntity.class)
 public abstract class PlayerSpeedMixin {
@@ -163,6 +171,15 @@ public abstract class PlayerSpeedMixin {
             return;
         }
         cir.setReturnValue(cir.getReturnValue() * multiplier);
+    }
+
+    @Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true, require = 0)
+    private void mc_custom_client$cancelDamage(ServerLevel level, DamageSource source, float amount,
+                                                CallbackInfoReturnable<Boolean> cir) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (NoDamageController.isEnabled() && LocalPlayerCheck.isLocalPlayer(self)) {
+            cir.setReturnValue(false);
+        }
     }
 
     /** 現在地から上方向に水ブロックを数え、最初に水でなくなったYを「水面の高さ」として返す。 */

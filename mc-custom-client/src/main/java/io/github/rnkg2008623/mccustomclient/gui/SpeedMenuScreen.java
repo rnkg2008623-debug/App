@@ -5,6 +5,7 @@ import io.github.rnkg2008623.mccustomclient.AirWalkController;
 import io.github.rnkg2008623.mccustomclient.FreecamController;
 import io.github.rnkg2008623.mccustomclient.JumpController;
 import io.github.rnkg2008623.mccustomclient.MyCustomClient;
+import io.github.rnkg2008623.mccustomclient.NoDamageController;
 import io.github.rnkg2008623.mccustomclient.SpeedController;
 import io.github.rnkg2008623.mccustomclient.VelocityController;
 import io.github.rnkg2008623.mccustomclient.WaterWalkController;
@@ -48,7 +49,7 @@ public class SpeedMenuScreen extends Screen {
     @Override
     protected void init() {
         int centerX = this.width / 2;
-        int y = this.height / 2 - 162;
+        int y = this.height / 2 - 176;
 
         this.addRenderableWidget(new MultiplierSlider(
                 centerX - WIDGET_WIDTH / 2, y, WIDGET_WIDTH, WIDGET_HEIGHT,
@@ -86,6 +87,15 @@ public class SpeedMenuScreen extends Screen {
         this.addRenderableWidget(Button.builder(airWalkLabel(), button -> {
                     AirWalkController.toggle();
                     button.setMessage(airWalkLabel());
+                })
+                .pos(centerX - WIDGET_WIDTH / 2, y)
+                .size(WIDGET_WIDTH, WIDGET_HEIGHT)
+                .build());
+        y += WIDGET_HEIGHT + SPACING;
+
+        this.addRenderableWidget(Button.builder(noDamageLabel(), button -> {
+                    NoDamageController.toggle();
+                    button.setMessage(noDamageLabel());
                 })
                 .pos(centerX - WIDGET_WIDTH / 2, y)
                 .size(WIDGET_WIDTH, WIDGET_HEIGHT)
@@ -134,6 +144,7 @@ public class SpeedMenuScreen extends Screen {
                     VelocityController.reset();
                     WaterWalkController.reset();
                     AirWalkController.reset();
+                    NoDamageController.reset();
                     FreecamController.setEnabled(false);
                     this.clearWidgets();
                     this.init();
@@ -264,6 +275,11 @@ public class SpeedMenuScreen extends Screen {
         return Component.literal("空中歩行: " + state);
     }
 
+    private static Component noDamageLabel() {
+        String state = NoDamageController.isEnabled() ? "ON" : "OFF";
+        return Component.literal("ダメージ無効化: " + state);
+    }
+
     private static Component freecamLabel() {
         String state = FreecamController.isEnabled() ? "ON" : "OFF";
         return Component.literal("フリーカム: " + state);
@@ -273,7 +289,7 @@ public class SpeedMenuScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         super.extractRenderState(graphics, mouseX, mouseY, partialTick);
         graphics.centeredText(
-                this.font, this.title, this.width / 2, this.height / 2 - 187, 0xFFFFFF
+                this.font, this.title, this.width / 2, this.height / 2 - 201, 0xFFFFFF
         );
         graphics.text(
                 this.font,
