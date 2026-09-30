@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>単語クエスト</title>
+<meta name="description" content="ゲーム感覚で覚えるフラッシュカード式の単語テスト帳。CSVで単語をインポートしてタグで分類し、4択で回答してXPを貯めてレベルアップ。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗡️</text></svg>">
+<link rel="stylesheet" href="assets/css/wordquest.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a href="index.html" class="back-link" title="学習ナビに戻る">←</a>
+  <h1 class="logo">🗡️ 単語クエスト</h1>
+  <div class="player">
+    <div class="lv-badge" id="hdr-level">Lv 1</div>
+    <div class="xp-wrap">
+      <div class="xp-bar"><div class="xp-fill" id="hdr-xp-fill"></div></div>
+      <div class="xp-text" id="hdr-xp-text">0 / 50 XP</div>
+    </div>
+  </div>
+  <div class="today-chip" id="hdr-today" title="今日の回答数">今日 0問</div>
+  <button type="button" class="icon-btn" id="btn-sound" title="効果音のON/OFF">🔊</button>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button type="button" class="tab active" data-view="play">⚔️ プレイ</button>
+  <button type="button" class="tab" data-view="import">📥 インポート</button>
+  <button type="button" class="tab" data-view="list">📖 単語一覧</button>
+  <button type="button" class="tab" data-view="calendar">📅 カレンダー</button>
+  <button type="button" class="tab" data-view="profile">👤 プロフィール</button>
+</nav>
+
+<main>
+  <!-- ===== プレイ ===== -->
+  <section class="view active" id="view-play">
+    <div id="play-setup" class="panel setup">
+      <h2>クエスト準備</h2>
+      <div class="field">
+        <div class="field-label">カテゴリー（タグ）<small>複数選択可</small></div>
+        <div class="chips" id="play-tags"></div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <div class="field-label">出題形式</div>
+          <div class="seg" id="play-dir">
+            <button type="button" data-v="t2m">単語 → 意味</button>
+            <button type="button" data-v="m2t">意味 → 単語</button>
+            <button type="button" data-v="mix">ミックス</button>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">問題数</div>
+          <div class="seg" id="play-count">
+            <button type="button" data-v="10">10</button>
+            <button type="button" data-v="20">20</button>
+            <button type="button" data-v="50">50</button>
+            <button type="button" data-v="0">全部</button>
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-label">出題モード</div>
+          <div class="seg" id="play-mode">
+            <button type="button" data-v="smart">おまかせ</button>
+            <button type="button" data-v="weak">苦手のみ</button>
+            <button type="button" data-v="new">未回答のみ</button>
+          </div>
+        </div>
+      </div>
+      <p class="pool-info" id="play-pool-info"></p>
+      <button type="button" class="btn primary big" id="btn-start">▶ クエスト開始</button>
+    </div>
+
+    <div id="play-game" class="game hidden">
+      <div class="game-hud">
+        <span id="g-progress">1 / 10</span>
+        <div class="g-progress-bar"><div id="g-progress-fill"></div></div>
+        <span class="combo" id="g-combo"></span>
+        <span class="timer" id="g-timer">0.0s</span>
+        <button type="button" class="btn small ghost" id="btn-quit">中断</button>
+      </div>
+      <div class="card-stage">
+        <div class="card" id="g-card">
+          <div class="card-meta" id="g-card-meta"></div>
+          <div class="card-dir" id="g-dir"></div>
+          <div class="card-q" id="g-question"></div>
+          <div class="card-tags" id="g-tags"></div>
+        </div>
+        <div class="float-layer" id="g-float"></div>
+      </div>
+      <div class="choices" id="g-choices"></div>
+      <div class="feedback" id="g-feedback"></div>
+      <div class="next-row">
+        <button type="button" class="btn primary hidden" id="btn-next">次へ ▶ <small>(Enter)</small></button>
+      </div>
+      <p class="hint">キーボード: 1〜4 で回答 / Enter で次へ</p>
+    </div>
+
+    <div id="play-result" class="panel result hidden">
+      <h2>クエスト完了！</h2>
+      <div class="result-grade" id="r-grade"></div>
+      <div class="stat-grid" id="r-stats"></div>
+      <div class="result-list" id="r-list"></div>
+      <div class="btn-row">
+        <button type="button" class="btn primary" id="btn-retry">🔁 もう一度</button>
+        <button type="button" class="btn" id="btn-retry-wrong">❌ 間違えた単語を復習</button>
+        <button type="button" class="btn ghost" id="btn-back-setup">準備画面へ</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== インポート ===== -->
+  <section class="view" id="view-import">
+    <div class="panel">
+      <h2>単語をインポート</h2>
+      <p class="muted">1行に1単語。<code>単語,意味</code> または <code>単語,意味,タグ</code> の形式で貼り付けてください。
+        区切りはカンマ・タブ（Excel / スプレッドシートからのコピペ）・<code>：</code> に対応しています。
+        3列目のタグは <code>;</code> や <code>|</code> やスペースで複数指定できます。</p>
+      <pre class="example">apple,りんご,food;basic
+abandon,捨てる,verb TOEIC
+"take off","離陸する, 脱ぐ",idiom</pre>
+      <textarea id="imp-text" spellcheck="false" placeholder="ここにCSVを貼り付け"></textarea>
+      <div class="field-row">
+        <label class="field grow">
+          <span class="field-label">まとめて付けるタグ（任意・スペース区切り）</span>
+          <input type="text" id="imp-tags" placeholder="例: 英検2級 unit1">
+        </label>
+        <label class="field">
+          <span class="field-label">ファイルから読み込む</span>
+          <input type="file" id="imp-file" accept=".csv,.tsv,.txt,text/csv,text/plain">
+        </label>
+      </div>
+      <label class="check"><input type="checkbox" id="imp-overwrite" checked> 同じ単語がすでにある場合は意味を上書きする（タグは追加）</label>
+      <div class="preview" id="imp-preview"></div>
+      <button type="button" class="btn primary big" id="btn-import" disabled>📥 インポート</button>
+    </div>
+  </section>
+
+  <!-- ===== 単語一覧 ===== -->
+  <section class="view" id="view-list">
+    <div class="panel">
+      <div class="list-head">
+        <h2>単語一覧 <small id="list-count"></small></h2>
+        <input type="search" id="list-search" placeholder="🔍 単語・意味で検索">
+      </div>
+      <div class="chips" id="list-tags"></div>
+      <div class="alpha-bar" id="list-alpha"></div>
+      <div class="bulk-bar" id="list-bulk">
+        <label class="check"><input type="checkbox" id="list-select-all"> 表示中をすべて選択</label>
+        <span id="list-selected-count" class="muted"></span>
+        <input type="text" id="bulk-tag" placeholder="タグ名">
+        <button type="button" class="btn small" id="btn-bulk-add">＋タグ追加</button>
+        <button type="button" class="btn small" id="btn-bulk-remove">－タグ削除</button>
+        <button type="button" class="btn small danger" id="btn-bulk-delete">🗑 削除</button>
+        <button type="button" class="btn small ghost" id="btn-manage-tags">🏷 タグ管理</button>
+      </div>
+      <div id="list-body" class="word-list"></div>
+    </div>
+  </section>
+
+  <!-- ===== カレンダー ===== -->
+  <section class="view" id="view-calendar">
+    <div class="panel">
+      <div class="cal-head">
+        <button type="button" class="btn small ghost" id="cal-prev">◀</button>
+        <h2 id="cal-title"></h2>
+        <button type="button" class="btn small ghost" id="cal-next">▶</button>
+        <button type="button" class="btn small" id="cal-today">今日</button>
+      </div>
+      <div class="cal-summary" id="cal-summary"></div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div class="cal-legend">
+        <span>少ない</span><i class="h1"></i><i class="h2"></i><i class="h3"></i><i class="h4"></i><span>多い（回答数）</span>
+      </div>
+    </div>
+    <div class="panel" id="cal-detail"></div>
+  </section>
+
+  <!-- ===== プロフィール ===== -->
+  <section class="view" id="view-profile">
+    <div class="panel profile-top">
+      <div class="big-level" id="pf-level">1</div>
+      <div class="pf-main">
+        <div class="pf-title" id="pf-title">見習い冒険者</div>
+        <div class="xp-bar big"><div class="xp-fill" id="pf-xp-fill"></div></div>
+        <div class="muted" id="pf-xp-text"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>ステータス</h2>
+      <div class="stat-grid" id="pf-stats"></div>
+    </div>
+    <div class="panel">
+      <h2>直近14日間の回答数</h2>
+      <div class="bars" id="pf-bars"></div>
+    </div>
+    <div class="panel">
+      <h2>単語レベル分布</h2>
+      <div class="dist" id="pf-dist"></div>
+    </div>
+    <div class="panel">
+      <h2>データ管理</h2>
+      <p class="muted">データはこのブラウザの localStorage に保存されています。別の端末へ移すときはバックアップを使ってください。</p>
+      <div class="btn-row">
+        <button type="button" class="btn" id="btn-export">💾 バックアップ(JSON)を保存</button>
+        <label class="btn">📂 バックアップから復元<input type="file" id="restore-file" accept=".json,application/json" hidden></label>
+        <button type="button" class="btn danger" id="btn-reset">⚠ すべてリセット</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal-bg hidden" id="modal-bg">
+  <div class="modal" id="modal"></div>
+</div>
+<div class="levelup hidden" id="levelup">
+  <div class="levelup-inner">
+    <div class="lu-label">LEVEL UP!</div>
+    <div class="lu-level" id="lu-level">2</div>
+    <div class="lu-sub" id="lu-sub"></div>
+  </div>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script src="assets/js/wordquest.js"></script>
+</body>
+</html>
