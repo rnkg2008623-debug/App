@@ -434,6 +434,20 @@ final class AppStore: ObservableObject {
         save()
     }
 
+    func updateSubtaskTitle(taskID: UUID, subtaskID: UUID, title: String) {
+        guard let taskIdx = tasks.firstIndex(where: { $0.id == taskID }),
+              let subtaskIdx = tasks[taskIdx].subtasks.firstIndex(where: { $0.id == subtaskID }) else { return }
+        tasks[taskIdx].subtasks[subtaskIdx].title = title
+        save()
+    }
+
+    func updateSubtaskDueDate(taskID: UUID, subtaskID: UUID, dueDate: Date?) {
+        guard let taskIdx = tasks.firstIndex(where: { $0.id == taskID }),
+              let subtaskIdx = tasks[taskIdx].subtasks.firstIndex(where: { $0.id == subtaskID }) else { return }
+        tasks[taskIdx].subtasks[subtaskIdx].dueDate = dueDate
+        save()
+    }
+
     func removeSubtask(taskID: UUID, subtaskID: UUID) {
         guard let taskIdx = tasks.firstIndex(where: { $0.id == taskID }) else { return }
         tasks[taskIdx].subtasks.removeAll { $0.id == subtaskID }

@@ -172,6 +172,7 @@ struct SubTask: Identifiable, Codable, Hashable {
     var id: UUID = UUID()
     var title: String
     var isDone: Bool = false
+    var dueDate: Date? = nil
 }
 
 struct TaskItem: Identifiable, Codable, Hashable {

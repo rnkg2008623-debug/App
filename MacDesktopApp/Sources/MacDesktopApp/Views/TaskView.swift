@@ -166,18 +166,37 @@ private struct TaskCard: View {
         newSubtaskTitle = ""
     }
 
+    private func isSubtaskOverdue(_ subtask: SubTask) -> Bool {
+        guard let dueDate = subtask.dueDate else { return false }
+        return dueDate < Calendar.current.startOfDay(for: Date()) && !subtask.isDone
+    }
+
     private func subtaskRow(_ subtask: SubTask) -> some View {
-        Button {
-            store.toggleSubtask(taskID: task.id, subtaskID: subtask.id)
-        } label: {
+        VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Image(systemName: subtask.isDone ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(subtask.isDone ? Theme.accent : Theme.textSecondary)
-                Text(subtask.title)
-                    .font(.system(size: 13))
-                    .foregroundStyle(subtask.isDone ? Theme.textSecondary : Theme.textPrimary)
-                    .strikethrough(subtask.isDone)
-                Spacer()
+                Button {
+                    store.toggleSubtask(taskID: task.id, subtaskID: subtask.id)
+                } label: {
+                    Image(systemName: subtask.isDone ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(subtask.isDone ? Theme.accent : Theme.textSecondary)
+                }
+                .buttonStyle(.plain)
+
+                TextField("サブタスク", text: Binding(
+                    get: { subtask.title },
+                    set: { store.updateSubtaskTitle(taskID: task.id, subtaskID: subtask.id, title: $0) }
+                ))
+                .textFieldStyle(.plain)
+                .font(.system(size: 13))
+                .foregroundStyle(subtask.isDone ? Theme.textSecondary : Theme.textPrimary)
+                .strikethrough(subtask.isDone)
+
+                if let dueDate = subtask.dueDate {
+                    Text(dueDate.formatted(date: .abbreviated, time: .omitted))
+                        .font(.system(size: 10))
+                        .foregroundStyle(isSubtaskOverdue(subtask) ? Color(hex: "E2685C") : Theme.textSecondary)
+                }
+
                 Button {
                     store.removeSubtask(taskID: task.id, subtaskID: subtask.id)
                 } label: {
@@ -186,13 +205,35 @@ private struct TaskCard: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(Theme.textSecondary)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color.white.opacity(0.04))
-            )
+
+            HStack {
+                Toggle("期限", isOn: Binding(
+                    get: { subtask.dueDate != nil },
+                    set: { enabled in
+                        store.updateSubtaskDueDate(taskID: task.id, subtaskID: subtask.id, dueDate: enabled ? (subtask.dueDate ?? Date()) : nil)
+                    }
+                ))
+                .toggleStyle(.switch)
+                .tint(Theme.accent)
+                .font(.caption2)
+                .foregroundStyle(Theme.textSecondary)
+
+                if subtask.dueDate != nil {
+                    DatePicker("", selection: Binding(
+                        get: { subtask.dueDate ?? Date() },
+                        set: { store.updateSubtaskDueDate(taskID: task.id, subtaskID: subtask.id, dueDate: $0) }
+                    ), displayedComponents: .date)
+                    .labelsHidden()
+                }
+                Spacer()
+            }
+            .padding(.leading, 24)
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(Color.white.opacity(0.04))
+        )
     }
 }
