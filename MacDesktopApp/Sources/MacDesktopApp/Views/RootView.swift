@@ -13,6 +13,7 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
     case notes = "ノート"
     case pdf = "PDF"
     case timer = "タイマー"
+    case task = "タスク"
     case statistics = "統計"
     case settings = "設定"
 
@@ -32,6 +33,7 @@ enum AppTab: String, CaseIterable, Identifiable, Hashable {
         case .notes: return "note.text"
         case .pdf: return "doc.richtext"
         case .timer: return "timer"
+        case .task: return "list.bullet.clipboard"
         case .statistics: return "chart.bar"
         case .settings: return "gearshape"
         }
@@ -168,6 +170,7 @@ struct RootView: View {
                     case .notes: NotesView()
                     case .pdf: PDFLibraryView()
                     case .timer: TimerView()
+                    case .task: TaskView()
                     case .statistics: StatisticsView()
                     case .settings: SettingsView()
                     case .video: EmptyView()

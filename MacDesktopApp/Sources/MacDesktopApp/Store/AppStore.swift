@@ -14,6 +14,7 @@ final class AppStore: ObservableObject {
     @Published var pdfFolders: [PDFFolder] = []
     @Published var timeEntries: [TimeEntry] = []
     @Published var activeTimer: ActiveTimerSession? = nil
+    @Published var tasks: [TaskItem] = []
     @Published var theme: ThemeSettings = ThemeSettings()
     @Published var backgroundMediaHistory: [String] = []
     @Published var selectedWeek: WeekType = .weekA
@@ -35,6 +36,7 @@ final class AppStore: ObservableObject {
         var pdfFolders: [PDFFolder] = []
         var timeEntries: [TimeEntry] = []
         var activeTimer: ActiveTimerSession? = nil
+        var tasks: [TaskItem] = []
         var theme: ThemeSettings = ThemeSettings()
         var backgroundMediaHistory: [String] = []
 
@@ -52,6 +54,7 @@ final class AppStore: ObservableObject {
             pdfFolders: [PDFFolder] = [],
             timeEntries: [TimeEntry] = [],
             activeTimer: ActiveTimerSession? = nil,
+            tasks: [TaskItem] = [],
             theme: ThemeSettings = ThemeSettings(),
             backgroundMediaHistory: [String] = []
         ) {
@@ -68,6 +71,7 @@ final class AppStore: ObservableObject {
             self.pdfFolders = pdfFolders
             self.timeEntries = timeEntries
             self.activeTimer = activeTimer
+            self.tasks = tasks
             self.theme = theme
             self.backgroundMediaHistory = backgroundMediaHistory
         }
@@ -77,7 +81,7 @@ final class AppStore: ObservableObject {
         // older version of the app (a missing key falls back to its default
         // instead of failing the entire decode).
         enum CodingKeys: String, CodingKey {
-            case files, videos, videoFolders, events, snsLinks, todos, notes, quizFolders, quizzes, pdfItems, pdfFolders, timeEntries, activeTimer, theme, backgroundMediaHistory
+            case files, videos, videoFolders, events, snsLinks, todos, notes, quizFolders, quizzes, pdfItems, pdfFolders, timeEntries, activeTimer, tasks, theme, backgroundMediaHistory
         }
 
         init(from decoder: Decoder) throws {
@@ -95,6 +99,7 @@ final class AppStore: ObservableObject {
             pdfFolders = try container.decodeIfPresent([PDFFolder].self, forKey: .pdfFolders) ?? []
             timeEntries = try container.decodeIfPresent([TimeEntry].self, forKey: .timeEntries) ?? []
             activeTimer = try container.decodeIfPresent(ActiveTimerSession.self, forKey: .activeTimer)
+            tasks = try container.decodeIfPresent([TaskItem].self, forKey: .tasks) ?? []
             theme = try container.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? ThemeSettings()
             backgroundMediaHistory = try container.decodeIfPresent([String].self, forKey: .backgroundMediaHistory) ?? []
         }
@@ -130,6 +135,7 @@ final class AppStore: ObservableObject {
         pdfFolders = decoded.pdfFolders
         timeEntries = decoded.timeEntries
         activeTimer = decoded.activeTimer
+        tasks = decoded.tasks
         theme = decoded.theme
         backgroundMediaHistory = decoded.backgroundMediaHistory
     }
@@ -149,6 +155,7 @@ final class AppStore: ObservableObject {
             pdfFolders: pdfFolders,
             timeEntries: timeEntries,
             activeTimer: activeTimer,
+            tasks: tasks,
             theme: theme,
             backgroundMediaHistory: backgroundMediaHistory
         )
@@ -381,6 +388,49 @@ final class AppStore: ObservableObject {
 
     func removeTimeEntry(_ id: UUID) {
         timeEntries.removeAll { $0.id == id }
+        save()
+    }
+
+    // MARK: - タスク
+
+    func addTask(_ task: TaskItem) {
+        tasks.append(task)
+        save()
+    }
+
+    func updateTaskTitle(_ id: UUID, title: String) {
+        guard let idx = tasks.firstIndex(where: { $0.id == id }) else { return }
+        tasks[idx].title = title
+        save()
+    }
+
+    func updateTaskTimeSpent(_ id: UUID, hours: Double) {
+        guard let idx = tasks.firstIndex(where: { $0.id == id }) else { return }
+        tasks[idx].timeSpentHours = max(0, hours)
+        save()
+    }
+
+    func removeTask(_ id: UUID) {
+        tasks.removeAll { $0.id == id }
+        save()
+    }
+
+    func addSubtask(toTask taskID: UUID, title: String) {
+        guard let idx = tasks.firstIndex(where: { $0.id == taskID }) else { return }
+        tasks[idx].subtasks.append(SubTask(title: title))
+        save()
+    }
+
+    func toggleSubtask(taskID: UUID, subtaskID: UUID) {
+        guard let taskIdx = tasks.firstIndex(where: { $0.id == taskID }),
+              let subtaskIdx = tasks[taskIdx].subtasks.firstIndex(where: { $0.id == subtaskID }) else { return }
+        tasks[taskIdx].subtasks[subtaskIdx].isDone.toggle()
+        save()
+    }
+
+    func removeSubtask(taskID: UUID, subtaskID: UUID) {
+        guard let taskIdx = tasks.firstIndex(where: { $0.id == taskID }) else { return }
+        tasks[taskIdx].subtasks.removeAll { $0.id == subtaskID }
         save()
     }
 

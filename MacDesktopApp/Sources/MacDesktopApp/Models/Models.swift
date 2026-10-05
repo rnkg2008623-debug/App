@@ -166,6 +166,29 @@ struct ActiveTimerSession: Codable, Hashable {
     var startedAt: Date
 }
 
+// MARK: - タスク
+
+struct SubTask: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var title: String
+    var isDone: Bool = false
+}
+
+struct TaskItem: Identifiable, Codable, Hashable {
+    var id: UUID = UUID()
+    var title: String
+    var timeSpentHours: Double = 0
+    var subtasks: [SubTask] = []
+    var createdAt: Date = Date()
+
+    /// Percentage of subtasks completed. A task with no subtasks yet shows 0%.
+    var completionPercentage: Double {
+        guard !subtasks.isEmpty else { return 0 }
+        let doneCount = subtasks.filter(\.isDone).count
+        return Double(doneCount) / Double(subtasks.count) * 100
+    }
+}
+
 // MARK: - テーマ（機能7）
 
 enum AppThemeMode: String, Codable, CaseIterable, Identifiable, Hashable {
