@@ -180,6 +180,7 @@ struct TaskItem: Identifiable, Codable, Hashable {
     var timeSpentHours: Double = 0
     var subtasks: [SubTask] = []
     var createdAt: Date = Date()
+    var dueDate: Date? = nil
 
     /// Percentage of subtasks completed. A task with no subtasks yet shows 0%.
     var completionPercentage: Double {

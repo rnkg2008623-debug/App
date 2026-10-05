@@ -410,6 +410,12 @@ final class AppStore: ObservableObject {
         save()
     }
 
+    func updateTaskDueDate(_ id: UUID, dueDate: Date?) {
+        guard let idx = tasks.firstIndex(where: { $0.id == id }) else { return }
+        tasks[idx].dueDate = dueDate
+        save()
+    }
+
     func removeTask(_ id: UUID) {
         tasks.removeAll { $0.id == id }
         save()

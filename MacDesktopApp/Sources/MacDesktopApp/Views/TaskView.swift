@@ -4,6 +4,8 @@ struct TaskView: View {
     @EnvironmentObject var store: AppStore
     @State private var newTitle = ""
     @State private var newHoursText = ""
+    @State private var hasDueDate = false
+    @State private var newDueDate = Date()
 
     var body: some View {
         ScrollView {
@@ -29,6 +31,18 @@ struct TaskView: View {
                         .buttonStyle(GlowButtonStyle(prominent: true))
                         .disabled(newTitle.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
+
+                    HStack {
+                        Toggle("期限を設定", isOn: $hasDueDate)
+                            .toggleStyle(.switch)
+                            .tint(Theme.accent)
+                            .foregroundStyle(Theme.textSecondary)
+                        if hasDueDate {
+                            DatePicker("", selection: $newDueDate, displayedComponents: .date)
+                                .labelsHidden()
+                        }
+                        Spacer()
+                    }
                 }
                 .panelStyle()
 
@@ -53,9 +67,11 @@ struct TaskView: View {
         let trimmed = newTitle.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
         let hours = Double(newHoursText) ?? 0
-        store.addTask(TaskItem(title: trimmed, timeSpentHours: hours))
+        store.addTask(TaskItem(title: trimmed, timeSpentHours: hours, dueDate: hasDueDate ? newDueDate : nil))
         newTitle = ""
         newHoursText = ""
+        hasDueDate = false
+        newDueDate = Date()
     }
 }
 
@@ -64,6 +80,11 @@ private struct TaskCard: View {
     let task: TaskItem
     @State private var newSubtaskTitle = ""
 
+    private var isOverdue: Bool {
+        guard let dueDate = task.dueDate else { return false }
+        return dueDate < Calendar.current.startOfDay(for: Date()) && task.completionPercentage < 100
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -71,6 +92,11 @@ private struct TaskCard: View {
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
+                if let dueDate = task.dueDate {
+                    Label(dueDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
+                        .font(.system(size: 11))
+                        .foregroundStyle(isOverdue ? Color(hex: "E2685C") : Theme.textSecondary)
+                }
                 Text(String(format: "%.1f 時間", task.timeSpentHours))
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(Theme.textSecondary)
@@ -84,6 +110,28 @@ private struct TaskCard: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(Theme.textSecondary)
+            }
+
+            HStack {
+                Toggle("期限", isOn: Binding(
+                    get: { task.dueDate != nil },
+                    set: { enabled in
+                        store.updateTaskDueDate(task.id, dueDate: enabled ? (task.dueDate ?? Date()) : nil)
+                    }
+                ))
+                .toggleStyle(.switch)
+                .tint(Theme.accent)
+                .foregroundStyle(Theme.textSecondary)
+                .font(.caption)
+
+                if task.dueDate != nil {
+                    DatePicker("", selection: Binding(
+                        get: { task.dueDate ?? Date() },
+                        set: { store.updateTaskDueDate(task.id, dueDate: $0) }
+                    ), displayedComponents: .date)
+                    .labelsHidden()
+                }
+                Spacer()
             }
 
             ProgressView(value: task.completionPercentage, total: 100)
