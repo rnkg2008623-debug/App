@@ -1,0 +1,74 @@
+name: Build macOS App
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - claude/free-mac-app-15dxlg
+    paths:
+      - 'MacDesktopApp/**'
+      - '.github/workflows/build-mac-app.yml'
+
+jobs:
+  build:
+    runs-on: macos-14
+    defaults:
+      run:
+        working-directory: MacDesktopApp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Swift toolchain
+        run: swift --version
+
+      - name: Build universal (Apple Silicon + Intel) release binary
+        run: swift build -c release --arch arm64 --arch x86_64
+
+      - name: Assemble .app bundle
+        run: |
+          set -euo pipefail
+          APP_NAME="MacDesktopApp"
+          BUILD_DIR=".build/apple/Products/Release"
+          BUNDLE="${APP_NAME}.app"
+
+          mkdir -p "${BUNDLE}/Contents/MacOS"
+          cp "${BUILD_DIR}/${APP_NAME}" "${BUNDLE}/Contents/MacOS/${APP_NAME}"
+          chmod +x "${BUNDLE}/Contents/MacOS/${APP_NAME}"
+
+          cat > "${BUNDLE}/Contents/Info.plist" << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleExecutable</key>
+              <string>MacDesktopApp</string>
+              <key>CFBundleIdentifier</key>
+              <string>com.macdesktopapp.local</string>
+              <key>CFBundleName</key>
+              <string>MacDesktopApp</string>
+              <key>CFBundleDisplayName</key>
+              <string>MacDesktopApp</string>
+              <key>CFBundleVersion</key>
+              <string>1.0</string>
+              <key>CFBundleShortVersionString</key>
+              <string>1.0</string>
+              <key>CFBundlePackageType</key>
+              <string>APPL</string>
+              <key>LSMinimumSystemVersion</key>
+              <string>13.0</string>
+              <key>NSHighResolutionCapable</key>
+              <true/>
+          </dict>
+          </plist>
+          EOF
+
+          lipo -info "${BUNDLE}/Contents/MacOS/${APP_NAME}" || true
+          zip -r "${APP_NAME}-macOS.zip" "${BUNDLE}"
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MacDesktopApp-macOS
+          path: MacDesktopApp/MacDesktopApp-macOS.zip
+          retention-days: 30
