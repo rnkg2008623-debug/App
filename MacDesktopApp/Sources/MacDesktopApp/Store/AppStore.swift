@@ -15,6 +15,7 @@ final class AppStore: ObservableObject {
     @Published var timeEntries: [TimeEntry] = []
     @Published var activeTimer: ActiveTimerSession? = nil
     @Published var tasks: [TaskItem] = []
+    @Published var todayTasks: [TaskItem] = []
     @Published var theme: ThemeSettings = ThemeSettings()
     @Published var backgroundMediaHistory: [String] = []
     @Published var selectedWeek: WeekType = .weekA
@@ -37,6 +38,7 @@ final class AppStore: ObservableObject {
         var timeEntries: [TimeEntry] = []
         var activeTimer: ActiveTimerSession? = nil
         var tasks: [TaskItem] = []
+        var todayTasks: [TaskItem] = []
         var theme: ThemeSettings = ThemeSettings()
         var backgroundMediaHistory: [String] = []
 
@@ -55,6 +57,7 @@ final class AppStore: ObservableObject {
             timeEntries: [TimeEntry] = [],
             activeTimer: ActiveTimerSession? = nil,
             tasks: [TaskItem] = [],
+            todayTasks: [TaskItem] = [],
             theme: ThemeSettings = ThemeSettings(),
             backgroundMediaHistory: [String] = []
         ) {
@@ -72,6 +75,7 @@ final class AppStore: ObservableObject {
             self.timeEntries = timeEntries
             self.activeTimer = activeTimer
             self.tasks = tasks
+            self.todayTasks = todayTasks
             self.theme = theme
             self.backgroundMediaHistory = backgroundMediaHistory
         }
@@ -81,7 +85,7 @@ final class AppStore: ObservableObject {
         // older version of the app (a missing key falls back to its default
         // instead of failing the entire decode).
         enum CodingKeys: String, CodingKey {
-            case files, videos, videoFolders, events, snsLinks, todos, notes, quizFolders, quizzes, pdfItems, pdfFolders, timeEntries, activeTimer, tasks, theme, backgroundMediaHistory
+            case files, videos, videoFolders, events, snsLinks, todos, notes, quizFolders, quizzes, pdfItems, pdfFolders, timeEntries, activeTimer, tasks, todayTasks, theme, backgroundMediaHistory
         }
 
         init(from decoder: Decoder) throws {
@@ -100,6 +104,7 @@ final class AppStore: ObservableObject {
             timeEntries = try container.decodeIfPresent([TimeEntry].self, forKey: .timeEntries) ?? []
             activeTimer = try container.decodeIfPresent(ActiveTimerSession.self, forKey: .activeTimer)
             tasks = try container.decodeIfPresent([TaskItem].self, forKey: .tasks) ?? []
+            todayTasks = try container.decodeIfPresent([TaskItem].self, forKey: .todayTasks) ?? []
             theme = try container.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? ThemeSettings()
             backgroundMediaHistory = try container.decodeIfPresent([String].self, forKey: .backgroundMediaHistory) ?? []
         }
@@ -136,6 +141,7 @@ final class AppStore: ObservableObject {
         timeEntries = decoded.timeEntries
         activeTimer = decoded.activeTimer
         tasks = decoded.tasks
+        todayTasks = decoded.todayTasks
         theme = decoded.theme
         backgroundMediaHistory = decoded.backgroundMediaHistory
     }
@@ -156,6 +162,7 @@ final class AppStore: ObservableObject {
             timeEntries: timeEntries,
             activeTimer: activeTimer,
             tasks: tasks,
+            todayTasks: todayTasks,
             theme: theme,
             backgroundMediaHistory: backgroundMediaHistory
         )
@@ -451,6 +458,61 @@ final class AppStore: ObservableObject {
     func removeSubtask(taskID: UUID, subtaskID: UUID) {
         guard let taskIdx = tasks.firstIndex(where: { $0.id == taskID }) else { return }
         tasks[taskIdx].subtasks.removeAll { $0.id == subtaskID }
+        save()
+    }
+
+    // MARK: - 今日
+
+    /// A parallel task list where every item's due date is fixed to the day
+    /// it was created — there is no update method for it, since "today" is
+    /// meant to be a hard constraint of this section rather than something
+    /// the user edits like a regular task's due date.
+    func addTodayTask(_ task: TaskItem) {
+        todayTasks.append(task)
+        save()
+    }
+
+    func updateTodayTaskTimeSpent(_ id: UUID, hours: Double) {
+        guard let idx = todayTasks.firstIndex(where: { $0.id == id }) else { return }
+        todayTasks[idx].timeSpentHours = max(0, hours)
+        save()
+    }
+
+    func removeTodayTask(_ id: UUID) {
+        todayTasks.removeAll { $0.id == id }
+        save()
+    }
+
+    func addTodaySubtask(toTask taskID: UUID, title: String) {
+        guard let idx = todayTasks.firstIndex(where: { $0.id == taskID }) else { return }
+        todayTasks[idx].subtasks.append(SubTask(title: title))
+        save()
+    }
+
+    func toggleTodaySubtask(taskID: UUID, subtaskID: UUID) {
+        guard let taskIdx = todayTasks.firstIndex(where: { $0.id == taskID }),
+              let subtaskIdx = todayTasks[taskIdx].subtasks.firstIndex(where: { $0.id == subtaskID }) else { return }
+        todayTasks[taskIdx].subtasks[subtaskIdx].isDone.toggle()
+        save()
+    }
+
+    func updateTodaySubtaskTitle(taskID: UUID, subtaskID: UUID, title: String) {
+        guard let taskIdx = todayTasks.firstIndex(where: { $0.id == taskID }),
+              let subtaskIdx = todayTasks[taskIdx].subtasks.firstIndex(where: { $0.id == subtaskID }) else { return }
+        todayTasks[taskIdx].subtasks[subtaskIdx].title = title
+        save()
+    }
+
+    func updateTodaySubtaskDueDate(taskID: UUID, subtaskID: UUID, dueDate: Date?) {
+        guard let taskIdx = todayTasks.firstIndex(where: { $0.id == taskID }),
+              let subtaskIdx = todayTasks[taskIdx].subtasks.firstIndex(where: { $0.id == subtaskID }) else { return }
+        todayTasks[taskIdx].subtasks[subtaskIdx].dueDate = dueDate
+        save()
+    }
+
+    func removeTodaySubtask(taskID: UUID, subtaskID: UUID) {
+        guard let taskIdx = todayTasks.firstIndex(where: { $0.id == taskID }) else { return }
+        todayTasks[taskIdx].subtasks.removeAll { $0.id == subtaskID }
         save()
     }
 
