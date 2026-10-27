@@ -89,31 +89,31 @@ struct StatisticsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                SectionHeading(title: "統計")
+                SectionHeading(title: store.t("統計"))
 
                 HStack(spacing: 16) {
-                    statTile(title: "合計（秒）", value: String(format: "%.0f 秒", totalSeconds))
-                    statTile(title: "合計（時間）", value: String(format: "%.2f 時間", totalSeconds / 3600))
-                    statTile(title: "合計（日）", value: String(format: "%.2f 日", totalSeconds / 86400))
+                    statTile(title: store.t("合計（秒）"), value: String(format: store.t("%.0f 秒"), totalSeconds))
+                    statTile(title: store.t("合計（時間）"), value: String(format: store.t("%.2f 時間"), totalSeconds / 3600))
+                    statTile(title: store.t("合計（日）"), value: String(format: store.t("%.2f 日"), totalSeconds / 86400))
                 }
 
                 HStack(spacing: 16) {
-                    statTile(title: "クイズ回答回数", value: "\(totalQuizAttempts) 回")
-                    statTile(title: "全体正答率", value: overallQuizAccuracy.map { String(format: "%.0f%%", $0 * 100) } ?? "—")
+                    statTile(title: store.t("クイズ回答回数"), value: String(format: store.t("%d 回"), totalQuizAttempts))
+                    statTile(title: store.t("全体正答率"), value: overallQuizAccuracy.map { String(format: "%.0f%%", $0 * 100) } ?? "—")
                 }
 
                 HStack(spacing: 16) {
-                    statTile(title: "完了したタスク数", value: "\(completedTaskCount) 件")
-                    statTile(title: "完了したサブタスク数", value: "\(completedSubtaskCount) 件")
+                    statTile(title: store.t("完了したタスク数"), value: String(format: store.t("%d 件"), completedTaskCount))
+                    statTile(title: store.t("完了したサブタスク数"), value: String(format: store.t("%d 件"), completedSubtaskCount))
                 }
 
                 VStack(alignment: .leading, spacing: 14) {
                     HStack {
-                        SectionHeading(title: "期間ごとのグラフ")
+                        SectionHeading(title: store.t("期間ごとのグラフ"))
                         Spacer()
-                        Picker("期間", selection: $range) {
+                        Picker(store.t("期間"), selection: $range) {
                             ForEach(StatsRange.allCases) { r in
-                                Text(r.rawValue).tag(r)
+                                Text(store.t(r.rawValue)).tag(r)
                             }
                         }
                         .pickerStyle(.menu)
@@ -121,21 +121,21 @@ struct StatisticsView: View {
                     }
 
                     if dailyTotals.allSatisfy({ $0.totalSeconds == 0 }) {
-                        Text("この期間の記録がありません")
+                        Text(store.t("この期間の記録がありません"))
                             .font(.caption)
                             .foregroundStyle(Theme.textSecondary)
                             .frame(maxWidth: .infinity, minHeight: 180)
                     } else {
                         Chart(dailyTotals) { item in
                             BarMark(
-                                x: .value("日付", item.day, unit: .day),
-                                y: .value("時間", item.totalSeconds / 3600)
+                                x: .value(store.t("日付"), item.day, unit: .day),
+                                y: .value(store.t("時間"), item.totalSeconds / 3600)
                             )
                             .foregroundStyle(Theme.accent.gradient)
                             .cornerRadius(4)
                         }
                         .frame(height: 260)
-                        .chartYAxisLabel("時間")
+                        .chartYAxisLabel(store.t("時間"))
                         .chartXAxis {
                             AxisMarks(values: .stride(by: .day, count: max(range.days / 7, 1))) { value in
                                 AxisGridLine()
@@ -153,10 +153,10 @@ struct StatisticsView: View {
                 .panelStyle()
 
                 VStack(alignment: .leading, spacing: 10) {
-                    SectionHeading(title: "フォルダー")
+                    SectionHeading(title: store.t("フォルダー"))
 
                     if store.quizFolders.isEmpty {
-                        Text("学習フォルダがまだありません")
+                        Text(store.t("学習フォルダがまだありません"))
                             .font(.caption)
                             .foregroundStyle(Theme.textSecondary)
                     } else {
@@ -208,7 +208,7 @@ struct StatisticsView: View {
 
             if isExpanded {
                 if quizzes.isEmpty {
-                    Text("このフォルダにはまだクイズがありません")
+                    Text(store.t("このフォルダにはまだクイズがありません"))
                         .font(.caption)
                         .foregroundStyle(Theme.textSecondary)
                         .padding(.leading, 24)
@@ -222,7 +222,7 @@ struct StatisticsView: View {
                                     .foregroundStyle(Theme.textPrimary)
                                     .lineLimit(1)
                                 Spacer()
-                                Text(quiz.accuracy.map { String(format: "%.0f%%", $0 * 100) } ?? "未挑戦")
+                                Text(quiz.accuracy.map { String(format: "%.0f%%", $0 * 100) } ?? store.t("未挑戦"))
                                     .font(.system(size: 11, design: .monospaced))
                                     .foregroundStyle(Theme.textSecondary)
                             }

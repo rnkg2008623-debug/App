@@ -19,6 +19,7 @@ final class AppStore: ObservableObject {
     @Published var theme: ThemeSettings = ThemeSettings()
     @Published var backgroundMediaHistory: [String] = []
     @Published var selectedWeek: WeekType = .weekA
+    @Published var language: AppLanguage = .japanese
 
     private let saveURL: URL
     private let maxBackgroundHistory = 24
@@ -41,6 +42,7 @@ final class AppStore: ObservableObject {
         var todayTasks: [TaskItem] = []
         var theme: ThemeSettings = ThemeSettings()
         var backgroundMediaHistory: [String] = []
+        var language: AppLanguage = .japanese
 
         init(
             files: [StoredFile] = [],
@@ -59,7 +61,8 @@ final class AppStore: ObservableObject {
             tasks: [TaskItem] = [],
             todayTasks: [TaskItem] = [],
             theme: ThemeSettings = ThemeSettings(),
-            backgroundMediaHistory: [String] = []
+            backgroundMediaHistory: [String] = [],
+            language: AppLanguage = .japanese
         ) {
             self.files = files
             self.videos = videos
@@ -78,6 +81,7 @@ final class AppStore: ObservableObject {
             self.todayTasks = todayTasks
             self.theme = theme
             self.backgroundMediaHistory = backgroundMediaHistory
+            self.language = language
         }
 
         // Decoded field-by-field with `decodeIfPresent` so that adding a new
@@ -85,7 +89,7 @@ final class AppStore: ObservableObject {
         // older version of the app (a missing key falls back to its default
         // instead of failing the entire decode).
         enum CodingKeys: String, CodingKey {
-            case files, videos, videoFolders, events, snsLinks, todos, notes, quizFolders, quizzes, pdfItems, pdfFolders, timeEntries, activeTimer, tasks, todayTasks, theme, backgroundMediaHistory
+            case files, videos, videoFolders, events, snsLinks, todos, notes, quizFolders, quizzes, pdfItems, pdfFolders, timeEntries, activeTimer, tasks, todayTasks, theme, backgroundMediaHistory, language
         }
 
         init(from decoder: Decoder) throws {
@@ -107,6 +111,7 @@ final class AppStore: ObservableObject {
             todayTasks = try container.decodeIfPresent([TaskItem].self, forKey: .todayTasks) ?? []
             theme = try container.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? ThemeSettings()
             backgroundMediaHistory = try container.decodeIfPresent([String].self, forKey: .backgroundMediaHistory) ?? []
+            language = try container.decodeIfPresent(AppLanguage.self, forKey: .language) ?? .japanese
         }
     }
 
@@ -119,9 +124,25 @@ final class AppStore: ObservableObject {
         let isFirstRun = !FileManager.default.fileExists(atPath: saveURL.path)
         load()
         if isFirstRun {
-            videoFolders = [VideoFolder(name: "フォルダ1"), VideoFolder(name: "フォルダ2")]
+            videoFolders = [VideoFolder(name: t("フォルダ1")), VideoFolder(name: t("フォルダ2"))]
             save()
         }
+    }
+
+    // MARK: - 言語
+
+    /// Translates a Japanese UI string into the currently selected display
+    /// language. Japanese itself needs no lookup, and any key with no entry in
+    /// `Localization.translations` simply falls back to the original Japanese
+    /// text, so a missing translation can never show a blank or broken label.
+    func t(_ key: String) -> String {
+        guard language != .japanese else { return key }
+        return Localization.translations[key]?[language] ?? key
+    }
+
+    func updateLanguage(_ newValue: AppLanguage) {
+        language = newValue
+        save()
     }
 
     func load() {
@@ -144,6 +165,7 @@ final class AppStore: ObservableObject {
         todayTasks = decoded.todayTasks
         theme = decoded.theme
         backgroundMediaHistory = decoded.backgroundMediaHistory
+        language = decoded.language
     }
 
     func save() {
@@ -164,7 +186,8 @@ final class AppStore: ObservableObject {
             tasks: tasks,
             todayTasks: todayTasks,
             theme: theme,
-            backgroundMediaHistory: backgroundMediaHistory
+            backgroundMediaHistory: backgroundMediaHistory,
+            language: language
         )
         guard let encoded = try? JSONEncoder().encode(data) else { return }
         if FileManager.default.fileExists(atPath: saveURL.path) {

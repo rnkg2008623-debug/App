@@ -4,6 +4,11 @@ final class CalculatorEngine: ObservableObject {
     @Published var display: String = "0"
     @Published var history: [String] = []
 
+    /// The text shown for NaN/infinite results (division by zero, etc). The
+    /// engine itself has no access to `AppStore`, so the owning view keeps
+    /// this in sync with the active display language (see `CalculatorView`).
+    var errorLabel: String = "エラー"
+
     private var pendingValue: Double?
     private var pendingOp: String?
     private var startingNewNumber = true
@@ -118,7 +123,7 @@ final class CalculatorEngine: ObservableObject {
     }
 
     private func format(_ value: Double) -> String {
-        if value.isNaN || value.isInfinite { return "エラー" }
+        if value.isNaN || value.isInfinite { return errorLabel }
         if value == value.rounded() && abs(value) < 1e15 {
             return String(format: "%.0f", value)
         }

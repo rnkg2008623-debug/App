@@ -11,7 +11,7 @@ struct SNSLinksView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            SectionHeading(title: "SNSリンクを追加")
+            SectionHeading(title: store.t("SNSリンクを追加"))
 
             HStack {
                 Picker("", selection: $newEmoji) {
@@ -19,9 +19,9 @@ struct SNSLinksView: View {
                 }
                 .labelsHidden()
                 .frame(width: 70)
-                TextField("サービス名（例: Instagram）", text: $newPlatform).themedField()
+                TextField(store.t("サービス名（例: Instagram）"), text: $newPlatform).themedField()
                 TextField("URL", text: $newURL).themedField()
-                Button("追加") {
+                Button(store.t("追加")) {
                     guard !newURL.trimmingCharacters(in: .whitespaces).isEmpty else { return }
                     store.addSNSLink(
                         SNSLink(platform: newPlatform.isEmpty ? newURL : newPlatform, urlString: newURL, emoji: newEmoji)
@@ -34,12 +34,12 @@ struct SNSLinksView: View {
             }
             .panelStyle()
 
-            SectionHeading(title: "登録済みリンク")
+            SectionHeading(title: store.t("登録済みリンク"))
 
             if store.snsLinks.isEmpty {
                 VStack(spacing: 10) {
                     Image(systemName: "link").font(.system(size: 40)).foregroundStyle(Theme.accentGold)
-                    Text("SNSリンクを追加してください").foregroundStyle(Theme.textSecondary)
+                    Text(store.t("SNSリンクを追加してください")).foregroundStyle(Theme.textSecondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -53,7 +53,7 @@ struct SNSLinksView: View {
                                     Text(link.urlString).font(.caption).foregroundStyle(Theme.textSecondary).lineLimit(1)
                                 }
                                 Spacer()
-                                Button("開く") {
+                                Button(store.t("開く")) {
                                     if let url = URL(string: link.urlString) {
                                         NSWorkspace.shared.open(url)
                                     }

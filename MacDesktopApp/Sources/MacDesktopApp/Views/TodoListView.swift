@@ -9,16 +9,16 @@ struct TodoListView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            SectionHeading(title: "Todoを追加")
+            SectionHeading(title: store.t("Todoを追加"))
 
             VStack(alignment: .leading, spacing: 8) {
-                TextField("タイトル", text: $newTitle).themedField()
-                TextField("説明", text: $newDetails).themedField()
+                TextField(store.t("タイトル"), text: $newTitle).themedField()
+                TextField(store.t("説明"), text: $newDetails).themedField()
                 HStack {
-                    TextField("所要時間（分）", text: $newDuration)
+                    TextField(store.t("所要時間（分）"), text: $newDuration)
                         .themedField()
                         .frame(width: 140)
-                    Button("追加") {
+                    Button(store.t("追加")) {
                         let todo = TodoItem(
                             title: newTitle,
                             details: newDetails,
@@ -37,14 +37,14 @@ struct TodoListView: View {
 
             let doneCount = store.todos.filter { $0.isDone }.count
             let totalMinutes = store.todos.reduce(0) { $0 + $1.durationMinutes }
-            Text("完了 \(doneCount) / \(store.todos.count) 件・合計見積もり \(totalMinutes) 分")
+            Text(String(format: store.t("完了 %d / %d 件・合計見積もり %d 分"), doneCount, store.todos.count, totalMinutes))
                 .font(.caption)
                 .foregroundStyle(Theme.accentGold)
 
             if store.todos.isEmpty {
                 VStack(spacing: 10) {
                     Image(systemName: "checklist").font(.system(size: 40)).foregroundStyle(Theme.accentGold)
-                    Text("Todoを追加してください").foregroundStyle(Theme.textSecondary)
+                    Text(store.t("Todoを追加してください")).foregroundStyle(Theme.textSecondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -71,11 +71,11 @@ struct TodoListView: View {
                                         Text(todo.details).font(.caption).foregroundStyle(Theme.textSecondary)
                                     }
                                     if todo.durationMinutes > 0 {
-                                        Text("所要時間: \(todo.durationMinutes)分").font(.caption2).foregroundStyle(Theme.accentGold)
+                                        Text(String(format: store.t("所要時間: %d分"), todo.durationMinutes)).font(.caption2).foregroundStyle(Theme.accentGold)
                                     }
                                 }
                                 Spacer()
-                                Button("編集") { editingTodo = todo }
+                                Button(store.t("編集")) { editingTodo = todo }
                                     .buttonStyle(GlowButtonStyle())
                                 Button(role: .destructive) {
                                     store.removeTodo(todo.id)
@@ -103,6 +103,7 @@ struct TodoListView: View {
 }
 
 struct TodoEditor: View {
+    @EnvironmentObject var store: AppStore
     @Environment(\.dismiss) private var dismiss
     @State private var todo: TodoItem
     let onSave: (TodoItem) -> Void
@@ -114,15 +115,15 @@ struct TodoEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeading(title: "Todoを編集")
-            TextField("タイトル", text: $todo.title).themedField()
-            TextField("説明", text: $todo.details).themedField()
-            TextField("所要時間（分）", value: $todo.durationMinutes, format: .number).themedField()
-            Toggle("完了", isOn: $todo.isDone).tint(Theme.accent)
+            SectionHeading(title: store.t("Todoを編集"))
+            TextField(store.t("タイトル"), text: $todo.title).themedField()
+            TextField(store.t("説明"), text: $todo.details).themedField()
+            TextField(store.t("所要時間（分）"), value: $todo.durationMinutes, format: .number).themedField()
+            Toggle(store.t("完了"), isOn: $todo.isDone).tint(Theme.accent)
             HStack {
                 Spacer()
-                Button("キャンセル") { dismiss() }.buttonStyle(GlowButtonStyle())
-                Button("保存") {
+                Button(store.t("キャンセル")) { dismiss() }.buttonStyle(GlowButtonStyle())
+                Button(store.t("保存")) {
                     onSave(todo)
                     dismiss()
                 }

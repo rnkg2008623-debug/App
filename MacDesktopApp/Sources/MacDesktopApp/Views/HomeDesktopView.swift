@@ -71,7 +71,7 @@ struct HomeDesktopView: View {
                         Image(systemName: "arrow.down.doc")
                             .font(.system(size: 36))
                             .foregroundStyle(Theme.accentGold)
-                        Text("Finderからファイルをここにドラッグ＆ドロップして置けます")
+                        Text(store.t("Finderからファイルをここにドラッグ＆ドロップして置けます"))
                             .font(.system(size: 15, weight: .medium, design: .serif))
                             .tracking(0.5)
                     }
@@ -204,6 +204,7 @@ struct HomeDesktopView: View {
 }
 
 struct DesktopIconView: View {
+    @EnvironmentObject var store: AppStore
     let file: StoredFile
     let isSelected: Bool
     let liveOffset: CGSize
@@ -242,9 +243,9 @@ struct DesktopIconView: View {
         .onTapGesture(count: 2) { onOpen() }
         .onTapGesture(count: 1) { onSelectTap() }
         .contextMenu {
-            Button("開く") { onOpen() }
-            Button("Finderで表示") { onRevealInFinder() }
-            Button("削除", role: .destructive) { onDelete() }
+            Button(store.t("開く")) { onOpen() }
+            Button(store.t("Finderで表示")) { onRevealInFinder() }
+            Button(store.t("削除"), role: .destructive) { onDelete() }
         }
     }
 }

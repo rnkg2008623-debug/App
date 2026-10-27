@@ -9,9 +9,26 @@ struct SettingsView: View {
         HStack(alignment: .top, spacing: 20) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    SectionHeading(title: "外観モード")
+                    SectionHeading(title: store.t("言語"))
                     VStack(alignment: .leading, spacing: 10) {
-                        Picker("モード", selection: Binding(
+                        Picker(store.t("言語"), selection: Binding(
+                            get: { store.language },
+                            set: { newValue in
+                                store.updateLanguage(newValue)
+                            }
+                        )) {
+                            ForEach(AppLanguage.allCases) { lang in
+                                Text(lang.nativeName).tag(lang)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                    }
+                    .panelStyle()
+
+                    SectionHeading(title: store.t("外観モード"))
+                    VStack(alignment: .leading, spacing: 10) {
+                        Picker(store.t("モード"), selection: Binding(
                             get: { store.theme.mode },
                             set: { newValue in
                                 var theme = store.theme
@@ -20,7 +37,7 @@ struct SettingsView: View {
                             }
                         )) {
                             ForEach(AppThemeMode.allCases) { mode in
-                                Text(mode.label).tag(mode)
+                                Text(store.t(mode.label)).tag(mode)
                             }
                         }
                         .pickerStyle(.segmented)
@@ -28,9 +45,9 @@ struct SettingsView: View {
                     }
                     .panelStyle()
 
-                    SectionHeading(title: "ホーム画面の背景")
+                    SectionHeading(title: store.t("ホーム画面の背景"))
                     VStack(alignment: .leading, spacing: 14) {
-                        ColorPicker("背景色", selection: Binding(
+                        ColorPicker(store.t("背景色"), selection: Binding(
                             get: { Color(hex: store.theme.backgroundColorHex) },
                             set: { newColor in
                                 var theme = store.theme
@@ -41,12 +58,12 @@ struct SettingsView: View {
                         ))
                         .foregroundStyle(Theme.textPrimary)
 
-                        Text("画像・GIF・動画（mp4/mov/m4v）を背景に設定できます。動画・GIFは自動でループ再生されます。")
+                        Text(store.t("画像・GIF・動画（mp4/mov/m4v）を背景に設定できます。動画・GIFは自動でループ再生されます。"))
                             .font(.caption)
                             .foregroundStyle(Theme.textSecondary)
 
                         HStack {
-                            Button("背景メディアを選択…") {
+                            Button(store.t("背景メディアを選択…")) {
                                 let panel = NSOpenPanel()
                                 panel.allowedContentTypes = [.image, .movie]
                                 panel.allowsMultipleSelection = false
@@ -61,7 +78,7 @@ struct SettingsView: View {
                             .buttonStyle(GlowButtonStyle())
 
                             if store.theme.backgroundMediaPath != nil {
-                                Button("メディアをやめて色に戻す") {
+                                Button(store.t("メディアをやめて色に戻す")) {
                                     var theme = store.theme
                                     theme.backgroundMediaPath = nil
                                     store.updateTheme(theme)
@@ -82,7 +99,7 @@ struct SettingsView: View {
                 Rectangle().fill(Theme.panelBorder).frame(width: 1)
 
                 VStack(alignment: .leading, spacing: 12) {
-                    SectionHeading(title: "背景の履歴")
+                    SectionHeading(title: store.t("背景の履歴"))
                     ScrollView {
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                             ForEach(store.backgroundMediaHistory, id: \.self) { path in
@@ -97,7 +114,7 @@ struct SettingsView: View {
                                     store.addBackgroundMediaHistory(path)
                                 }
                                 .contextMenu {
-                                    Button("履歴から削除", role: .destructive) {
+                                    Button(store.t("履歴から削除"), role: .destructive) {
                                         store.removeBackgroundMediaHistory(path)
                                     }
                                 }

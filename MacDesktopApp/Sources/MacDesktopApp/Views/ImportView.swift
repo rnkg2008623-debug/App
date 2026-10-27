@@ -13,16 +13,16 @@ struct ImportView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            SectionHeading(title: "インポート")
+            SectionHeading(title: store.t("インポート"))
 
             VStack(alignment: .leading, spacing: 14) {
-                Text("2つの形式に対応しています。①4択クイズ形式：「質問,選択肢1,選択肢2,選択肢3,選択肢4,正解の番号(1〜4)」の6列。②単語帳形式：「単語, 意味」の2列（例: Apple, りんご）— 他の単語の意味が自動でダミーの選択肢になり4択クイズになります（最低4語必要）。1行目に見出しがあっても自動でスキップされます。")
+                Text(store.t("2つの形式に対応しています。①4択クイズ形式：「質問,選択肢1,選択肢2,選択肢3,選択肢4,正解の番号(1〜4)」の6列。②単語帳形式：「単語, 意味」の2列（例: Apple, りんご）— 他の単語の意味が自動でダミーの選択肢になり4択クイズになります（最低4語必要）。1行目に見出しがあっても自動でスキップされます。"))
                     .font(.caption)
                     .foregroundStyle(Theme.textSecondary)
 
                 HStack {
-                    Picker("インポート先フォルダ", selection: $targetFolderID) {
-                        Text("フォルダを選択…").tag(Optional<UUID>.none)
+                    Picker(store.t("インポート先フォルダ"), selection: $targetFolderID) {
+                        Text(store.t("フォルダを選択…")).tag(Optional<UUID>.none)
                         ForEach(store.quizFolders) { folder in
                             Text(folder.name).tag(Optional(folder.id))
                         }
@@ -32,7 +32,7 @@ struct ImportView: View {
                         newFolderName = ""
                         showNewFolderAlert = true
                     } label: {
-                        Label("新しいフォルダ", systemImage: "folder.badge.plus")
+                        Label(store.t("新しいフォルダ"), systemImage: "folder.badge.plus")
                     }
                     .buttonStyle(GlowButtonStyle())
                 }
@@ -40,7 +40,7 @@ struct ImportView: View {
                 Button {
                     importFromFile()
                 } label: {
-                    Label("CSVファイルを選択してインポート", systemImage: "square.and.arrow.down")
+                    Label(store.t("CSVファイルを選択してインポート"), systemImage: "square.and.arrow.down")
                 }
                 .buttonStyle(GlowButtonStyle(prominent: true))
                 .disabled(targetFolderID == nil)
@@ -53,9 +53,9 @@ struct ImportView: View {
             }
             .panelStyle()
 
-            SectionHeading(title: "コピー＆ペーストでインポート")
+            SectionHeading(title: store.t("コピー＆ペーストでインポート"))
             VStack(alignment: .leading, spacing: 10) {
-                Text("上と同じ形式のテキストを直接貼り付けられます。例:\nApple, りんご\nBanana, バナナ\nCherry, さくらんぼ\nGrape, ぶどう")
+                Text(store.t("上と同じ形式のテキストを直接貼り付けられます。例:\nApple, りんご\nBanana, バナナ\nCherry, さくらんぼ\nGrape, ぶどう"))
                     .font(.caption)
                     .foregroundStyle(Theme.textSecondary)
 
@@ -69,7 +69,7 @@ struct ImportView: View {
                 Button {
                     importFromPaste()
                 } label: {
-                    Label("貼り付けた内容をインポート", systemImage: "doc.on.clipboard")
+                    Label(store.t("貼り付けた内容をインポート"), systemImage: "doc.on.clipboard")
                 }
                 .buttonStyle(GlowButtonStyle(prominent: true))
                 .disabled(targetFolderID == nil || pasteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -80,16 +80,16 @@ struct ImportView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .alert("新しいフォルダ", isPresented: $showNewFolderAlert) {
-            TextField("フォルダ名", text: $newFolderName)
-            Button("作成") {
+        .alert(store.t("新しいフォルダ"), isPresented: $showNewFolderAlert) {
+            TextField(store.t("フォルダ名"), text: $newFolderName)
+            Button(store.t("作成")) {
                 let trimmed = newFolderName.trimmingCharacters(in: .whitespaces)
                 guard !trimmed.isEmpty else { return }
                 let folder = QuizFolder(name: trimmed)
                 store.addQuizFolder(folder)
                 targetFolderID = folder.id
             }
-            Button("キャンセル", role: .cancel) {}
+            Button(store.t("キャンセル"), role: .cancel) {}
         }
     }
 
@@ -104,7 +104,7 @@ struct ImportView: View {
 
         guard let text = try? String(contentsOf: url, encoding: .utf8) else {
             resultIsError = true
-            resultMessage = "ファイルを読み込めませんでした。"
+            resultMessage = store.t("ファイルを読み込めませんでした。")
             return
         }
 
@@ -118,21 +118,21 @@ struct ImportView: View {
     }
 
     private func applyImport(_ rows: [[String]], targetFolderID: UUID) {
-        let (quizzes, skipped, note) = Self.buildQuizzes(from: rows, folderID: targetFolderID)
+        let (quizzes, skipped, note) = Self.buildQuizzes(from: rows, folderID: targetFolderID, store: store)
 
         guard !quizzes.isEmpty else {
             resultIsError = true
-            resultMessage = note ?? "インポートできる内容がありませんでした（\(skipped)行をスキップ）。"
+            resultMessage = note ?? String(format: store.t("インポートできる内容がありませんでした（%d行をスキップ）。"), skipped)
             return
         }
 
         store.addQuizzes(quizzes)
         resultIsError = false
-        var message = "\(quizzes.count)件のクイズをインポートしました。"
+        var message = String(format: store.t("%d件のクイズをインポートしました。"), quizzes.count)
         if let note {
             message += "\n" + note
         } else if skipped > 0 {
-            message = "\(quizzes.count)件のクイズをインポートしました（\(skipped)行をスキップ）。"
+            message = String(format: store.t("%d件のクイズをインポートしました（%d行をスキップ）。"), quizzes.count, skipped)
         }
         resultMessage = message
     }
@@ -144,7 +144,7 @@ struct ImportView: View {
     /// random as distractors, so a plain vocabulary list turns into 4-choice
     /// quizzes automatically (at least 4 pairs are needed to have 3 distinct
     /// wrong answers to pick from).
-    private static func buildQuizzes(from rows: [[String]], folderID: UUID) -> (quizzes: [Quiz], skipped: Int, note: String?) {
+    private static func buildQuizzes(from rows: [[String]], folderID: UUID, store: AppStore) -> (quizzes: [Quiz], skipped: Int, note: String?) {
         var fullRows: [[String]] = []
         var wordDefPairs: [(word: String, definition: String)] = []
         var skipped = 0
@@ -178,7 +178,7 @@ struct ImportView: View {
             if wordDefPairs.count < 4 {
                 // Each word needs 3 *other* definitions to use as wrong answers,
                 // so fewer than 4 pairs can never produce a 4-choice quiz.
-                note = "単語帳形式（単語, 意味）は4択の選択肢を作るために最低4語必要です（現在\(wordDefPairs.count)語のみ貼り付けられています）。"
+                note = String(format: store.t("単語帳形式（単語, 意味）は4択の選択肢を作るために最低4語必要です（現在%d語のみ貼り付けられています）。"), wordDefPairs.count)
                 skipped += wordDefPairs.count
             } else {
                 for (index, entry) in wordDefPairs.enumerated() {
@@ -195,7 +195,7 @@ struct ImportView: View {
                     guard let correctIndex = choices.firstIndex(of: entry.definition) else { continue }
                     quizzes.append(Quiz(
                         folderID: folderID,
-                        question: "「\(entry.word)」の意味は？",
+                        question: String(format: store.t("「%@」の意味は？"), entry.word),
                         choices: choices,
                         correctIndex: correctIndex
                     ))

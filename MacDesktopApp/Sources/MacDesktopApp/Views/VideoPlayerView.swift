@@ -27,21 +27,21 @@ struct VideoPlayerView: View {
             folderPane
         }
         .onChange(of: selectedFolderFilter) { newFolderID = $0 }
-        .alert("新しいフォルダ", isPresented: $showNewFolderAlert) {
-            TextField("フォルダ名", text: $newFolderName)
-            Button("作成") {
+        .alert(store.t("新しいフォルダ"), isPresented: $showNewFolderAlert) {
+            TextField(store.t("フォルダ名"), text: $newFolderName)
+            Button(store.t("作成")) {
                 let trimmed = newFolderName.trimmingCharacters(in: .whitespaces)
                 guard !trimmed.isEmpty else { return }
                 store.addVideoFolder(VideoFolder(name: trimmed))
             }
-            Button("キャンセル", role: .cancel) {}
+            Button(store.t("キャンセル"), role: .cancel) {}
         }
-        .alert("フォルダ名を変更", isPresented: Binding(
+        .alert(store.t("フォルダ名を変更"), isPresented: Binding(
             get: { renamingFolder != nil },
             set: { if !$0 { renamingFolder = nil } }
         )) {
-            TextField("フォルダ名", text: $renameText)
-            Button("保存") {
+            TextField(store.t("フォルダ名"), text: $renameText)
+            Button(store.t("保存")) {
                 if let folder = renamingFolder {
                     let trimmed = renameText.trimmingCharacters(in: .whitespaces)
                     if !trimmed.isEmpty {
@@ -50,14 +50,14 @@ struct VideoPlayerView: View {
                 }
                 renamingFolder = nil
             }
-            Button("キャンセル", role: .cancel) { renamingFolder = nil }
+            Button(store.t("キャンセル"), role: .cancel) { renamingFolder = nil }
         }
     }
 
     private var addFormPane: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                SectionHeading(title: "動画リンクを追加")
+                SectionHeading(title: store.t("動画リンクを追加"))
                 Spacer()
                 Button {
                     showAddForm.toggle()
@@ -66,22 +66,22 @@ struct VideoPlayerView: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(Theme.textSecondary)
-                .help(showAddForm ? "セクションを隠す" : "セクションを表示")
+                .help(showAddForm ? store.t("セクションを隠す") : store.t("セクションを表示"))
             }
 
             if showAddForm {
                 VStack(alignment: .leading, spacing: 8) {
-                    TextField("タイトル", text: $newTitle).themedField()
-                    TextField("URL（YouTubeなど）", text: $newURL).themedField()
+                    TextField(store.t("タイトル"), text: $newTitle).themedField()
+                    TextField(store.t("URL（YouTubeなど）"), text: $newURL).themedField()
 
-                    Picker("フォルダ", selection: $newFolderID) {
-                        Text("フォルダなし").tag(Optional<UUID>.none)
+                    Picker(store.t("フォルダ"), selection: $newFolderID) {
+                        Text(store.t("フォルダなし")).tag(Optional<UUID>.none)
                         ForEach(store.videoFolders) { folder in
                             Text(folder.name).tag(Optional(folder.id))
                         }
                     }
 
-                    Button("追加") {
+                    Button(store.t("追加")) {
                         guard !newURL.trimmingCharacters(in: .whitespaces).isEmpty else { return }
                         let link = VideoLink(
                             title: newTitle.isEmpty ? newURL : newTitle,
@@ -111,10 +111,10 @@ struct VideoPlayerView: View {
                     Image(systemName: "play.rectangle.fill")
                         .font(.system(size: 44))
                         .foregroundStyle(Theme.accentGold)
-                    Text("動画プレイヤー")
+                    Text(store.t("動画プレイヤー"))
                         .font(.system(size: 32, weight: .bold, design: .serif))
                         .foregroundStyle(Theme.textPrimary)
-                    Text("右のフォルダから動画を選択してください")
+                    Text(store.t("右のフォルダから動画を選択してください"))
                         .font(.subheadline)
                         .foregroundStyle(Theme.textSecondary)
                 }
@@ -132,20 +132,20 @@ struct VideoPlayerView: View {
 
     private var folderPane: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionHeading(title: "動画ファイル")
+            SectionHeading(title: store.t("動画ファイル"))
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
-                    folderSection(id: nil, name: "保存した動画（すべて）")
+                    folderSection(id: nil, name: store.t("保存した動画（すべて）"))
 
                     ForEach(store.videoFolders) { folder in
                         folderSection(id: folder.id, name: folder.name)
                             .contextMenu {
-                                Button("名前を変更") {
+                                Button(store.t("名前を変更")) {
                                     renamingFolder = folder
                                     renameText = folder.name
                                 }
-                                Button("削除", role: .destructive) {
+                                Button(store.t("削除"), role: .destructive) {
                                     store.removeVideoFolder(folder.id)
                                     if selectedFolderFilter == folder.id { selectedFolderFilter = nil }
                                     if newFolderID == folder.id { newFolderID = nil }
@@ -159,7 +159,7 @@ struct VideoPlayerView: View {
                 newFolderName = ""
                 showNewFolderAlert = true
             } label: {
-                Label("新しいフォルダ", systemImage: "folder.badge.plus")
+                Label(store.t("新しいフォルダ"), systemImage: "folder.badge.plus")
             }
             .buttonStyle(GlowButtonStyle())
         }
@@ -178,7 +178,7 @@ struct VideoPlayerView: View {
             if isExpanded {
                 let videos = id == nil ? store.videos : store.videos.filter { $0.folderID == id }
                 if videos.isEmpty {
-                    Text("動画がありません")
+                    Text(store.t("動画がありません"))
                         .font(.caption)
                         .foregroundStyle(Theme.textSecondary)
                         .padding(.leading, 18)

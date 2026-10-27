@@ -8,10 +8,10 @@ struct TimerView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            SectionHeading(title: "タイマー")
+            SectionHeading(title: store.t("タイマー"))
 
             VStack(alignment: .leading, spacing: 14) {
-                TextField("何の作業をしていますか？", text: labelBinding)
+                TextField(store.t("何の作業をしていますか？"), text: labelBinding)
                     .themedField()
 
                 TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -23,9 +23,9 @@ struct TimerView: View {
 
                 if store.activeTimer == nil {
                     Button {
-                        store.startTimer(label: labelDraft.trimmingCharacters(in: .whitespaces).isEmpty ? "作業" : labelDraft)
+                        store.startTimer(label: labelDraft.trimmingCharacters(in: .whitespaces).isEmpty ? store.t("作業") : labelDraft)
                     } label: {
-                        Label("開始", systemImage: "play.fill")
+                        Label(store.t("開始"), systemImage: "play.fill")
                     }
                     .buttonStyle(GlowButtonStyle(prominent: true))
                 } else {
@@ -33,23 +33,23 @@ struct TimerView: View {
                         store.stopTimer()
                         labelDraft = ""
                     } label: {
-                        Label("停止", systemImage: "stop.fill")
+                        Label(store.t("停止"), systemImage: "stop.fill")
                     }
                     .buttonStyle(GlowButtonStyle(destructive: true))
                 }
 
-                Text("他のタブに移動したりウィンドウが背面にあっても、タイマーは止まらず動き続けます。")
+                Text(store.t("他のタブに移動したりウィンドウが背面にあっても、タイマーは止まらず動き続けます。"))
                     .font(.caption2)
                     .foregroundStyle(Theme.textSecondary)
             }
             .panelStyle()
 
-            SectionHeading(title: "記録")
+            SectionHeading(title: store.t("記録"))
             ScrollView {
                 VStack(spacing: 6) {
                     let sorted = store.timeEntries.sorted { $0.startedAt > $1.startedAt }
                     if sorted.isEmpty {
-                        Text("まだ記録がありません")
+                        Text(store.t("まだ記録がありません"))
                             .font(.caption)
                             .foregroundStyle(Theme.textSecondary)
                             .padding(.vertical, 12)
@@ -86,7 +86,7 @@ struct TimerView: View {
     private func entryRow(_ entry: TimeEntry) -> some View {
         HStack(spacing: 10) {
             if editingEntryID == entry.id {
-                TextField("ラベル", text: $editingText, onCommit: {
+                TextField(store.t("ラベル"), text: $editingText, onCommit: {
                     store.updateTimeEntryLabel(entry.id, label: editingText)
                     editingEntryID = nil
                 })

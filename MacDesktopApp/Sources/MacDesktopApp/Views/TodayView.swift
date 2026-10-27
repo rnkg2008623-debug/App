@@ -8,26 +8,26 @@ struct TodayView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                SectionHeading(title: "今日")
+                SectionHeading(title: store.t("今日"))
 
-                Text("ここに追加したタスクは、期限が必ず「今日」に設定されます。")
+                Text(store.t("ここに追加したタスクは、期限が必ず「今日」に設定されます。"))
                     .font(.caption)
                     .foregroundStyle(Theme.textSecondary)
 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("タスクを作成")
+                    Text(store.t("タスクを作成"))
                         .font(.caption)
                         .foregroundStyle(Theme.textSecondary)
 
                     HStack {
-                        TextField("タスク名", text: $newTitle).themedField()
-                        TextField("時間", text: $newHoursText)
+                        TextField(store.t("タスク名"), text: $newTitle).themedField()
+                        TextField(store.t("時間"), text: $newHoursText)
                             .themedField()
                             .frame(width: 80)
-                        Text("時間")
+                        Text(store.t("時間"))
                             .font(.caption)
                             .foregroundStyle(Theme.textSecondary)
-                        Button("追加") {
+                        Button(store.t("追加")) {
                             addTask()
                         }
                         .buttonStyle(GlowButtonStyle(prominent: true))
@@ -37,7 +37,7 @@ struct TodayView: View {
                 .panelStyle()
 
                 if store.todayTasks.isEmpty {
-                    Text("まだタスクがありません")
+                    Text(store.t("まだタスクがありません"))
                         .font(.subheadline)
                         .foregroundStyle(Theme.textSecondary)
                 } else {
@@ -104,7 +104,7 @@ private struct TodayTaskCard: View {
                             .font(.system(size: 11))
                             .foregroundStyle(isOverdue ? Color(hex: "E2685C") : Theme.textSecondary)
                     }
-                    Text(String(format: "%.1f 時間", task.timeSpentHours))
+                    Text(String(format: store.t("%.1f 時間"), task.timeSpentHours))
                         .font(.system(size: 12, design: .monospaced))
                         .foregroundStyle(Theme.textSecondary)
                     Text(String(format: "%.0f%%", task.completionPercentage))
@@ -138,10 +138,10 @@ private struct TodayTaskCard: View {
                 }
 
                 HStack {
-                    TextField("細かいタスクを追加", text: $newSubtaskTitle)
+                    TextField(store.t("細かいタスクを追加"), text: $newSubtaskTitle)
                         .themedField()
                         .onSubmit { addSubtask() }
-                    Button("追加") {
+                    Button(store.t("追加")) {
                         addSubtask()
                     }
                     .buttonStyle(GlowButtonStyle())
@@ -181,7 +181,7 @@ private struct TodayTaskCard: View {
                 }
                 .buttonStyle(.plain)
 
-                TextField("サブタスク", text: Binding(
+                TextField(store.t("サブタスク"), text: Binding(
                     get: { subtask.title },
                     set: { store.updateTodaySubtaskTitle(taskID: task.id, subtaskID: subtask.id, title: $0) }
                 ))
@@ -206,7 +206,7 @@ private struct TodayTaskCard: View {
             }
 
             HStack {
-                Toggle("期限", isOn: Binding(
+                Toggle(store.t("期限"), isOn: Binding(
                     get: { subtask.dueDate != nil },
                     set: { enabled in
                         store.updateTodaySubtaskDueDate(taskID: task.id, subtaskID: subtask.id, dueDate: enabled ? (subtask.dueDate ?? Date()) : nil)

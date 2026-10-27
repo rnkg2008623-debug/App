@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct CalculatorView: View {
+    @EnvironmentObject var store: AppStore
     @StateObject private var engine = CalculatorEngine()
     @State private var showFunctions = true
     @FocusState private var isFocused: Bool
@@ -25,7 +26,7 @@ struct CalculatorView: View {
     var body: some View {
         HStack(spacing: 0) {
             VStack(spacing: 14) {
-                SectionHeading(title: "電卓")
+                SectionHeading(title: store.t("電卓"))
 
                 Text(engine.display)
                     .font(.system(size: 46, weight: .light, design: .monospaced))
@@ -45,13 +46,13 @@ struct CalculatorView: View {
                     }
                 }
 
-                Toggle("関数パネルを表示", isOn: $showFunctions)
+                Toggle(store.t("関数パネルを表示"), isOn: $showFunctions)
                     .toggleStyle(.switch)
                     .tint(Theme.accent)
                     .foregroundStyle(Theme.textSecondary)
                     .padding(.top, 6)
 
-                Text("キーボードでも入力できます（数字・+ - × ÷・Enter・Delete）")
+                Text(store.t("キーボードでも入力できます（数字・+ - × ÷・Enter・Delete）"))
                     .font(.caption2)
                     .foregroundStyle(Theme.textSecondary)
 
@@ -63,7 +64,7 @@ struct CalculatorView: View {
             if showFunctions {
                 Rectangle().fill(Theme.panelBorder).frame(width: 1)
                 VStack(alignment: .leading, spacing: 10) {
-                    SectionHeading(title: "関数")
+                    SectionHeading(title: store.t("関数"))
                     ScrollView {
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                             ForEach(functionButtons, id: \.self) { fn in
@@ -81,7 +82,7 @@ struct CalculatorView: View {
                     }
                     .frame(maxHeight: 280)
 
-                    SectionHeading(title: "履歴")
+                    SectionHeading(title: store.t("履歴"))
                     ScrollView {
                         VStack(alignment: .leading, spacing: 4) {
                             ForEach(engine.history.reversed(), id: \.self) { line in
@@ -98,7 +99,13 @@ struct CalculatorView: View {
         .focusable()
         .focusEffectDisabled()
         .focused($isFocused)
-        .onAppear { isFocused = true }
+        .onAppear {
+            isFocused = true
+            engine.errorLabel = store.t("エラー")
+        }
+        .onChange(of: store.language) { _ in
+            engine.errorLabel = store.t("エラー")
+        }
         .onKeyPress { press in
             handleKeyPress(press)
         }

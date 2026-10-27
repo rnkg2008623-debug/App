@@ -10,22 +10,22 @@ struct TaskView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                SectionHeading(title: "タスク")
+                SectionHeading(title: store.t("タスク"))
 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("タスクを作成")
+                    Text(store.t("タスクを作成"))
                         .font(.caption)
                         .foregroundStyle(Theme.textSecondary)
 
                     HStack {
-                        TextField("タスク名", text: $newTitle).themedField()
-                        TextField("時間", text: $newHoursText)
+                        TextField(store.t("タスク名"), text: $newTitle).themedField()
+                        TextField(store.t("時間"), text: $newHoursText)
                             .themedField()
                             .frame(width: 80)
-                        Text("時間")
+                        Text(store.t("時間"))
                             .font(.caption)
                             .foregroundStyle(Theme.textSecondary)
-                        Button("追加") {
+                        Button(store.t("追加")) {
                             addTask()
                         }
                         .buttonStyle(GlowButtonStyle(prominent: true))
@@ -33,7 +33,7 @@ struct TaskView: View {
                     }
 
                     HStack {
-                        Toggle("期限を設定", isOn: $hasDueDate)
+                        Toggle(store.t("期限を設定"), isOn: $hasDueDate)
                             .toggleStyle(.switch)
                             .tint(Theme.accent)
                             .foregroundStyle(Theme.textSecondary)
@@ -47,7 +47,7 @@ struct TaskView: View {
                 .panelStyle()
 
                 if store.tasks.isEmpty {
-                    Text("まだタスクがありません")
+                    Text(store.t("まだタスクがありません"))
                         .font(.subheadline)
                         .foregroundStyle(Theme.textSecondary)
                 } else {
@@ -116,7 +116,7 @@ private struct TaskCard: View {
                             .font(.system(size: 11))
                             .foregroundStyle(isOverdue ? Color(hex: "E2685C") : Theme.textSecondary)
                     }
-                    Text(String(format: "%.1f 時間", task.timeSpentHours))
+                    Text(String(format: store.t("%.1f 時間"), task.timeSpentHours))
                         .font(.system(size: 12, design: .monospaced))
                         .foregroundStyle(Theme.textSecondary)
                     Text(String(format: "%.0f%%", task.completionPercentage))
@@ -139,7 +139,7 @@ private struct TaskCard: View {
 
             if isExpanded {
                 HStack {
-                    Toggle("期限", isOn: Binding(
+                    Toggle(store.t("期限"), isOn: Binding(
                         get: { task.dueDate != nil },
                         set: { enabled in
                             store.updateTaskDueDate(task.id, dueDate: enabled ? (task.dueDate ?? Date()) : nil)
@@ -172,10 +172,10 @@ private struct TaskCard: View {
                 }
 
                 HStack {
-                    TextField("細かいタスクを追加", text: $newSubtaskTitle)
+                    TextField(store.t("細かいタスクを追加"), text: $newSubtaskTitle)
                         .themedField()
                         .onSubmit { addSubtask() }
-                    Button("追加") {
+                    Button(store.t("追加")) {
                         addSubtask()
                     }
                     .buttonStyle(GlowButtonStyle())
@@ -215,7 +215,7 @@ private struct TaskCard: View {
                 }
                 .buttonStyle(.plain)
 
-                TextField("サブタスク", text: Binding(
+                TextField(store.t("サブタスク"), text: Binding(
                     get: { subtask.title },
                     set: { store.updateSubtaskTitle(taskID: task.id, subtaskID: subtask.id, title: $0) }
                 ))
@@ -240,7 +240,7 @@ private struct TaskCard: View {
             }
 
             HStack {
-                Toggle("期限", isOn: Binding(
+                Toggle(store.t("期限"), isOn: Binding(
                     get: { subtask.dueDate != nil },
                     set: { enabled in
                         store.updateSubtaskDueDate(taskID: task.id, subtaskID: subtask.id, dueDate: enabled ? (subtask.dueDate ?? Date()) : nil)

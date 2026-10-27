@@ -18,21 +18,21 @@ struct PDFLibraryView: View {
             folderPane
             viewerPane
         }
-        .alert("新しいフォルダ", isPresented: $showNewFolderAlert) {
-            TextField("フォルダ名", text: $newFolderName)
-            Button("作成") {
+        .alert(store.t("新しいフォルダ"), isPresented: $showNewFolderAlert) {
+            TextField(store.t("フォルダ名"), text: $newFolderName)
+            Button(store.t("作成")) {
                 let trimmed = newFolderName.trimmingCharacters(in: .whitespaces)
                 guard !trimmed.isEmpty else { return }
                 store.addPDFFolder(PDFFolder(name: trimmed))
             }
-            Button("キャンセル", role: .cancel) {}
+            Button(store.t("キャンセル"), role: .cancel) {}
         }
-        .alert("フォルダ名を変更", isPresented: Binding(
+        .alert(store.t("フォルダ名を変更"), isPresented: Binding(
             get: { renamingFolder != nil },
             set: { if !$0 { renamingFolder = nil } }
         )) {
-            TextField("フォルダ名", text: $renameText)
-            Button("保存") {
+            TextField(store.t("フォルダ名"), text: $renameText)
+            Button(store.t("保存")) {
                 if let folder = renamingFolder {
                     let trimmed = renameText.trimmingCharacters(in: .whitespaces)
                     if !trimmed.isEmpty {
@@ -41,37 +41,37 @@ struct PDFLibraryView: View {
                 }
                 renamingFolder = nil
             }
-            Button("キャンセル", role: .cancel) { renamingFolder = nil }
+            Button(store.t("キャンセル"), role: .cancel) { renamingFolder = nil }
         }
     }
 
     private var folderPane: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionHeading(title: "PDFライブラリ")
+            SectionHeading(title: store.t("PDFライブラリ"))
 
             Button {
                 importPDFs()
             } label: {
-                Label("PDFをアップロード", systemImage: "doc.badge.plus")
+                Label(store.t("PDFをアップロード"), systemImage: "doc.badge.plus")
             }
             .buttonStyle(GlowButtonStyle(prominent: true))
 
-            Text("PDFをアップロードして、選べるセクション・フォルダーなどを作成可能")
+            Text(store.t("PDFをアップロードして、選べるセクション・フォルダーなどを作成可能"))
                 .font(.caption)
                 .foregroundStyle(Theme.textSecondary)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
-                    folderSection(id: nil, name: "すべてのPDF")
+                    folderSection(id: nil, name: store.t("すべてのPDF"))
 
                     ForEach(store.pdfFolders) { folder in
                         folderSection(id: folder.id, name: folder.name)
                             .contextMenu {
-                                Button("名前を変更") {
+                                Button(store.t("名前を変更")) {
                                     renamingFolder = folder
                                     renameText = folder.name
                                 }
-                                Button("削除", role: .destructive) {
+                                Button(store.t("削除"), role: .destructive) {
                                     store.removePDFFolder(folder.id)
                                     if selectedFolderFilter == folder.id { selectedFolderFilter = nil }
                                 }
@@ -84,7 +84,7 @@ struct PDFLibraryView: View {
                 newFolderName = ""
                 showNewFolderAlert = true
             } label: {
-                Label("新しいフォルダ", systemImage: "folder.badge.plus")
+                Label(store.t("新しいフォルダ"), systemImage: "folder.badge.plus")
             }
             .buttonStyle(GlowButtonStyle())
         }
@@ -120,7 +120,7 @@ struct PDFLibraryView: View {
             if isExpanded {
                 let items = id == nil ? store.pdfItems : store.pdfItems.filter { $0.folderID == id }
                 if items.isEmpty {
-                    Text("PDFがありません")
+                    Text(store.t("PDFがありません"))
                         .font(.caption)
                         .foregroundStyle(Theme.textSecondary)
                         .padding(.leading, 18)
@@ -192,11 +192,11 @@ struct PDFLibraryView: View {
                     Image(systemName: "doc.text.magnifyingglass")
                         .font(.system(size: 44))
                         .foregroundStyle(Theme.accentGold)
-                    Text("選択されたPDFを展開する場所")
+                    Text(store.t("選択されたPDFを展開する場所"))
                         .font(.system(size: 28, weight: .bold, design: .serif))
                         .foregroundStyle(Theme.textPrimary)
                         .multilineTextAlignment(.center)
-                    Text("左のリストからPDFを選択してください")
+                    Text(store.t("左のリストからPDFを選択してください"))
                         .font(.subheadline)
                         .foregroundStyle(Theme.textSecondary)
                 }

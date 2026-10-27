@@ -18,7 +18,7 @@ struct TimetableView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                SectionHeading(title: "タイムテーブル")
+                SectionHeading(title: store.t("タイムテーブル"))
 
                 Spacer()
 
@@ -33,7 +33,7 @@ struct TimetableView: View {
                 Button {
                     editingEvent = TimetableEvent(title: "", weekType: store.selectedWeek)
                 } label: {
-                    Label("予定を追加", systemImage: "plus")
+                    Label(store.t("予定を追加"), systemImage: "plus")
                 }
                 .buttonStyle(GlowButtonStyle(prominent: true))
             }
@@ -80,7 +80,7 @@ struct TimetableView: View {
 
     private func dayCard(_ day: Weekday) -> some View {
         VStack(spacing: 0) {
-            Text(day.shortLabel)
+            Text(store.t(day.shortLabel))
                 .font(.system(size: 14, weight: .bold, design: .serif))
                 .foregroundStyle(Theme.accentGold)
                 .frame(maxWidth: .infinity)
@@ -115,7 +115,7 @@ struct TimetableView: View {
         return Button {
             store.selectedWeek = week
         } label: {
-            Text(week.rawValue)
+            Text(store.t(week.rawValue))
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(isSelected ? Color.black : Theme.textSecondary)
                 .padding(.horizontal, 14)

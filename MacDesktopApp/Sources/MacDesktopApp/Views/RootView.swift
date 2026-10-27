@@ -65,7 +65,7 @@ struct RootView: View {
     /// toggle button, so dragging the sidebar closed (or too narrow) leaves no way
     /// to reopen it with the mouse. This invisible button restores it via ⌘⌥0.
     private var resetSidebarShortcut: some View {
-        Button("サイドバーをリセット") {
+        Button(store.t("サイドバーをリセット")) {
             columnVisibility = .all
         }
         .keyboardShortcut("0", modifiers: [.command, .option])
@@ -111,7 +111,7 @@ struct RootView: View {
             HStack(spacing: 12) {
                 Image(systemName: tab.icon)
                     .frame(width: 18)
-                Text(tab.rawValue)
+                Text(store.t(tab.rawValue))
                     .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
                 Spacer()
             }

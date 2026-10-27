@@ -17,15 +17,15 @@ struct FileStorageView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                SectionHeading(title: "ファイル")
+                SectionHeading(title: store.t("ファイル"))
                 Spacer()
-                TextField("検索", text: $searchText)
+                TextField(store.t("検索"), text: $searchText)
                     .themedField()
                     .frame(maxWidth: 220)
                 Button {
                     showImporter = true
                 } label: {
-                    Label("追加", systemImage: "plus")
+                    Label(store.t("追加"), systemImage: "plus")
                 }
                 .buttonStyle(GlowButtonStyle(prominent: true))
             }
@@ -34,7 +34,7 @@ struct FileStorageView: View {
             if filtered.isEmpty {
                 VStack(spacing: 10) {
                     Image(systemName: "tray").font(.system(size: 40)).foregroundStyle(Theme.accentGold)
-                    Text("ファイルがありません。「追加」から取り込んでください。")
+                    Text(store.t("ファイルがありません。「追加」から取り込んでください。"))
                         .foregroundStyle(Theme.textSecondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -56,9 +56,9 @@ struct FileStorageView: View {
                             .panelStyle(padding: 10)
                             .onTapGesture(count: 2) { NSWorkspace.shared.open(file.url) }
                             .contextMenu {
-                                Button("開く") { NSWorkspace.shared.open(file.url) }
-                                Button("Finderで表示") { NSWorkspace.shared.activateFileViewerSelecting([file.url]) }
-                                Button("削除", role: .destructive) { store.removeFile(file.id) }
+                                Button(store.t("開く")) { NSWorkspace.shared.open(file.url) }
+                                Button(store.t("Finderで表示")) { NSWorkspace.shared.activateFileViewerSelecting([file.url]) }
+                                Button(store.t("削除"), role: .destructive) { store.removeFile(file.id) }
                             }
                         }
                     }

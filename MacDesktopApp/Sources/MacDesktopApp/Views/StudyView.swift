@@ -23,23 +23,23 @@ struct StudyView: View {
                 selectedFolderID = store.quizFolders.first?.id
             }
         }
-        .alert("新しいフォルダ", isPresented: $showNewFolderAlert) {
-            TextField("フォルダ名", text: $newFolderName)
-            Button("作成") {
+        .alert(store.t("新しいフォルダ"), isPresented: $showNewFolderAlert) {
+            TextField(store.t("フォルダ名"), text: $newFolderName)
+            Button(store.t("作成")) {
                 let trimmed = newFolderName.trimmingCharacters(in: .whitespaces)
                 guard !trimmed.isEmpty else { return }
                 let folder = QuizFolder(name: trimmed)
                 store.addQuizFolder(folder)
                 selectedFolderID = folder.id
             }
-            Button("キャンセル", role: .cancel) {}
+            Button(store.t("キャンセル"), role: .cancel) {}
         }
-        .alert("フォルダ名を変更", isPresented: Binding(
+        .alert(store.t("フォルダ名を変更"), isPresented: Binding(
             get: { renamingFolder != nil },
             set: { if !$0 { renamingFolder = nil } }
         )) {
-            TextField("フォルダ名", text: $renameText)
-            Button("保存") {
+            TextField(store.t("フォルダ名"), text: $renameText)
+            Button(store.t("保存")) {
                 if let folder = renamingFolder {
                     let trimmed = renameText.trimmingCharacters(in: .whitespaces)
                     if !trimmed.isEmpty {
@@ -48,24 +48,24 @@ struct StudyView: View {
                 }
                 renamingFolder = nil
             }
-            Button("キャンセル", role: .cancel) { renamingFolder = nil }
+            Button(store.t("キャンセル"), role: .cancel) { renamingFolder = nil }
         }
     }
 
     private var folderPane: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionHeading(title: "学習フォルダ")
+            SectionHeading(title: store.t("学習フォルダ"))
 
             ScrollView {
                 VStack(spacing: 4) {
                     ForEach(store.quizFolders) { folder in
                         folderRow(folder)
                             .contextMenu {
-                                Button("名前を変更") {
+                                Button(store.t("名前を変更")) {
                                     renamingFolder = folder
                                     renameText = folder.name
                                 }
-                                Button("削除", role: .destructive) {
+                                Button(store.t("削除"), role: .destructive) {
                                     store.removeQuizFolder(folder.id)
                                     if selectedFolderID == folder.id { selectedFolderID = nil }
                                 }
@@ -78,7 +78,7 @@ struct StudyView: View {
                 newFolderName = ""
                 showNewFolderAlert = true
             } label: {
-                Label("新しいフォルダ", systemImage: "folder.badge.plus")
+                Label(store.t("新しいフォルダ"), systemImage: "folder.badge.plus")
             }
             .buttonStyle(GlowButtonStyle())
         }
@@ -127,7 +127,7 @@ struct StudyView: View {
         } else {
             VStack(spacing: 10) {
                 Image(systemName: "graduationcap").font(.system(size: 44)).foregroundStyle(Theme.accentGold)
-                Text("左のフォルダを選択するか、新規作成してください").foregroundStyle(Theme.textSecondary)
+                Text(store.t("左のフォルダを選択するか、新規作成してください")).foregroundStyle(Theme.textSecondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .themedBackground()
@@ -164,14 +164,14 @@ private struct QuizFolderDetailView: View {
                     Button {
                         startSession()
                     } label: {
-                        Label(sessionActive ? "最初からやり直す" : "4択テストを開始", systemImage: "play.fill")
+                        Label(sessionActive ? store.t("最初からやり直す") : store.t("4択テストを開始"), systemImage: "play.fill")
                     }
                     .buttonStyle(GlowButtonStyle(prominent: true))
                 }
             }
 
             if quizzesInFolder.isEmpty {
-                Text("このフォルダにはまだクイズがありません。インポートタブからCSVで追加してください。")
+                Text(store.t("このフォルダにはまだクイズがありません。インポートタブからCSVで追加してください。"))
                     .font(.subheadline)
                     .foregroundStyle(Theme.textSecondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -195,7 +195,7 @@ private struct QuizFolderDetailView: View {
     private var sessionView: some View {
         if let quiz = currentQuiz {
             VStack(alignment: .leading, spacing: 18) {
-                Text("問題 \(sessionIndex + 1) / \(sessionOrder.count)")
+                Text(String(format: store.t("問題 %d / %d"), sessionIndex + 1, sessionOrder.count))
                     .font(.caption)
                     .foregroundStyle(Theme.textSecondary)
 
@@ -210,7 +210,7 @@ private struct QuizFolderDetailView: View {
                 }
 
                 if selectedChoice != nil {
-                    Button("次へ") {
+                    Button(store.t("次へ")) {
                         sessionIndex += 1
                         selectedChoice = nil
                     }
@@ -223,14 +223,14 @@ private struct QuizFolderDetailView: View {
                 Image(systemName: "checkmark.seal.fill")
                     .font(.system(size: 44))
                     .foregroundStyle(Theme.accentGold)
-                Text("テスト終了！")
+                Text(store.t("テスト終了！"))
                     .font(.system(size: 24, weight: .bold, design: .serif))
                     .foregroundStyle(Theme.textPrimary)
-                Button("もう一度挑戦する") {
+                Button(store.t("もう一度挑戦する")) {
                     startSession()
                 }
                 .buttonStyle(GlowButtonStyle(prominent: true))
-                Button("クイズ一覧に戻る") {
+                Button(store.t("クイズ一覧に戻る")) {
                     sessionOrder = []
                 }
                 .buttonStyle(GlowButtonStyle())
@@ -299,7 +299,7 @@ private struct QuizFolderDetailView: View {
                             .foregroundStyle(Theme.textPrimary)
                             .lineLimit(1)
                         Spacer()
-                        Text(quiz.accuracy.map { String(format: "%.0f%%", $0 * 100) } ?? "未挑戦")
+                        Text(quiz.accuracy.map { String(format: "%.0f%%", $0 * 100) } ?? store.t("未挑戦"))
                             .font(.system(size: 11, design: .monospaced))
                             .foregroundStyle(Theme.textSecondary)
                         Button {

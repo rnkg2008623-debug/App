@@ -26,7 +26,7 @@ struct NotesView: View {
     var body: some View {
         HSplitView {
             VStack(alignment: .leading, spacing: 10) {
-                SectionHeading(title: "カテゴリー")
+                SectionHeading(title: store.t("カテゴリー"))
                 ScrollView {
                     VStack(spacing: 4) {
                         ForEach(categories, id: \.self) { category in
@@ -35,8 +35,8 @@ struct NotesView: View {
                     }
                 }
                 HStack {
-                    TextField("新しいカテゴリー", text: $newCategoryName).themedField()
-                    Button("追加") {
+                    TextField(store.t("新しいカテゴリー"), text: $newCategoryName).themedField()
+                    Button(store.t("追加")) {
                         let trimmed = newCategoryName.trimmingCharacters(in: .whitespaces)
                         guard !trimmed.isEmpty else { return }
                         selectedCategory = trimmed
@@ -50,15 +50,15 @@ struct NotesView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    SectionHeading(title: selectedCategory ?? "カテゴリーを選択")
+                    SectionHeading(title: selectedCategory ?? store.t("カテゴリーを選択"))
                     Spacer()
                     Button {
                         guard let selectedCategory else { return }
-                        let note = Note(category: selectedCategory, title: "新しいノート")
+                        let note = Note(category: selectedCategory, title: store.t("新しいノート"))
                         store.addNote(note)
                         selectedNoteID = note.id
                     } label: {
-                        Label("新規ノート", systemImage: "plus")
+                        Label(store.t("新規ノート"), systemImage: "plus")
                     }
                     .buttonStyle(GlowButtonStyle(prominent: true))
                     .disabled(selectedCategory == nil)
@@ -81,7 +81,7 @@ struct NotesView: View {
             } else {
                 VStack(spacing: 10) {
                     Image(systemName: "note.text").font(.system(size: 44)).foregroundStyle(Theme.accentGold)
-                    Text("ノートを選択するか、新規作成してください").foregroundStyle(Theme.textSecondary)
+                    Text(store.t("ノートを選択するか、新規作成してください")).foregroundStyle(Theme.textSecondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .themedBackground()
@@ -144,7 +144,7 @@ struct NoteEditorView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                TextField("タイトル", text: $note.title)
+                TextField(store.t("タイトル"), text: $note.title)
                     .font(.themeTitle(20))
                     .textFieldStyle(.plain)
                     .foregroundStyle(Theme.textPrimary)
@@ -153,7 +153,7 @@ struct NoteEditorView: View {
                 Button {
                     exportPDF()
                 } label: {
-                    Label("PDFで保存", systemImage: "doc.richtext")
+                    Label(store.t("PDFで保存"), systemImage: "doc.richtext")
                 }
                 .buttonStyle(GlowButtonStyle())
                 Button(role: .destructive) {
@@ -182,7 +182,7 @@ struct NoteEditorView: View {
 
     private func exportPDF() {
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = note.title.isEmpty ? "ノート.pdf" : "\(note.title).pdf"
+        panel.nameFieldStringValue = note.title.isEmpty ? store.t("ノート.pdf") : "\(note.title).pdf"
         panel.allowedContentTypes = [.pdf]
         guard panel.runModal() == .OK, let url = panel.url else { return }
         PDFExporter.export(title: note.title, content: note.content, to: url)

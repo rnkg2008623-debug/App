@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TimetableEventEditor: View {
+    @EnvironmentObject var store: AppStore
     @Environment(\.dismiss) private var dismiss
     @State private var event: TimetableEvent
     @State private var startDate: Date
@@ -39,29 +40,29 @@ struct TimetableEventEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionHeading(title: isNew ? "予定を追加" : "予定を編集")
+            SectionHeading(title: isNew ? store.t("予定を追加") : store.t("予定を編集"))
 
-            TextField("タイトル", text: $event.title).themedField()
+            TextField(store.t("タイトル"), text: $event.title).themedField()
 
-            Picker("週", selection: $event.weekType) {
+            Picker(store.t("週"), selection: $event.weekType) {
                 ForEach(WeekType.allCases) { week in
-                    Text(week.rawValue).tag(week)
+                    Text(store.t(week.rawValue)).tag(week)
                 }
             }
 
-            Picker("曜日", selection: $event.weekday) {
+            Picker(store.t("曜日"), selection: $event.weekday) {
                 ForEach(Weekday.allCases) { day in
-                    Text(day.fullLabel).tag(day)
+                    Text(store.t(day.fullLabel)).tag(day)
                 }
             }
 
             HStack {
-                DatePicker("開始", selection: $startDate, displayedComponents: .hourAndMinute)
-                DatePicker("終了", selection: $endDate, displayedComponents: .hourAndMinute)
+                DatePicker(store.t("開始"), selection: $startDate, displayedComponents: .hourAndMinute)
+                DatePicker(store.t("終了"), selection: $endDate, displayedComponents: .hourAndMinute)
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("色").foregroundStyle(Theme.textSecondary)
+                Text(store.t("色")).foregroundStyle(Theme.textSecondary)
 
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 8) {
                     ForEach(Self.colorOptions, id: \.self) { hex in
@@ -102,20 +103,20 @@ struct TimetableEventEditor: View {
                 }
             }
 
-            TextField("メモ", text: $event.note).themedField()
+            TextField(store.t("メモ"), text: $event.note).themedField()
 
             HStack {
                 if !isNew {
-                    Button("削除", role: .destructive) {
+                    Button(store.t("削除"), role: .destructive) {
                         onDelete(event)
                         dismiss()
                     }
                     .buttonStyle(GlowButtonStyle(destructive: true))
                 }
                 Spacer()
-                Button("キャンセル") { dismiss() }
+                Button(store.t("キャンセル")) { dismiss() }
                     .buttonStyle(GlowButtonStyle())
-                Button("保存") {
+                Button(store.t("保存")) {
                     event.startMinutes = Self.minutesFrom(startDate)
                     event.endMinutes = Self.minutesFrom(endDate)
                     onSave(event)
