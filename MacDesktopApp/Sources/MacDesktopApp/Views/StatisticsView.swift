@@ -51,6 +51,19 @@ struct StatisticsView: View {
         return Double(totalQuizCorrect) / Double(totalQuizAttempts)
     }
 
+    /// タスク and 今日 combined — both count toward the same completion stats.
+    private var allTasks: [TaskItem] {
+        store.tasks + store.todayTasks
+    }
+
+    private var completedTaskCount: Int {
+        allTasks.filter { $0.completionPercentage >= 100 }.count
+    }
+
+    private var completedSubtaskCount: Int {
+        allTasks.reduce(0) { $0 + $1.subtasks.filter(\.isDone).count }
+    }
+
     private var dailyTotals: [DailyTotal] {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
@@ -87,6 +100,11 @@ struct StatisticsView: View {
                 HStack(spacing: 16) {
                     statTile(title: "クイズ回答回数", value: "\(totalQuizAttempts) 回")
                     statTile(title: "全体正答率", value: overallQuizAccuracy.map { String(format: "%.0f%%", $0 * 100) } ?? "—")
+                }
+
+                HStack(spacing: 16) {
+                    statTile(title: "完了したタスク数", value: "\(completedTaskCount) 件")
+                    statTile(title: "完了したサブタスク数", value: "\(completedSubtaskCount) 件")
                 }
 
                 VStack(alignment: .leading, spacing: 14) {
